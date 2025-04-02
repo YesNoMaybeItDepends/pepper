@@ -16,7 +16,7 @@
   (when-some [closest-mineral (get-closest-mineral game unit)]
     (unit/gather unit closest-mineral)))
 
-(defn on-unit-complete [{game :game unit :unit :as args}]
+(defn on-unit-complete [{game :game unit :unit}]
   (let [type (unit/get-type unit)
         is-worker? (unit-type/is-worker? type)]
     (when is-worker? (handle-worker-complete game unit))))
