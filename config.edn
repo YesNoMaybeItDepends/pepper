@@ -1,0 +1,3 @@
+;; Replaced with config.local.edn
+{:starcraft
+ {:path "absolute file system to chaoslauncher.exe"}}

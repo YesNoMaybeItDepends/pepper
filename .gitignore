@@ -249,3 +249,6 @@ gradle-app.setting
 .clj-kondo/imports
 .calva
 .lsp
+
+### Config ###
+config.local.edn
