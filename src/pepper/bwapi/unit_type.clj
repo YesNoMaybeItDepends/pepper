@@ -51,10 +51,10 @@
 
 (def keywords (keys by-kw))
 
-(defn kw->enum [kw]
+(defn kw->type [kw]
   (get by-kw kw))
 
-(defn enum->kw [enum]
+(defn type->kw [enum]
   (get by-enum enum))
 
 (defn valid-kw? [kw]
