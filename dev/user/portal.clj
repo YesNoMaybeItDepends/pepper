@@ -6,7 +6,7 @@
     (add-tap #'p/submit)
     portal))
 
-(defn stop-portal! [portal]
+(defn stop-portal! [#_portal]
   (remove-tap #'p/submit)
   (p/close)
   (p/stop)

@@ -1,7 +1,7 @@
 #_{:clj-kondo/ignore [:unused-namespace]}
 
 (ns user
-  (:require [user.portal :refer [start-portal! stop-portal!]]
+  (:require [user.portal :refer [start-portal! #_stop-portal!]]
             [pepper.core :as pepper]
             [portal.api :as p]
             [clojure.reflect :as reflect]
