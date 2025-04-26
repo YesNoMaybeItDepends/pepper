@@ -12,7 +12,8 @@
             [pepper.client :as client]
             [clojure.pprint :as pprint]
             [zprint.zprint :as zp]
-            [clojure.spec.alpha :as s]))
+            [clojure.spec.alpha :as s]
+            [pepper.starcraft :as starcraft]))
 
 (defonce portal (atom (start-portal!)))
 #_(swap! portal stop-portal!)
@@ -35,8 +36,8 @@
        (catch Exception e (println e))))
 
 (when false
-  ;; (client/start-starcraft!)
-  (client/stop-starcraft!)
+  (starcraft/stop!)
+  (starcraft/start!)
   #_())
 
 (comment

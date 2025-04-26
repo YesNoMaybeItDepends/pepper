@@ -3,9 +3,9 @@
    [pepper.config :as config]
    [babashka.process :as p]))
 
-(defn start-starcraft! []
+(defn start! []
   (p/process (get-in config/config [:starcraft :path])))
 
-(defn stop-starcraft! []
+(defn stop! []
   (p/sh "pskill starcraft")
   (p/sh "pskill chaoslauncher"))
