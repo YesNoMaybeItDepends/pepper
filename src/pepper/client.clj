@@ -1,147 +1,89 @@
 (ns pepper.client
-  (:require [pepper.events :as e]
-            [pepper.proc.queue :as q]
-            [clojure.core.async :refer [>!!]]
-            [pepper.starcraft :as starcraft])
   (:import (bwapi BWEventListener BWClient)))
 
-(defn to-queue "im doing something with this" [client-ref this]
-  (>!! q/queue {:client client-ref
-                :this this}))
-
-(defn event-handler
-  [client-ref event args]
-  (#'e/event-handler client-ref event args))
-
-(defn event-listener
-  [client-ref meme-event-handler]
+(defn event-listener [f]
   (reify BWEventListener
+
     (onEnd [this isWinner]
-      (#'e/event-handler
-       {:client client-ref
-        :event :on-end
-        :isWinner isWinner}))
+      (f {:event :on-end
+          :data {:is-winner isWinner}}))
 
     (onFrame [this]
-      (#'e/event-handler
-       {:client client-ref
-        :event :on-frame}))
+      (f {:event :on-frame}))
 
     (onNukeDetect [this target]
-      (#'e/event-handler
-       {:client client-ref
-        :event :on-nuke-detect
-        :target target}))
-
+      (f {:event :on-nuke-detect
+          :data {:target target}}))
 
     (onPlayerDropped [this player]
-      (#'e/event-handler
-       {:client client-ref
-        :event :on-player-dropped
-        :player player}))
+      (f {:event :on-player-dropped
+          :data {:player player}}))
 
     (onPlayerLeft [this player]
-      (#'e/event-handler
-       {:client client-ref
-        :event :on-player-left
-        :player player}))
+      (f {:event :on-player-left
+          :data {:player player}}))
 
     (onReceiveText [this player text]
-      (#'e/event-handler
-       {:client client-ref
-        :event :on-receive-text
-        :player player :text text}))
+      (f {:event :on-receive-text
+          :data {:player player :text text}}))
 
     (onSaveGame [this gameName]
-      (#'e/event-handler
-       {:client client-ref
-        :event :on-save-game
-        :gameName gameName}))
+      (f {:event :on-save-game
+          :data {:gameName gameName}}))
 
     (onSendText [this text]
-      (#'e/event-handler
-       {:client client-ref
-        :event :on-send-text
-        :text text}))
+      (f {:event :on-send-text
+          :data {:text text}}))
 
     (onStart [this]
-      (#'e/event-handler
-       {:client client-ref
-        :event :on-start}))
+      (f {:event :on-start}))
 
     (onUnitComplete [this unit]
-      (#'e/event-handler
-       {:client client-ref
-        :event :on-unit-complete
-        :unit unit}))
+      (f {:event :on-unit-complete
+          :data {:unit unit}}))
 
     (onUnitCreate [this unit]
-      (#'e/event-handler
-       {:client client-ref
-        :event :on-unit-create
-        :unit unit}))
+      (f {:event :on-unit-create
+          :data {:unit unit}}))
 
     (onUnitDestroy [this unit]
-      (#'e/event-handler
-       {:client client-ref
-        :event :on-unit-destroy
-        :unit unit}))
+      (f {:event :on-unit-destroy
+          :data {:unit unit}}))
 
     (onUnitDiscover [this unit]
-      (#'e/event-handler
-       {:client client-ref
-        :event :on-unit-discover
-        :unit unit}))
+      (f {:event :on-unit-discover
+          :data {:unit unit}}))
 
     (onUnitEvade [this unit]
-      (#'e/event-handler
-       {:client client-ref
-        :event :on-unit-evade
-        :unit unit}))
+      (f {:event :on-unit-evade
+          :data {:unit unit}}))
 
     (onUnitHide [this unit]
-      (#'e/event-handler
-       {:client client-ref
-        :event :on-unit-hide
-        :unit unit}))
+      (f {:event :on-unit-hide
+          :data {:unit unit}}))
 
     (onUnitMorph [this unit]
-      (#'e/event-handler
-       {:client client-ref
-        :event :on-unit-morph
-        :unit unit}))
+      (f {:event :on-unit-morph
+          :data {:unit unit}}))
 
     (onUnitRenegade [this unit]
-      (#'e/event-handler
-       {:client client-ref
-        :event :on-unit-renegade
-        :unit unit}))
+      (f {:event :on-unit-renegade
+          :data {:unit unit}}))
 
     (onUnitShow [this unit]
-      (#'e/event-handler
-       {:client client-ref
-        :event :on-unit-show
-        :unit unit}))))
+      (f {:event :on-unit-show
+          :data {:unit unit}}))))
 
 (defn start!
-  [client-ref event-handler]
-  (let [client (BWClient. (event-listener client-ref event-handler))
-        starcraft (starcraft/start!)]
-    client))
-
-(defn stop!
-  [client]
-  (.leaveGame (.getGame client))
-  (starcraft/stop!)
-  nil)
+  "Do I want to pass a channel, or create a channel here?"
+  [f]
+  {:client (BWClient.
+            (event-listener
+             (fn callback [e] (f e))))})
 
 (defn start-game
   [client]
   (.startGame client))
-
-(defn stop-game
-  [client]
-  (.leaveGame (.getGame client)))
 
 (defn get-game
   [client]

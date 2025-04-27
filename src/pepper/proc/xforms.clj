@@ -1,5 +1,12 @@
 (ns pepper.proc.xforms)
 
+(def printing-tapping-xf
+  (map (fn print-tap
+         [x]
+         (println x)
+         (tap> x)
+         x)))
+
 (def logging-xf
   (map (fn print-message [message]
          (println message)
