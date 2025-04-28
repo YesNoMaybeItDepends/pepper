@@ -3,9 +3,6 @@
 (defn update-state
   [state tick]
   (cond
-    ;; (need-supply? state) (conj state (request-building tick))
-    ;; (need-builder? state) (conj state (assign-builder tick))
-    ;; (finished? state tick) (update (dissoc state :building :builder :tick-requested :tick-started :ticks-to-build) :supply-total + 10)
     :else state))
 
 (def starting-clock {:tick 0

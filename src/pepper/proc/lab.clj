@@ -3,8 +3,7 @@
    [pepper.proc.proc :as p]
    [pepper.proc.queue :as queue]
    [pepper.proc.hello-world :as hw]
-   [zprint.core :as zp]
-   [clojure.core.async :as a :refer [>!! >! <! <!!]]))
+   [clojure.core.async :as a :refer [>!!]]))
 
 (def AUTO-RUN (atom false))
 
