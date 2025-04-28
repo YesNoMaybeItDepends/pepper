@@ -1,3 +1,4 @@
 ;; Replaced with config.local.edn
-{:starcraft
- {:path "absolute file system to chaoslauncher.exe"}}
+{:starcraft {:path "absolute file system to chaoslauncher.exe"}
+
+ :pepper {:cheats "list of cheats to call at the same time, if desired"}}
