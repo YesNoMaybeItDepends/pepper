@@ -4,6 +4,10 @@
 
 rename config.edn to config.local.edn
 
+# BWAPI config
+
+bwapi.ini in starcraft folder
+
 # How to run if gen-class
 
 There's probably a better way to do this

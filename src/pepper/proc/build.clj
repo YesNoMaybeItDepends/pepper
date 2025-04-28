@@ -1,6 +1,5 @@
 (ns pepper.proc.build
   (:require
-   [clojure.core.async :refer [<! go-loop]]
    [pepper.proc.proc :as proc]
    [clojure.test :refer [deftest is testing]]))
 

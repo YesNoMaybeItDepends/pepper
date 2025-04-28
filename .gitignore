@@ -245,9 +245,16 @@ gradle-app.setting
 
 # End of https://www.toptal.com/developers/gitignore/api/clojure,visualstudiocode,java,node,maven,gradle
 
-### Calva ###
+### Clojure ###
+.calva/output-window
+.calva/repl.calva-repl
 .clj-kondo/imports
-.calva
+.clj-kondo/.cache
+.clj-kondo/.lock
+.socket-repl-port
+.nrepl-port
+.cpcache
+.portal
 .lsp
 
 ### Config ###
