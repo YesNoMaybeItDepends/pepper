@@ -37,7 +37,7 @@
 (defn find-available-worker [player]
   (first (filter available-worker? (player/get-units player))))
 
-(defn run "rename to run"
+(defn run
   [game {building :building
          worker :worker
          :as job}]
