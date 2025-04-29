@@ -2,8 +2,7 @@
   (:require
    [clojure.core.async :as a :refer [chan sub mix admix pipe]]
    [pepper.proc.xforms :as xform]
-   [clojure.spec.alpha :as s]
-   [pepper.proc.queue :as q]))
+   [clojure.spec.alpha :as s]))
 
 ;;;; Proc definition
 (s/def ::proc-type keyword?)
