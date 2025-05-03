@@ -1,5 +1,28 @@
 (ns pepper.client
-  (:import (bwapi BWEventListener BWClient)))
+  "TODO: move to bwapi"
+  (:import (bwapi BWEventListener BWClient BWClientConfiguration)))
+
+(defn client-configuration
+  ([] (new BWClientConfiguration))
+  ([{:keys [async
+            async-frame-buffer-capacity
+            async-unsafe
+            auto-continue
+            debug-connection
+            log-verbosely
+            max-frame-duration-ms
+            unlimited-frame-zero]
+     :as config}]
+
+   (cond-> (new BWClientConfiguration)
+     (some? async) (.withAsync async)
+     (some? async-frame-buffer-capacity) (.withAsyncFrameBufferCapacity async-frame-buffer-capacity)
+     (some? async-unsafe) (.withAsyncUnsafe async-unsafe)
+     (some? auto-continue) (.withAutoContinue auto-continue)
+     (some? debug-connection) (.withDebugConnection debug-connection)
+     (some? log-verbosely) (.withLogVerbosely log-verbosely)
+     (some? max-frame-duration-ms) (.withMaxFrameDurationMs max-frame-duration-ms)
+     (some? unlimited-frame-zero) (.withUnlimitedFrameZero unlimited-frame-zero))))
 
 (defn event-listener [f]
   (reify BWEventListener
@@ -74,16 +97,15 @@
       (f {:event :on-unit-show
           :data {:unit unit}}))))
 
-(defn start!
-  "Do I want to pass a channel, or create a channel here?"
+(defn init!
   [f]
-  {:client (BWClient.
-            (event-listener
-             (fn callback [e] (f e))))})
+  (BWClient.
+   (event-listener
+    (fn callback [e] (f e)))))
 
-(defn start-game
-  [client]
-  (.startGame client))
+(defn start-game!
+  ([client] (.startGame client))
+  ([client config] (.startGame client config)))
 
 (defn get-game
   [client]

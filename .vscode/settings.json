@@ -1,0 +1,24 @@
+{
+  "files.exclude": {
+    ".calva": true,
+    ".clj-kondo/imports": true,
+    ".clj-kondo/.cache": true,
+    "classes": true,
+    ".socket-repl-port": false,
+    ".nrepl-port": false,
+    ".cpcache": true,
+    ".portal": true,
+    ".lsp": true
+  },
+  "search.exclude": {
+    ".calva": true,
+    ".clj-kondo/imports": true,
+    ".clj-kondo/.cache": true,
+    "classes": true,
+    ".socket-repl-port": false,
+    ".nrepl-port": false,
+    ".cpcache": true,
+    ".portal": true,
+    ".lsp": true
+  }
+}

@@ -259,3 +259,6 @@ gradle-app.setting
 
 ### Config ###
 config.local.edn
+
+### Misc ###
+.ignore

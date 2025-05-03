@@ -1,59 +1,71 @@
 (ns pepper.core
   (:require
-   [clojure.core.async :as async :refer [<! chan sliding-buffer go-loop put!]]
+   [clojure.core.async :as a]
    [clojure.spec.alpha :as s]
-   [pepper.client :as client]
-   [pepper.starcraft :as starcraft]))
+   [pepper.starcraft :as starcraft]
+   [clojure.core.async.flow :as flow]
+   [pepper.flow.client :as client]
+   [pepper.flow.printer :as printer]
+   [pepper.flow.game-parser :as game-parser]
+   [clojure.core.async.flow-monitor :as mon]))
 
 (s/check-asserts true) ;; TODO: keep here or elsewhere
 
-(def AUTO-RUN false)
+(defonce state
+  (atom {:flow nil
+         :report-chan nil
+         :error-chan nil}))
 
-(defonce state (atom nil))
+(defonce monitor-server (atom nil))
 
-(defn start? []
-  (and (nil? @state) AUTO-RUN))
+(defn init! [state]
+  (assoc state :flow (flow/create-flow
+                      {:procs {:client {:proc (flow/process #'client/proc)}
 
-(defn handle-event [e]
-  (println (java.util.Date.) "->" e))
+                               :printer {:proc (flow/process #'printer/proc)}
 
-(defn channel-handler []
-  (go-loop []
-    (when-some [e (<! (:events @state))]
-      (#'handle-event e)
-      (recur))))
+                               :game-parser {:proc (flow/process #'game-parser/proc)}}
 
-(defn start! []
-  (let [events (chan (sliding-buffer 1))
-        client (client/start! (partial put! events))
-        game (future (client/start-game client))]
-    (reset! state {:client client
-                   :events events
-                   :game game
-                   :proc (channel-handler)})))
+                       :conns [[[:client ::client/out-event]  [:game-parser ::game-parser/in-event]]
+                               [[:game-parser ::game-parser/out]  [:printer :in]]]})))
 
-(defn stop!
-  "TODO: Doesn't really work,
-   the jbwapi client tries to reconnect by design.
-   
-   An option is to throw an error which makes it
-   stop trying to reconnect. But with my 
-   reified implementation it doesn't work.
-   
-   Another idea is to go back to the gen-class implementation,
-   like Korhal, and launch the client externally 
-   as a different system process"
+(defn start! [state]
+  (merge state (flow/start (:flow state))))
 
-  []
+(defn pause! []
+  (flow/pause (:flow @state)))
+
+(defn resume! []
+  (flow/resume (:flow @state)))
+
+(defn stop! []
+  (flow/stop (:flow @state))
   (starcraft/stop!)
-  ;; nuke everything
-  (shutdown-agents))
+  (mon/stop-server monitor-server))
 
-(when (start?)
-  (start!))
+((fn auto-init []
+   (when ((fn auto-init? [] true))
+     (when (nil? (:flow @state))
+       (swap! state init!)
+       (when (nil? @monitor-server)
+         (def monitor-server (mon/start-server @state)))))))
+
+((fn auto-start []
+   (when ((fn auto-run? [] false))
+     (swap! state start!)
+     (starcraft/start!))))
 
 (comment
 
-  (stop!)
+  (a/poll! (:report-chan @state))
+  (a/poll! (:error-chan @state))
+
+  @state
+  @monitor-server
 
   #_())
+
+;; misc 
+(defn java-game->game-data [game]
+  (let [game (bean game)]
+    (keys game)))

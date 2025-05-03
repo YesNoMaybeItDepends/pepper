@@ -75,6 +75,10 @@
   {:pre [(some? game)]}
   (.leaveGame game))
 
+(defn is-in-game
+  [game]
+  {:pre [(some? game)]}
+  (.isInGame game))
 
 
 
