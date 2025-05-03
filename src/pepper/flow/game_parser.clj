@@ -1,7 +1,7 @@
 (ns pepper.flow.game-parser
   (:require
    [clojure.spec.alpha :as s]
-   [pepper.bwapi.game :as g]
+   [pepper.bwapi.impl.game :as g]
    [pepper.client :as client]))
 
 ;; in

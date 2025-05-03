@@ -1,6 +1,6 @@
 (ns pepper.jobs.gather
   (:require
-   [pepper.bwapi.game :as game]
+   [pepper.bwapi.impl.game :as game]
    [pepper.bwapi.unit :as unit]
    [pepper.bwapi.unit-type :as unit-type]
    [pepper.jobs :as jobs]))

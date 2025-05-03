@@ -1,6 +1,6 @@
 (ns pepper.jobs.build
   (:require
-   [pepper.bwapi.game :as game]
+   [pepper.bwapi.impl.game :as game]
    [pepper.bwapi.player :as player]
    [pepper.bwapi.unit :as unit]
    [pepper.bwapi.unit-type :as unit-type]

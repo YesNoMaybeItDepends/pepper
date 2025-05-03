@@ -1,4 +1,4 @@
-(ns pepper.bwapi.game
+(ns pepper.bwapi.impl.game
   "See https://javabwapi.github.io/JBWAPI/bwapi/Game.html"
   (:import (bwapi Text)))
 

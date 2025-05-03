@@ -1,7 +1,7 @@
 (ns pepper.macro.budget
   (:require
    [clojure.spec.alpha :as s]
-   [pepper.bwapi.game :as game]
+   [pepper.bwapi.impl.game :as game]
    [pepper.bwapi.player :as player]))
 
 (s/def ::minerals keyword?)

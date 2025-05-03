@@ -1,7 +1,7 @@
 (ns pepper.flow.client
   (:require
    [pepper.client :as client]
-   [pepper.bwapi.game :as g]
+   [pepper.bwapi.impl.game :as g]
    [clojure.core.async :as a]
    [clojure.spec.alpha :as s]
    [clojure.core.async.flow :as flow]))

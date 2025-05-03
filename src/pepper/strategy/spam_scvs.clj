@@ -1,6 +1,6 @@
 (ns pepper.strategy.spam-scvs
   (:require
-   [pepper.bwapi.game :as game]
+   [pepper.bwapi.impl.game :as game]
    [pepper.bwapi.player :as player]
    [pepper.bwapi.unit :as unit]))
 

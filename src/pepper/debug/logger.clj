@@ -1,5 +1,5 @@
 (ns pepper.debug.logger
-  (:require [pepper.bwapi.game :as game]
+  (:require [pepper.bwapi.impl.game :as game]
             [pepper.jobs :as jobs]))
 
 (defn logger-handler [game text]

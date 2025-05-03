@@ -1,7 +1,7 @@
 (ns pepper.debug.cheats
   (:require
    [clojure.string :as str]
-   [pepper.bwapi.game :as game]
+   [pepper.bwapi.impl.game :as game]
    [pepper.config :as config]))
 
 (def cheats ;; the value should also include the string cheat

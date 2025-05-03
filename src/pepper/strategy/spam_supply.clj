@@ -1,6 +1,6 @@
 (ns pepper.strategy.spam-supply
   (:require
-   [pepper.bwapi.game :as game]
+   [pepper.bwapi.impl.game :as game]
    [pepper.jobs :as jobs]
    [pepper.jobs.build :as build]
    [pepper.supply :as supply]))

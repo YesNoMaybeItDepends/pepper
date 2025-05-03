@@ -1,6 +1,6 @@
 (ns pepper.events
   (:require [pepper.bwapi.client :as client]
-            [pepper.bwapi.game :as game]
+            [pepper.bwapi.impl.game :as game]
             [pepper.bwapi.player :as player]
             [pepper.macro :as macro]
             [pepper.debug.cheats :as cheats]
