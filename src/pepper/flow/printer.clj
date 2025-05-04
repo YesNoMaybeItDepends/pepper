@@ -1,4 +1,6 @@
-(ns pepper.flow.printer)
+(ns pepper.flow.printer
+  (:require
+   [clojure.core.async.flow :as flow]))
 
 (defn log [input msg]
   (println "[" (java.util.Date.) "]" input "->" msg))
@@ -13,6 +15,6 @@
   ([state transition] state)
 
   ([state input msg]
-   (when false
-     (log input msg))
-   [state]))
+   #_(when false
+       (log input msg))
+   [state {::flow/report [msg]}]))

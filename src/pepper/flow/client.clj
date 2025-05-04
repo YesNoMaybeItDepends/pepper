@@ -1,7 +1,7 @@
 (ns pepper.flow.client
   (:require
    [pepper.client :as client]
-   [pepper.bwapi.impl.game :as g]
+   [pepper.bwapi.impl.game :as game]
    [clojure.core.async :as a]
    [clojure.spec.alpha :as s]
    [clojure.core.async.flow :as flow]))
@@ -11,6 +11,7 @@
 
 ;; outs
 (s/def ::out-event any?)
+#_(s/def ::event #{:on-start :on-frame :something-else})
 
 (defn proc
   "TODO: pausing and stopping"
@@ -36,17 +37,14 @@
      (println "haha")
 
      ::flow/stop
-     (let [game (client/get-game client)]
+     (do
        (println "haha")
-       (g/leave-game game)
-       (println "left the game?" (g/is-in-game game)))))
+       (game/leave-game)
+       (println "left the game?" (game/is-in-game)))))
 
   ([{:keys [client] :as state} input message]
-   (case input
-     ::in-event
-     (case (:event message)
-       :on-start [state {::out-event [(assoc message :client client)]
-                         #_::flow/report #_[{:message message
-                                             :inst (java.util.Date.)}]}]
-       [state {::out-event [message]
-               #_::flow/report #_[{:message message :inst (java.util.Date.)}]}]))))
+   (case input ::in-event (case (:event message)
+                            :on-start (let [game (client/get-game client)]
+                                        (game/bind-game! game)
+                                        [state {::out-event [message]}])
+                            [state {::out-event [message]}]))))

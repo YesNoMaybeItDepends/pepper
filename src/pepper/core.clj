@@ -6,7 +6,7 @@
    [clojure.core.async.flow :as flow]
    [pepper.flow.client :as client]
    [pepper.flow.printer :as printer]
-   [pepper.flow.game-parser :as game-parser]
+   [pepper.flow.game :as game]
    [clojure.core.async.flow-monitor :as mon]))
 
 (s/check-asserts true) ;; TODO: keep here or elsewhere
@@ -21,13 +21,11 @@
 (defn init! [state]
   (assoc state :flow (flow/create-flow
                       {:procs {:client {:proc (flow/process #'client/proc)}
-
                                :printer {:proc (flow/process #'printer/proc)}
+                               :game {:proc (flow/process #'game/proc)}}
 
-                               :game-parser {:proc (flow/process #'game-parser/proc)}}
-
-                       :conns [[[:client ::client/out-event]  [:game-parser ::game-parser/in-event]]
-                               [[:game-parser ::game-parser/out]  [:printer :in]]]})))
+                       :conns [[[:client ::client/out-event] [:game ::game/in-event]]
+                               [[:game ::game/out]  [:printer :in]]]})))
 
 (defn start! [state]
   (merge state (flow/start (:flow state))))
@@ -52,8 +50,10 @@
 
 ((fn auto-start []
    (when ((fn auto-run? [] false))
-     (swap! state start!)
-     (starcraft/start!))))
+     (do ;; eval-manually
+       (swap! state start!)
+       (flow/resume (:flow @state))
+       (starcraft/start!)))))
 
 (comment
 
