@@ -33,7 +33,7 @@
 
 (defn start! []
   (println "Starting flow")
-  (swap! state merge (flow/start (:flow state)))
+  (swap! state (fn [state] (merge state (flow/start (:flow state)))))
   (flow/resume (:flow @state)))
 
 (defn pause! []
@@ -70,6 +70,7 @@
 
   settings
   @state
+  (:flow @state)
   @monitor-server
 
   #_())

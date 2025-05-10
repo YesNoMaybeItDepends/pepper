@@ -58,7 +58,7 @@
    (case input
      ::bwapi-events (case (:event message)
                       :on-start (let [game (client/get-game client)
-                                      bwem (bwem/init) #_"implicitly takes game"]
+                                      bwem (bwem/init game)]
                                   (game/bind-game! game)
                                   (bwem/bind-bwem! bwem)
                                   [state {::out-event [message]}])
