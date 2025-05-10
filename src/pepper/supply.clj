@@ -1,6 +1,6 @@
 (ns pepper.supply
-  (:require [pepper.bwapi.unit :as unit]
-            [pepper.bwapi.player :as player]))
+  (:require [pepper.bw-api.unit :as unit]
+            [pepper.bw-api.player :as player]))
 
 (defn supply-capacity [player] (player/supply-total player))
 (defn supply-used [player] (player/supply-used player))

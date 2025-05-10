@@ -37,5 +37,5 @@
   (doseq [cheat (config-cheats)]
     (game/send-text (key->str (get cheats cheat)))))
 
-(defn cheat-handler []
+(defn cheat-handler [text]
   (cheat))

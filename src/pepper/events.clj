@@ -36,7 +36,7 @@
   (let [text (:text args)
         game (unwrap-game-lol args)]
     (logger/logger-handler game text)
-    (cheats/cheat-handler game text)))
+    (cheats/cheat-handler text)))
 
 (defn on-receive-text-handler [args]
   (let [game (unwrap-game-lol args)]))
