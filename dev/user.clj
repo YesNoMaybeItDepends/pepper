@@ -14,9 +14,9 @@
    [clojure.pprint :as pprint]
    [zprint.zprint :as zp]
    [clojure.spec.alpha :as s]
+   [flow-storm.api :as fs-api]
    [pepper.starcraft :as starcraft]))
 
 (defonce portal (atom (start-portal!)))
-
-;; start!
-;; stop!
+(defonce flowstorm (do (fs-api/local-connect)
+                       true))

@@ -3,6 +3,7 @@
         org.clojure/core.async {:mvn/version "1.9.808-alpha1"}
         io.github.clojure/core.async.flow-monitor {:git/tag "v0.1.0" :git/sha "9d02164"}
         org.clojure/test.check {:mvn/version "1.1.1"}
+        org.clojure/java.data {:mvn/version "1.3.113"}
         nrepl/nrepl {:mvn/version "1.3.1"}
         io.github.clojure/tools.build {:mvn/version "0.10.7"}
         babashka/process {:mvn/version "0.5.22"}
@@ -10,5 +11,8 @@
 
         JavaBWAPI/JBWAPI {:local/root "libs/jbwapi-2.1.0.jar"}}
  :aliases {:dev {:extra-paths ["dev"]
-                 :extra-deps {djblue/portal {:mvn/version "0.58.5"}}}
+                 :classpath-overrides {org.clojure/clojure nil}
+                 :extra-deps {djblue/portal {:mvn/version "0.58.5"}
+                              com.github.flow-storm/clojure {:mvn/version "1.12.0-9"}
+                              com.github.flow-storm/flow-storm-dbg {:mvn/version "4.4.1"}}}
            :run {:main-opts ["-m" "pepper.main"]}}}
