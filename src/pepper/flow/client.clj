@@ -1,13 +1,24 @@
 (ns pepper.flow.client
   (:require
    [pepper.client :as client]
-   [pepper.bwapi.impl.game :as game]
+   [pepper.bw-api.game :as game]
    [clojure.core.async :as a]
    [clojure.spec.alpha :as s]
-   [clojure.core.async.flow :as flow]))
+   [clojure.core.async.flow :as flow]
+   [pepper.starcraft :as starcraft]
+   [pepper.bw-api.bwem :as bwem]))
 
 ;; in-ports
-(s/def ::in-event any?)
+(s/def ::bwapi-events any?)
+(s/def ::starcraft-started any?)
+(s/def ::client-started any?)
+(s/def ::client-created any?)
+(s/def ::game-started any?)
+(defn in-ports [] {::bwapi-events      (a/chan (a/sliding-buffer 1))
+                   ::client-created    (a/chan)
+                   ::client-started    (a/chan)
+                   ::starcraft-started (a/chan)
+                   ::game-started      (a/chan)})
 
 ;; outs
 (s/def ::out-event any?)
@@ -20,18 +31,19 @@
 
   ;; init
   ([args]
-   (assoc args
-          ::flow/in-ports
-          {::in-event (a/chan (a/sliding-buffer 1))}))
+   (let [in-ports (in-ports)
+         client (client/client (partial a/put! (::bwapi-events in-ports)))]
+     (assoc args :client client ::flow/in-ports in-ports)))
 
   ;; transition
-  ([{:keys [client game-future ::flow/in-ports] :as state} transition]
+  ([{:keys [client] :as state} transition]
    (case transition
      ::flow/resume
-     (let [in-port (::in-event in-ports)
-           client (client/init! (partial a/put! in-port))
-           game-future (future (client/start-game! client))]
-       (assoc state :client client :game-future game-future))
+     (assoc state
+            :game-future (future (client/start-game! client))
+            :starcraft-future (future
+                                (Thread/sleep 1000)
+                                (starcraft/start!)))
 
      ::flow/pause
      (println "haha")
@@ -43,8 +55,11 @@
        (println "left the game?" (game/is-in-game)))))
 
   ([{:keys [client] :as state} input message]
-   (case input ::in-event (case (:event message)
-                            :on-start (let [game (client/get-game client)]
-                                        (game/bind-game! game)
-                                        [state {::out-event [message]}])
-                            [state {::out-event [message]}]))))
+   (case input
+     ::bwapi-events (case (:event message)
+                      :on-start (let [game (client/get-game client)
+                                      bwem (bwem/init) #_"implicitly takes game"]
+                                  (game/bind-game! game)
+                                  (bwem/bind-bwem! bwem)
+                                  [state {::out-event [message]}])
+                      [state {::out-event [message]}]))))

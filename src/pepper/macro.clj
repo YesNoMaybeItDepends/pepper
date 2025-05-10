@@ -2,7 +2,7 @@
   (:require
    [pepper.macro.budget :as budget]
    [pepper.jobs :as jobs]
-   [pepper.bwapi.impl.game :as game]
+   [pepper.bw-api.game :as game]
    [pepper.strategy.spam-scvs :as spam-scvs]
    [pepper.strategy.spam-supply :as spam-supply]
    [pepper.strategy.spam-marines :as spam-marines]
@@ -55,7 +55,7 @@
 (defn run [game]
   ;; TODO: bw/build rax 
   (budget/run-frame game)
-  (game/draw-text-screen game 200 200 (str "Money: " (get-in (budget/get-budget) [:total :minerals])))
+  (game/draw-text-screen 200 200 (str "Money: " (get-in (budget/get-budget) [:total :minerals])))
   (spam-scvs/maybe-train-workers game)
   (spam-supply/maybe-build-supply game (jobs))
   (spam-marines/maybe-build-barracks game (jobs))

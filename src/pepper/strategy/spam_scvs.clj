@@ -1,11 +1,11 @@
 (ns pepper.strategy.spam-scvs
   (:require
-   [pepper.bwapi.impl.game :as game]
-   [pepper.bwapi.player :as player]
-   [pepper.bwapi.unit :as unit]))
+   [pepper.bw-api.game :as game]
+   [pepper.bw-api.player :as player]
+   [pepper.bw-api.unit :as unit]))
 
 (defn maybe-train-workers [game]
-  (let [player (game/self game)
+  (let [player (game/self)
         units (player/get-units player)]
 
     (doseq [trainer (filter #(and (.isBuilding (:type %)) (seq (.buildsWhat (:type %)))) (map (fn [unit] {:unit unit :type (.getType unit)}) units))]

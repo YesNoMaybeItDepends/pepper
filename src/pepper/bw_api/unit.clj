@@ -1,4 +1,4 @@
-(ns pepper.bwapi.unit
+(ns pepper.bw-api.unit
   "See https://javabwapi.github.io/JBWAPI/bwapi/Unit.html")
 
 (defn get-type

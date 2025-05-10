@@ -1,6 +1,6 @@
 (ns pepper.strategy.spam-marines
   (:require
-   [pepper.bwapi.impl.game :as game]
+   [pepper.bw-api :as game]
    [pepper.jobs :as jobs]
    [pepper.jobs.build :as build]
    [pepper.supply :as supply]))
@@ -14,7 +14,7 @@
     (and above-11-supply no-barracks no-barracks-jobs)))
 
 (defn maybe-build-barracks [game jobs]
-  (let [player (game/self game)]
+  (let [player (game/self)]
     (when (need-barracks? player jobs) (jobs/add! (build/job :barracks)))))
 
 (defn run [game jobs]

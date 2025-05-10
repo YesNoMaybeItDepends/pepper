@@ -1,8 +1,9 @@
-(ns pepper.bwapi.impl.game
+(ns pepper.bw-api.game
   "See https://javabwapi.github.io/JBWAPI/bwapi/Game.html"
   (:import (bwapi Text)))
 
 (defonce game nil)
+
 (defn bind-game! [g] (alter-var-root #'game (constantly g)))
 
 (defn self
@@ -72,6 +73,10 @@
   {:pre [(some? game)]}
   (.getGeysers game))
 
+(defn get-players []
+  {:pre [(some? game)]}
+  (.getPlayers game))
+
 (defn leave-game
   "Leaves the current game by surrendering and enters the post-game statistics/score screen."
   []
@@ -92,3 +97,19 @@
   []
   {:pre [(some? game)]}
   (.getFrameCount game))
+
+(defn pause-game
+  []
+  (.pauseGame game))
+
+(defn resume-game
+  []
+  (.resumeGame game))
+
+(defn get-all-units
+  []
+  (.getAllUnits game))
+
+(defn get-start-locations
+  []
+  (.getStartLocations game))

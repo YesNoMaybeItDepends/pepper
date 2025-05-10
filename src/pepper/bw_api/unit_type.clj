@@ -1,4 +1,4 @@
-(ns pepper.bwapi.unit-type
+(ns pepper.bw-api.unit-type
   "See https://javabwapi.github.io/JBWAPI/bwapi/UnitType.html"
   (:require [clojure.string :as str])
   (:import (bwapi UnitType)))

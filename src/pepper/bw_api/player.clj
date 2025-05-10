@@ -1,4 +1,4 @@
-(ns pepper.bwapi.player
+(ns pepper.bw-api.player
   "See https://javabwapi.github.io/JBWAPI/bwapi/Player.html")
 
 (defn get-units
@@ -50,3 +50,18 @@
    {:pre [(some? player)
           (some? unit-type)]}
    (.allUnitCount player unit-type)))
+
+(defn get-id
+  [player]
+  {:pre [(some? player)]}
+  (.getID player))
+
+(defn is-ally?
+  [player player-2]
+  {:pre [(some? player)]}
+  (.isAlly player player-2))
+
+(defn is-enemy?
+  [player]
+  {:pre [(some? player)]}
+  (.isEnemy player))

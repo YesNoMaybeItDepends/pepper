@@ -1,9 +1,9 @@
 (ns pepper.jobs.build
   (:require
-   [pepper.bwapi.impl.game :as game]
-   [pepper.bwapi.player :as player]
-   [pepper.bwapi.unit :as unit]
-   [pepper.bwapi.unit-type :as unit-type]
+   [pepper.bw-api.game :as game]
+   [pepper.bw-api.player :as player]
+   [pepper.bw-api.unit :as unit]
+   [pepper.bw-api.unit-type :as unit-type]
    [pepper.jobs :as jobs]
    [pepper.jobs.gather :as gather]))
 
@@ -21,7 +21,7 @@
     (game/get-build-location game unit-type start-location)))
 
 (defn order-build [game unit-type unit]
-  (let [player (game/self game)
+  (let [player (game/self)
         worker unit
         location (get-build-location game unit-type player)]
     (unit/build worker unit-type location)))
@@ -42,10 +42,10 @@
          worker :worker
          :as job}]
   (cond
-    (not (:id worker)) (let [unit (find-available-worker (game/self game))
+    (not (:id worker)) (let [unit (find-available-worker (game/self))
                              id (unit/get-unit-id unit)
                              type (:type building)]
-                         (cond (game/can-make game type unit)
+                         (cond (game/can-make type unit)
                                (do (order-build game type unit)
                                    (assoc job :worker (assoc worker :id id)))
                                :else job))

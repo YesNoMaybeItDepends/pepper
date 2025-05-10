@@ -1,7 +1,7 @@
 (ns pepper.events
-  (:require [pepper.bwapi.client :as client]
-            [pepper.bwapi.impl.game :as game]
-            [pepper.bwapi.player :as player]
+  (:require [pepper.bw-api.client :as client]
+            [pepper.bw-api.game :as game]
+            [pepper.bw-api.player :as player]
             [pepper.macro :as macro]
             [pepper.debug.cheats :as cheats]
             [pepper.debug.logger :as logger]
@@ -19,16 +19,16 @@
 
 (defn on-start-handler [args]
   (let [game (unwrap-game-lol args)]
-    (game/draw-text-screen game 100 100 "game started")))
+    (game/draw-text-screen 100 100 "game started")))
 
 (defn draw-message-crystals [game player]
   (let [name (player/get-name player)
         minerals (player/minerals player)]
-    (game/draw-text-screen game 100 100 (str name " has " minerals " crystals"))))
+    (game/draw-text-screen 100 100 (str name " has " minerals " crystals"))))
 
 (defn on-frame-handler [args]
   (let [game (unwrap-game-lol args)
-        player (game/self game)]
+        player (game/self)]
     (draw-message-crystals game player)
     (macro/run game)))
 

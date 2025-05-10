@@ -1,6 +1,6 @@
 (ns pepper.strategy.spam-supply
   (:require
-   [pepper.bwapi.impl.game :as game]
+   [pepper.bw-api.game :as game]
    [pepper.jobs :as jobs]
    [pepper.jobs.build :as build]
    [pepper.supply :as supply]))
@@ -12,5 +12,5 @@
        (not (build/building-in-jobs? :supply-depot jobs))))
 
 (defn maybe-build-supply [game jobs]
-  (let [player (game/self game)]
+  (let [player (game/self)]
     (when (need-supply? player jobs) (jobs/add! (build/job :supply-depot)))))

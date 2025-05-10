@@ -1,8 +1,8 @@
 (ns pepper.macro.budget
   (:require
    [clojure.spec.alpha :as s]
-   [pepper.bwapi.impl.game :as game]
-   [pepper.bwapi.player :as player]))
+   [pepper.bw-api.game :as game]
+   [pepper.bw-api.player :as player]))
 
 (s/def ::minerals keyword?)
 (s/def ::gas keyword?)
@@ -35,7 +35,7 @@
   (update-in budget [:total :minerals] (fn [total-minerals] minerals)))
 
 (defn run-frame [game]
-  (let [player (game/self game)
+  (let [player (game/self)
         minerals (player/minerals player)]
     (swap! budget update! minerals)))
 

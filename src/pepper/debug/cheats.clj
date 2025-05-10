@@ -1,7 +1,7 @@
 (ns pepper.debug.cheats
   (:require
    [clojure.string :as str]
-   [pepper.bwapi.impl.game :as game]
+   [pepper.bw-api.game :as game]
    [pepper.config :as config]))
 
 (def cheats ;; the value should also include the string cheat
@@ -33,10 +33,9 @@
 (defn key->str [key]
   (str/replace (name key) #"-" " "))
 
-(defn cheat [game]
+(defn cheat []
   (doseq [cheat (config-cheats)]
-    (game/send-text game (key->str (get cheats cheat)))))
+    (game/send-text (key->str (get cheats cheat)))))
 
-(defn cheat-handler [game text]
-  (cheat game))
-
+(defn cheat-handler []
+  (cheat))

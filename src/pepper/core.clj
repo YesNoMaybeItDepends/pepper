@@ -6,10 +6,13 @@
    [clojure.core.async.flow :as flow]
    [pepper.flow.client :as client]
    [pepper.flow.printer :as printer]
-   [pepper.flow.game :as game]
+   [pepper.flow.game-state :as game-state]
    [clojure.core.async.flow-monitor :as mon]))
 
-(s/check-asserts true) ;; TODO: keep here or elsewhere
+(s/check-asserts true) ;; TODO: keep here or elsewhere ? 
+
+(defonce settings {:auto-init? true
+                   :auto-start? false})
 
 (defonce state
   (atom {:flow nil
@@ -19,16 +22,19 @@
 (defonce monitor-server (atom nil))
 
 (defn init! [state]
+  (println "Initializing flow")
   (assoc state :flow (flow/create-flow
                       {:procs {:client {:proc (flow/process #'client/proc)}
-                               :printer {:proc (flow/process #'printer/proc)}
-                               :game {:proc (flow/process #'game/proc)}}
+                               :game-state {:proc (flow/process #'game-state/proc)}
+                               :printer {:proc (flow/process #'printer/proc)}}
 
-                       :conns [[[:client ::client/out-event] [:game ::game/in-event]]
-                               [[:game ::game/out]  [:printer :in]]]})))
+                       :conns [[[:client ::client/out-event] [:game-state ::game-state/in-event]]
+                               [[:game-state ::game-state/out]  [:printer :in]]]})))
 
-(defn start! [state]
-  (merge state (flow/start (:flow state))))
+(defn start! []
+  (println "Starting flow")
+  (swap! state merge (flow/start (:flow state)))
+  (flow/resume (:flow @state)))
 
 (defn pause! []
   (flow/pause (:flow @state)))
@@ -41,25 +47,28 @@
   (starcraft/stop!)
   (mon/stop-server monitor-server))
 
-((fn auto-init []
-   (when ((fn auto-init? [] true))
-     (when (nil? (:flow @state))
-       (swap! state init!)
-       (when (nil? @monitor-server)
-         (def monitor-server (mon/start-server @state)))))))
+(when (:auto-init? settings)
+  (when (nil? (:flow @state))
+    (swap! state init!)
+    (when (nil? @monitor-server)
+      (def monitor-server (mon/start-server @state)))))
 
-((fn auto-start []
-   (when ((fn auto-run? [] false))
-     (do ;; eval-manually
-       (swap! state start!)
-       (flow/resume (:flow @state))
-       (starcraft/start!)))))
+(when (:auto-start? settings)
+  (when (nil? (:report-chan @state))
+    (start!)))
 
 (comment
+
+  (init! state)
+  (start!)
+  (pause!)
+  (resume!)
+  (stop!)
 
   (a/poll! (:report-chan @state))
   (a/poll! (:error-chan @state))
 
+  settings
   @state
   @monitor-server
 

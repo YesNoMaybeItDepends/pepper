@@ -97,7 +97,7 @@
       (f {:event :on-unit-show
           :data {:unit unit}}))))
 
-(defn init!
+(defn client
   [f]
   (BWClient.
    (event-listener

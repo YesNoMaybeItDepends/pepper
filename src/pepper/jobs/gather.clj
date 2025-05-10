@@ -1,8 +1,8 @@
 (ns pepper.jobs.gather
   (:require
-   [pepper.bwapi.impl.game :as game]
-   [pepper.bwapi.unit :as unit]
-   [pepper.bwapi.unit-type :as unit-type]
+   [pepper.bw-api.game :as game]
+   [pepper.bw-api.unit :as unit]
+   [pepper.bw-api.unit-type :as unit-type]
    [pepper.jobs :as jobs]))
 
 (defn get-closest-mineral
@@ -10,7 +10,7 @@
   (:mineral (apply min-key :distance
                    (map (fn [mineral]
                           {:mineral mineral :distance (unit/get-distance unit mineral)})
-                        (game/get-minerals game)))))
+                        (game/get-minerals)))))
 
 (defn handle-worker-complete [game unit]
   (when-some [closest-mineral (get-closest-mineral game unit)]
