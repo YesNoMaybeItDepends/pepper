@@ -1,7 +1,7 @@
 (ns pepper.events
-  (:require [pepper.bw-api.client :as client]
-            [pepper.bw-api.game :as game]
-            [pepper.bw-api.player :as player]
+  (:require [pepper.api.client :as client]
+            [pepper.api.game :as game]
+            [pepper.api.player :as player]
             [pepper.macro :as macro]
             [pepper.debug.cheats :as cheats]
             [pepper.debug.logger :as logger]

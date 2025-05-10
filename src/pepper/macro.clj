@@ -2,7 +2,7 @@
   (:require
    [pepper.macro.budget :as budget]
    [pepper.jobs :as jobs]
-   [pepper.bw-api.game :as game]
+   [pepper.api.game :as game]
    [pepper.strategy.spam-scvs :as spam-scvs]
    [pepper.strategy.spam-supply :as spam-supply]
    [pepper.strategy.spam-marines :as spam-marines]

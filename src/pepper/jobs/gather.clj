@@ -1,8 +1,8 @@
 (ns pepper.jobs.gather
   (:require
-   [pepper.bw-api.game :as game]
-   [pepper.bw-api.unit :as unit]
-   [pepper.bw-api.unit-type :as unit-type]
+   [pepper.api.game :as game]
+   [pepper.api.unit :as unit]
+   [pepper.api.unit-type :as unit-type]
    [pepper.jobs :as jobs]))
 
 (defn get-closest-mineral

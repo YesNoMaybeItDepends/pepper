@@ -1,8 +1,8 @@
 (ns pepper.strategy.spam-scvs
   (:require
-   [pepper.bw-api.game :as game]
-   [pepper.bw-api.player :as player]
-   [pepper.bw-api.unit :as unit]))
+   [pepper.api.game :as game]
+   [pepper.api.player :as player]
+   [pepper.api.unit :as unit]))
 
 (defn maybe-train-workers [game]
   (let [player (game/self)

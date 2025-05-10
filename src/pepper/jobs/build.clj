@@ -1,9 +1,9 @@
 (ns pepper.jobs.build
   (:require
-   [pepper.bw-api.game :as game]
-   [pepper.bw-api.player :as player]
-   [pepper.bw-api.unit :as unit]
-   [pepper.bw-api.unit-type :as unit-type]
+   [pepper.api.game :as game]
+   [pepper.api.player :as player]
+   [pepper.api.unit :as unit]
+   [pepper.api.unit-type :as unit-type]
    [pepper.jobs :as jobs]
    [pepper.jobs.gather :as gather]))
 

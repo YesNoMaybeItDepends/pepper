@@ -1,12 +1,12 @@
 (ns pepper.flow.client
   (:require
    [pepper.client :as client]
-   [pepper.bw-api.game :as game]
+   [pepper.api.game :as game]
    [clojure.core.async :as a]
    [clojure.spec.alpha :as s]
    [clojure.core.async.flow :as flow]
    [pepper.starcraft :as starcraft]
-   [pepper.bw-api.bwem :as bwem]))
+   [pepper.api.bwem :as bwem]))
 
 ;; in-ports
 (s/def ::bwapi-events any?)

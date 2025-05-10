@@ -1,4 +1,4 @@
-(ns pepper.bw-api.player
+(ns pepper.api.player
   "See https://javabwapi.github.io/JBWAPI/bwapi/Player.html")
 
 (defn get-units

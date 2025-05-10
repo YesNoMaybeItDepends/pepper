@@ -1,5 +1,5 @@
-(ns pepper.bw-api.bwem
-  (:require [pepper.bw-api.game :as game])
+(ns pepper.api.bwem
+  (:require [pepper.api.game :as game])
   (:import (bwem BWEM BWMap)))
 
 (defonce bwem nil)

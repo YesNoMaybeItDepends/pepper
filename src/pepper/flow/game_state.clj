@@ -1,7 +1,7 @@
 (ns pepper.flow.game-state
   (:require
    [clojure.spec.alpha :as s]
-   [pepper.bw-api.game :as game]
+   [pepper.api.game :as game]
    [pepper.bw.player :refer [player->data]]
    [clojure.java.data :as j]))
 

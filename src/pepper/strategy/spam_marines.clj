@@ -1,6 +1,6 @@
 (ns pepper.strategy.spam-marines
   (:require
-   [pepper.bw-api.game :as game]
+   [pepper.api.game :as game]
    [pepper.jobs :as jobs]
    [pepper.jobs.build :as build]
    [pepper.supply :as supply]))

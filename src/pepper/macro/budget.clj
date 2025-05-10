@@ -1,8 +1,8 @@
 (ns pepper.macro.budget
   (:require
    [clojure.spec.alpha :as s]
-   [pepper.bw-api.game :as game]
-   [pepper.bw-api.player :as player]))
+   [pepper.api.game :as game]
+   [pepper.api.player :as player]))
 
 (s/def ::minerals keyword?)
 (s/def ::gas keyword?)
