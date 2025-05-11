@@ -8,6 +8,8 @@
         io.github.clojure/tools.build {:mvn/version "0.10.7"}
         babashka/process {:mvn/version "0.5.22"}
         zprint/zprint {:mvn/version "1.2.9"}
+        lambdaisland/deep-diff2 {:mvn/version "2.12.219"}
+        juji/editscript {:mvn/version "0.6.6"}
 
         JavaBWAPI/JBWAPI {:local/root "libs/jbwapi-2.1.0.jar"}}
  :aliases {:dev {:extra-paths ["dev"]
