@@ -27,15 +27,15 @@
   [bean]
   (update-keys bean (:keyword property->keyword)))
 
-(defn- bean->index
+(defn- bean->keys
   [bean]
   (map property->keyword (keys bean)))
 
-(defn obj->index
+(defn obj->keys
   [obj]
   (->> obj
        obj->bean
-       bean->index))
+       bean->keys))
 
 (defn obj->map
   [obj]
