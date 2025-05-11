@@ -1,10 +1,6 @@
 (ns pepper.utils.interop
-  (:require [clojure.reflect :as reflect]
-            [clojure.repl :as repl]
-            [clojure.java.data :as j]
-            [clojure.string :as str]
-            [lambdaisland.deep-diff2 :as ddiff]
-            [editscript.core :as e]))
+  (:require [clojure.java.data :as j]
+            [clojure.string :as str]))
 
 (defn- kebabify-property
   [string]
