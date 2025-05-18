@@ -20,5 +20,16 @@
     ".cpcache": true,
     ".portal": true,
     ".lsp": true
-  }
+  },
+  // "calva.replConnectSequences": [
+  //   {
+  //     "projectType": "deps.edn",
+  //     "name": "ligma",
+  //     "menuSelections": {
+  //       "cljAliases": []
+  //     },
+  //     "jackInEnv": {},
+  //     "customJackInCommandLine": "" 
+  //   }
+  // ]
 }

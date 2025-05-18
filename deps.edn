@@ -11,6 +11,7 @@
         zprint/zprint {:mvn/version "1.2.9"}
         lambdaisland/deep-diff2 {:mvn/version "2.12.219"}
         juji/editscript {:mvn/version "0.6.6"}
+        cider/cider-nrepl {:mvn/version "0.55.7"}
         com.github.JavaBWAPI/JBWAPI {:mvn/version "2.1.0"}}
  :aliases {:dev {:extra-paths ["dev"]
                  :classpath-overrides {org.clojure/clojure nil}
