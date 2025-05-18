@@ -1,7 +1,7 @@
 (ns pepper.client
   (:import (bwapi BWClient BWClientConfiguration BWEventListener)))
 
-(defn client-configuration
+(defn configuration
   ([] (BWClientConfiguration.))
   ([{:keys [async
             async-frame-buffer-capacity
@@ -100,3 +100,11 @@
   [f]
   (BWClient. (event-listener
               (fn callback [e] (f e)))))
+
+(defn start-game
+  ([client] (.startGame client))
+  ([client config] (.startGame client config)))
+
+(defn get-game
+  [client]
+  (.getGame client))
