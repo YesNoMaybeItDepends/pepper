@@ -59,7 +59,8 @@
           :data {:text text}}))
 
     (onStart [this]
-      (f {:event :on-start}))
+      (do (tap> "client on-start event")
+          (f {:event :on-start})))
 
     (onUnitComplete [this unit]
       (f {:event :on-unit-complete

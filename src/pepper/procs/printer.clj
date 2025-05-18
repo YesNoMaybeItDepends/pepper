@@ -1,4 +1,4 @@
-(ns pepper.flow.printer
+(ns pepper.procs.printer
   (:require
    [clojure.core.async.flow :as flow]))
 

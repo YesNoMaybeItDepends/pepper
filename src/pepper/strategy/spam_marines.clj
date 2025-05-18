@@ -14,7 +14,7 @@
     (and above-11-supply no-barracks no-barracks-jobs)))
 
 (defn maybe-build-barracks [game jobs]
-  (let [player (game/self)]
+  (let [player (game/self game)]
     (when (need-barracks? player jobs) (jobs/add! (build/job :barracks)))))
 
 (defn run [game jobs]

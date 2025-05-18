@@ -21,7 +21,7 @@
     (game/get-build-location game unit-type start-location)))
 
 (defn order-build [game unit-type unit]
-  (let [player (game/self)
+  (let [player (game/self game)
         worker unit
         location (get-build-location game unit-type player)]
     (unit/build worker unit-type location)))
@@ -42,7 +42,7 @@
          worker :worker
          :as job}]
   (cond
-    (not (:id worker)) (let [unit (find-available-worker (game/self))
+    (not (:id worker)) (let [unit (find-available-worker (game/self game))
                              id (unit/get-unit-id unit)
                              type (:type building)]
                          (cond (game/can-make type unit)

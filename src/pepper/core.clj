@@ -4,12 +4,38 @@
    [clojure.spec.alpha :as s]
    [pepper.starcraft :as starcraft]
    [clojure.core.async.flow :as flow]
-   [pepper.flow.client :as client]
-   [pepper.flow.printer :as printer]
-   [pepper.flow.game-state :as game-state]
+   [pepper.procs.client :as client]
+   [pepper.procs.game-events :as game-events]
+   [pepper.procs.printer :as printer]
+   [pepper.procs.game-state :as game-state]
    [clojure.core.async.flow-monitor :as mon]))
 
 (s/check-asserts true) ;; TODO: keep here or elsewhere ? 
+
+;;;; Utils
+
+(defn conn->ns [conn]
+  (-> conn
+      namespace
+      keyword))
+
+(defn conn->proc [conn ns->proc]
+  (-> conn
+      conn->ns
+      ns->proc))
+
+(defn conns->flow-conns
+  [conns conn->proc]
+  (mapv (fn [[from to]] [[(conn->proc from) from]
+                         [(conn->proc to) to]])
+        conns))
+
+;;;; Config
+
+(def proc? #{:client :game-events :game-state :printer})
+(def conns [[::client/game-event ::game-events/game-event]])
+(def ns->proc {:pepper.procs.client :client
+               :pepper.procs.game-events :game-events})
 
 (defonce settings {:auto-init? true
                    :auto-start? false})
@@ -25,11 +51,18 @@
   (println "Initializing flow")
   (assoc state :flow (flow/create-flow
                       {:procs {:client {:proc (flow/process #'client/proc)}
+                               :game-events {:proc (flow/process #'game-events/proc)}
                                :game-state {:proc (flow/process #'game-state/proc)}
+                               ;; TODO: remove printer cause don't need it right now
+                               ;; TODO: handle some kind of message sink when i remove printer
                                :printer {:proc (flow/process #'printer/proc)}}
 
-                       :conns [[[:client ::client/out-event] [:game-state ::game-state/in-event]]
-                               [[:game-state ::game-state/out]  [:printer :in]]]})))
+                       :conns [[[:client ::client/game-event]
+                                [:game-events ::game-events/game-event]]
+                               [[:game-events ::game-events/on-any]
+                                [:game-state ::game-state/game-event]]
+                               [[:game-state ::game-state/out]
+                                [:printer :in]]]})))
 
 (defn start! []
   (println "Starting flow")
@@ -59,6 +92,8 @@
 
 (comment
 
+  (System/exit 0)
+  (shutdown-agents)
   (init! state)
   (start!)
   (pause!)

@@ -19,16 +19,16 @@
 
 (defn on-start-handler [args]
   (let [game (unwrap-game-lol args)]
-    (game/draw-text-screen 100 100 "game started")))
+    (game/draw-text-screen game 100 100 "game started")))
 
 (defn draw-message-crystals [game player]
   (let [name (player/get-name player)
         minerals (player/minerals player)]
-    (game/draw-text-screen 100 100 (str name " has " minerals " crystals"))))
+    (game/draw-text-screen game 100 100 (str name " has " minerals " crystals"))))
 
 (defn on-frame-handler [args]
   (let [game (unwrap-game-lol args)
-        player (game/self)]
+        player (game/self game)]
     (draw-message-crystals game player)
     (macro/run game)))
 

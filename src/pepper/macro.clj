@@ -55,7 +55,7 @@
 (defn run [game]
   ;; TODO: bw/build rax 
   (budget/run-frame game)
-  (game/draw-text-screen 200 200 (str "Money: " (get-in (budget/get-budget) [:total :minerals])))
+  (game/draw-text-screen game 200 200 (str "Money: " (get-in (budget/get-budget) [:total :minerals])))
   (spam-scvs/maybe-train-workers game)
   (spam-supply/maybe-build-supply game (jobs))
   (spam-marines/maybe-build-barracks game (jobs))

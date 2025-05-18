@@ -10,7 +10,7 @@
   (:mineral (apply min-key :distance
                    (map (fn [mineral]
                           {:mineral mineral :distance (unit/get-distance unit mineral)})
-                        (game/get-minerals)))))
+                        (game/get-minerals game)))))
 
 (defn handle-worker-complete [game unit]
   (when-some [closest-mineral (get-closest-mineral game unit)]

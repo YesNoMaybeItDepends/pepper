@@ -33,9 +33,9 @@
 (defn key->str [key]
   (str/replace (name key) #"-" " "))
 
-(defn cheat []
-  (doseq [cheat (config-cheats)]
-    (game/send-text (key->str (get cheats cheat)))))
+#_(defn cheat [game]
+    (doseq [cheat (config-cheats)]
+      (game/send-text game (key->str (get cheats cheat)))))
 
-(defn cheat-handler [text]
-  (cheat))
+#_(defn cheat-handler [text]
+    (cheat))

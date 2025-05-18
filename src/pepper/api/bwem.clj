@@ -1,10 +1,11 @@
 (ns pepper.api.bwem
-  (:require [clojure.java.data :as j]
-            [portal.api :as p])
+  (:require [clojure.java.data :as j])
   (:import (bwem BWEM BWMap)))
 
-(defonce bwem nil)
-(defn bind-bwem! [b] (alter-var-root #'bwem (constantly b)))
+#_(defonce ^:dynamic *bwem* nil)
+
+#_(defn bind-bwem! [b] (alter-var-root #'*bwem* (constantly b)))
+
 (defn init [game]
   (let [bwem (new BWEM game)]
     (.setFailOnError bwem false)
@@ -15,28 +16,12 @@
     bwem))
 
 (defn get-map
-  []
+  [bwem]
   (.getMap bwem))
 
 (defn get-starting-locations
-  []
-  (.getStartingLocations (get-map)))
+  [bwem]
+  (.getStartingLocations (get-map bwem)))
 
-(defn get-unassigned-starting-locations []
-  (.getUnassignedStartingLocations (get-map)))
-
-(defn get-bases [])
-
-(comment
-
-  bwem
-
-  (j/from-java-shallow bwem {})
-
-  (-> bwem
-      (j/from-java-shallow {})
-      :map
-      (j/from-java-shallow {}))
-
-
-  #_())
+(defn get-unassigned-starting-locations [bwem]
+  (.getUnassignedStartingLocations (get-map bwem)))

@@ -5,7 +5,7 @@
    [pepper.api.unit :as unit]))
 
 (defn maybe-train-workers [game]
-  (let [player (game/self)
+  (let [player (game/self game)
         units (player/get-units player)]
 
     (doseq [trainer (filter #(and (.isBuilding (:type %)) (seq (.buildsWhat (:type %)))) (map (fn [unit] {:unit unit :type (.getType unit)}) units))]

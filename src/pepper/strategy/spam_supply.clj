@@ -12,5 +12,5 @@
        (not (build/building-in-jobs? :supply-depot jobs))))
 
 (defn maybe-build-supply [game jobs]
-  (let [player (game/self)]
+  (let [player (game/self game)]
     (when (need-supply? player jobs) (jobs/add! (build/job :supply-depot)))))

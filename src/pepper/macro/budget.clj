@@ -35,7 +35,7 @@
   (update-in budget [:total :minerals] (fn [total-minerals] minerals)))
 
 (defn run-frame [game]
-  (let [player (game/self)
+  (let [player (game/self game)
         minerals (player/minerals player)]
     (swap! budget update! minerals)))
 

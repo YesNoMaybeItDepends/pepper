@@ -16,14 +16,14 @@
                 str/lower-case
                 keyword)})
 
-(defn- obj->bean [obj]
-  (j/from-java-shallow obj {}))
+(defn- obj->bean [obj & {:keys [omit] :or {omit #{}} :as options}]
+  (j/from-java-shallow obj options))
 
 (defn- bean->map
   [bean]
   (update-keys bean (:keyword property->keyword)))
 
-(defn- bean->keys
+(defn- bean->keywords
   [bean]
   (map property->keyword (keys bean)))
 
@@ -31,7 +31,7 @@
   [obj]
   (->> obj
        obj->bean
-       bean->keys))
+       bean->keywords))
 
 (defn obj->map
   [obj]

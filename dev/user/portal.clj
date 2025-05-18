@@ -9,12 +9,14 @@
 
 (defonce ids (atom 0))
 
+(defonce max-taps 1000)
+
 (defn submit [value]
   (let [id (swap! ids inc)]
     (swap! tap-list
            (fn [taps]
              (conj
-              (if (< (count taps) 5)
+              (if (< (count taps) max-taps)
                 taps
                 (subvec taps 1))
               {:id    id
