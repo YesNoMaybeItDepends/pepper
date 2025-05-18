@@ -3,19 +3,16 @@
 (ns user
   (:require
    [user.portal :refer [start-portal!]]
-   [pepper.core :as core]
    [portal.api :as p]
    [clojure.reflect :as reflect]
    [clojure.core.async :as async]
    [clojure.java.process :as process]
    [clojure.java.io :as io]
    [clojure.repl :as repl]
-   [pepper.client :as client]
    [clojure.pprint :as pprint]
    [zprint.zprint :as zp]
    [clojure.spec.alpha :as s]
-   [flow-storm.api :as fs-api]
-   [pepper.starcraft :as starcraft]))
+   [flow-storm.api :as fs-api]))
 
 (defonce portal (atom (start-portal!)))
 (defonce flowstorm (do (fs-api/local-connect)
