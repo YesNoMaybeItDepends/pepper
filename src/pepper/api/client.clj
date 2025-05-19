@@ -1,4 +1,4 @@
-(ns pepper.client
+(ns pepper.api.client
   (:import (bwapi BWClient BWClientConfiguration BWEventListener)))
 
 (defn configuration

@@ -1,6 +1,6 @@
 (ns pepper.core
   (:import (bwapi Text))
-  (:require [pepper.client :as client]
+  (:require [pepper.api.client :as client]
             [clojure.core.async :as a]))
 
 (def game-ref (atom nil))
