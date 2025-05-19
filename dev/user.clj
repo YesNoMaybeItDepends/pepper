@@ -12,8 +12,15 @@
    [clojure.pprint :as pprint]
    [zprint.zprint :as zp]
    [clojure.spec.alpha :as s]
+   [pepper.core :as pepper]
    [flow-storm.api :as fs-api]))
 
 (defonce portal (atom (start-portal!)))
 (defonce flowstorm (do (fs-api/local-connect)
                        true))
+
+(comment
+
+  (pepper/-main)
+
+  #_())
