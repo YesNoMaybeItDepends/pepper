@@ -1,30 +1,23 @@
 (ns pepper.core
-  (:import (bwapi Text))
-  (:require [pepper.api.client :as client]
-            [clojure.core.async :as a]))
+  (:require
+   [clojure.spec.alpha :as s]
+   [clojure.core.async :as a]
+   [clojure.core.async.flow :as flow]
+   [clojure.core.async.flow-monitor :as flow-mon]
+   [pepper.procs.client :as client]
+   [pepper.procs.printer :as printer]))
 
-(def game-ref (atom nil))
-(def client-ref (atom nil))
+(defn main-flow []
+  (flow/create-flow {:procs {:client {:proc (flow/process #'client/proc)
+                                      :args {:client-config {:async false
+                                                             :debug-connection true
+                                                             :log-verbosely true}}}
+                             :printer {:proc (flow/process #'printer/printer)}}
 
-(defn event-handler [{:keys [this event data] :as msg}]
-  (case event
-    :on-start (reset! game-ref (.getGame @client-ref))
-    ;; else
-    (let [g @game-ref]
-      (when (some? g)
-        (let [f (.getFrameCount g)]
-          (println ":frame" f ":event" event)
-          (.drawTextScreen g 100 100 (str (.getFrameCount g)) (into-array Text [])))))))
+                     :conns [[[:client :out] [:printer :in]]]}))
 
-(def ch (a/chan (a/sliding-buffer 1)
-                (fn [xf] (fn [_ x] (#'event-handler x) x))))
-
-(reset! client-ref (client/client (partial a/put! ch)))
-
-(defn -main
-  "the bwapi client fails with async for some reason"
-  []
-  (a/go (try (client/start-game @client-ref (client/configuration {:async false
-                                                                   :debug-connection true
-                                                                   :log-verbosely true}))
-             (catch Exception e (println e)))))
+(defn -main []
+  (let [f (main-flow)
+        chs (flow/start f)]
+    (flow/resume f)
+    {:flow f :chs chs}))
