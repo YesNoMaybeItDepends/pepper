@@ -11,7 +11,9 @@
   (flow/create-flow {:procs {:client {:proc (flow/process #'client/proc)
                                       :args {:client-config {:async false
                                                              :debug-connection true
-                                                             :log-verbosely true}}}
+                                                             :log-verbosely true}
+                                             :ch-from-client (a/chan 10)
+                                             :ch-to-client (a/chan 10)}}
                              :printer {:proc (flow/process #'printer/printer)}}
 
                      :conns [[[:client :out] [:printer :in]]]}))

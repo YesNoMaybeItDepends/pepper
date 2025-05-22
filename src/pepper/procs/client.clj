@@ -8,39 +8,53 @@
 
 (defn describe
   []
-  {:params {:client-config "client config"}
-   :ins {:with-game "anything to do with the game"}
-   :outs {:out "blabla"}})
+  {:params
+   {:client-config "client config"
+    :ch-from-client "messages from the client"
+    :ch-to-client "messages to the client"}
+
+   :ins
+   {:with-game "anything to do with the game"}
+
+   :outs
+   {:out "blabla"}})
 
 (defn init
-  [{:keys [client-config] :as args}]
-  (let [game-events-ch (a/chan (a/sliding-buffer 1))
-        client (c/client (partial a/put! game-events-ch))]
+  [{:keys [client-config
+           ch-from-client
+           ch-to-client] :as args}]
+  (let [client (c/client {:to-client ch-to-client
+                          :from-client ch-from-client})]
     (assoc args
            :client client
            :client-config client-config
-           ::flow/in-ports {:client-events game-events-ch})))
+           ::flow/in-ports {:from-client ch-from-client}
+           ::flow/out-ports {:to-client ch-to-client})))
 
 (defn transition
   [{:keys [client client-config] :as state} transition]
   (case transition
-    ::flow/resume (do (future (c/start-game client (c/configuration client-config)))
-                      state)))
+    ::flow/resume ;; none of these work how I need, because they're run on different threads / asynchronously, but the client api is asynchronous
+    #_(do (c/start-game client (c/configuration client-config))
+          state)
+    #_(assoc state :go-game (a/go (c/start-game client (c/configuration client-config))))
+    #_(do (future (c/start-game client (c/configuration client-config)))
+          state)))
 
 (defn transform
   [{:keys [client game] :as state} id msg]
   (case id
-    :client-events (case (:event msg)
-                     :on-start (do (println "on start")
-                                   (let [game (c/get-game client)]
-                                     [(assoc state :game game) nil]))
+    :from-client (case (:event msg)
+                   :on-start (do (println "from-client ->" (:event msg))
+                                 (let [game (c/get-game client)]
+                                   [(assoc state :game game) nil]))
 
-                     :on-frame (do (println "on frame")
-                                   (g/draw-text-screen game 100 100 (str (g/get-frame-count game)))
-                                   [state nil])
+                   :on-frame (do (println "from-client ->" (:event msg))
+                                 #_(g/draw-text-screen game 100 100 (str (g/get-frame-count game)))
+                                 [state nil])
 
-                     (do (println "on anything else")
-                         [state nil]))))
+                   (do (println "from-client ->" (:event msg))
+                       [state nil]))))
 
 (defn proc
   ([] (#'describe))

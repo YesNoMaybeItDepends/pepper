@@ -1,4 +1,5 @@
 (ns pepper.api.client
+  (:require [clojure.core.async :as a])
   (:import (bwapi BWClient BWClientConfiguration BWEventListener)))
 
 (defn configuration
@@ -96,10 +97,23 @@
       (f {:event :on-unit-show
           :data {:unit unit}}))))
 
+(defn event-handler [{:keys [to-client
+                             from-client] :as channels}
+                     event]
+  (println "event-handler START")
+  (let [input (a/poll! to-client)
+        output (do (println "event-handler input ->" input)
+                   "whatever")]
+    (a/offer! from-client (merge event {:output output})))
+  (println "event-handler END"))
+
 (defn client
-  [f]
-  (BWClient. (event-listener
-              (fn callback [e] (f e)))))
+  [{:keys [to-client
+           from-client] :as channels}]
+  (BWClient.
+   (event-listener
+    (partial #'event-handler {:to-client to-client
+                              :from-client from-client}))))
 
 (defn start-game
   ([client] (.startGame client))
