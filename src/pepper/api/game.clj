@@ -5,4 +5,5 @@
   (.getFrameCount game))
 
 (defn draw-text-screen [game x y text]
-  (.drawTextScreen game x y text (into-array Text [])))
+  (if game (.drawTextScreen game x y text (into-array Text []))
+      (println "got no game sire...")))

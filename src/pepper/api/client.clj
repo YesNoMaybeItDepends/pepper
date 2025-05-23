@@ -2,7 +2,7 @@
   (:require [clojure.core.async :as a])
   (:import (bwapi BWClient BWClientConfiguration BWEventListener)))
 
-(defn configuration
+(defn make-configuration
   ([] (BWClientConfiguration.))
   ([{:keys [async
             async-frame-buffer-capacity
@@ -97,23 +97,10 @@
       (f {:event :on-unit-show
           :data {:unit unit}}))))
 
-(defn event-handler [{:keys [to-client
-                             from-client] :as channels}
-                     event]
-  (println "event-handler START")
-  (let [input (a/poll! to-client)
-        output (do (println "event-handler input ->" input)
-                   "whatever")]
-    (a/offer! from-client (merge event {:output output})))
-  (println "event-handler END"))
-
-(defn client
-  [{:keys [to-client
-           from-client] :as channels}]
+(defn make-client
+  [handler-fn]
   (BWClient.
-   (event-listener
-    (partial #'event-handler {:to-client to-client
-                              :from-client from-client}))))
+   (event-listener handler-fn)))
 
 (defn start-game
   ([client] (.startGame client))

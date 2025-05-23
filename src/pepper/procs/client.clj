@@ -23,8 +23,8 @@
   [{:keys [client-config
            ch-from-client
            ch-to-client] :as args}]
-  (let [client (c/client {:to-client ch-to-client
-                          :from-client ch-from-client})]
+  (let [client (c/make-client {:to-client ch-to-client
+                               :from-client ch-from-client})]
     (assoc args
            :client client
            :client-config client-config

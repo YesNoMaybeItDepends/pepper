@@ -20,29 +20,7 @@
                        true))
 
 (when true
-  (def bot (pepper/-main))
-  (def report-chan (:report-chan (:chs bot)))
-  (def error-chan (:error-chan (:chs bot)))
-  (def f (:flow bot))
-  (def server (flow-monitor/start-server {:flow f})))
+  (try (pepper/-main)
+       (catch Exception e (println e)))
 
-(comment
-
-  (a/poll! error-chan)
-  (a/poll! report-chan)
-
-  (flow/ping f)
-  (flow/ping-proc f :client)
-  (flow/ping-proc f :printer)
-
-  #_())
-
-
-(comment "testing api inputs"
-
-         (def out-ch (a/chan (a/sliding-buffer 1)))
-         (def out-fn (partial a/put! out-ch))
-         (def client-fn (fn callback [e] (f e)))
-         (defn event-handler [f] (f 1))
-
-         #_())
+  #_(def bot (pepper/-main)))
