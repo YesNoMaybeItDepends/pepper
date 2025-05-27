@@ -1,33 +1,64 @@
 (ns pepper.core
   (:require
-   [clojure.spec.alpha :as s]
    [clojure.core.async :as a]
-   #_[clojure.core.async.flow :as flow]
-   #_[clojure.core.async.flow-monitor :as flow-mon]
+   [clojure.core.async.flow :as flow]
    [pepper.api.client :as client]
-   [pepper.api.game :as game]
-   [pepper.utils.chaoslauncher :as chaoslauncher]
-   [pepper.procs.printer :as printer]))
+   [pepper.procs.asker :as asker]
+   [pepper.procs.handler :as handler]))
 
 (defonce state (atom nil))
 
-(defn on-frame [state e]
-  (case (:event e)
-    :on-start (swap! state assoc :game (client/get-game (:client @state)))
-    :on-frame (when-let [g (:game @state)]
-                (game/draw-text-screen (:game @state) 100 100 (str (game/get-frame-count g))))
-    (println e)))
+(defn create-flow
+  [from-game to-game game]
+  (flow/create-flow {:procs {:handler {:proc (flow/process #'handler/proc)
+                                       :args {:game game
+                                              :from-game from-game
+                                              :to-game to-game}}
+                             :asker {:proc (flow/process #'asker/proc)}}
+                     #_:conns #_[[[:handler :out] [:asker :trigger]]]}))
 
-(defn event-handler [e] (#'on-frame state e))
+(defn init-flow
+  [from-game to-game game]
+  (let [f (create-flow from-game to-game game)
+        chs (flow/start f)]
+    (swap! state assoc
+           :flow f
+           :report-chan (:report-chan chs)
+           :error-chan (:error-chan chs))
+    (flow/resume f)
+    true))
 
-(defn -main []
-  (swap! state assoc :client (client/make-client #'event-handler))
+(defn handle-on-start [event from-game to-game]
+  (let [client (:client @state)
+        game (client/get-game client)]
+    (init-flow from-game to-game game)))
 
-  (let [game-future (future (client/start-game (:client @state) (client/make-configuration {:async false
-                                                                                            :debug-connection true
-                                                                                            :log-verbosely true}))
-                            (println "Game finished, shutting down...")
-                            (chaoslauncher/stop!)
-                            (shutdown-agents))]
-    (swap! state assoc :game-future game-future)
-    (a/take! (a/timeout 1000) (chaoslauncher/start!))))
+(defn handle-on-frame
+  [event from-game to-game]
+  (let [p (a/>!! from-game event)
+        t (a/<!! to-game)]
+    (println t)
+    t))
+
+(defn event-handler
+  [from-game to-game event]
+  (case (:event event)
+    :on-start (#'handle-on-start event from-game to-game)
+    :on-frame (#'handle-on-frame event from-game to-game)
+    (println event)))
+
+(defn -main
+  []
+  (let [from-game (a/chan (a/sliding-buffer 10))
+        to-game (a/chan (a/sliding-buffer 10))
+        client (client/make-client (partial #'event-handler from-game to-game))]
+    (swap! state assoc
+           :client client
+           :from-game from-game
+           :to-game to-game)
+    (client/start-game client {:async false
+                               :debug-connection true
+                               :log-verbosely true})
+    (println "TODO: The game should now be over and I should shut down now")
+    #_(chaoslauncher/stop!)
+    #_(shutdown-agents)))

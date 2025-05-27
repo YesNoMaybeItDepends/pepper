@@ -104,7 +104,7 @@
 
 (defn start-game
   ([client] (.startGame client))
-  ([client config] (.startGame client config)))
+  ([client config] (.startGame client (make-configuration config))))
 
 (defn get-game
   [client]
