@@ -13,7 +13,7 @@
   [{:keys [from-game to-game game] :as args}]
   (assoc args
          :game game
-         :request []
+         :request false
          ::flow/in-ports {:from-game from-game}
          ::flow/out-ports {:to-game to-game}))
 
@@ -23,16 +23,23 @@
    transition]
   state)
 
+#_(defn handle-game-request [game {:keys [pid inid request] :as message}]
+    (when (fn? request) {[pid inid] [(request game)]}))
+
 (defn handle-game-request [game {:keys [pid inid request] :as message}]
-  (when (fn? request) {[pid inid] [(request game)]}))
+  (when (fn? request) {:out [(request game)]}))
 
 (defn transform [{:keys [game request] :as state} id msg]
   (case id
-    :request [(assoc state :request msg) nil]
-    :from-game (let [req (handle-game-request game request)]
-                 [(assoc state :request nil)
-                  {:to-game ["DONE"]
-                   :out (filterv some? [seq])}])))
+    :request [(assoc state :request (:request msg)) nil]
+    :from-game (do (when (fn? (:request state)) (request game))
+                   [(assoc state :request false)
+                    {:out [msg]
+                     :to-game ["DONE"]}])
+    #_(let [req (handle-game-request game request)]
+        [(assoc state :request nil)
+         {:to-game ["DONE"]
+          :out (filterv some? [seq])}])))
 
 (defn proc
   ([] (#'describe))

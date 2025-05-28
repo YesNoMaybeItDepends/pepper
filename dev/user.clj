@@ -23,7 +23,6 @@
 (when false
   (try (pepper/-main)
        (catch Exception e (println e)))
-
   #_(def bot (pepper/-main)))
 
 (comment ;;;; Test flow  
@@ -39,6 +38,7 @@
   (a/poll! error-chan)
 
   (flow/ping f)
+  (flow/ping-proc f :handler)
 
   @(flow/inject f [:hello-world :hello] ["good morning"])
 

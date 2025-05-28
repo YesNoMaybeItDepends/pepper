@@ -4,7 +4,8 @@
    [clojure.core.async.flow :as flow]
    [pepper.api.client :as client]
    [pepper.procs.asker :as asker]
-   [pepper.procs.handler :as handler]))
+   [pepper.procs.handler :as handler]
+   [pepper.utils.chaoslauncher :as chaoslauncher]))
 
 (defonce state (atom nil))
 
@@ -15,7 +16,8 @@
                                               :from-game from-game
                                               :to-game to-game}}
                              :asker {:proc (flow/process #'asker/proc)}}
-                     #_:conns #_[[[:handler :out] [:asker :trigger]]]}))
+                     :conns [[[:handler :out] [:asker :trigger]]
+                             [[:asker :question] [:handler :request]]]}))
 
 (defn init-flow
   [from-game to-game game]
@@ -45,6 +47,10 @@
   (case (:event event)
     :on-start (#'handle-on-start event from-game to-game)
     :on-frame (#'handle-on-frame event from-game to-game)
+    :on-end (do (println "TODO: The game should now be over and I should shut down now")
+                (chaoslauncher/stop!)
+                #_(Thread/sleep 5000)
+                #_(shutdown-agents))
     (println event)))
 
 (defn -main
@@ -56,9 +62,7 @@
            :client client
            :from-game from-game
            :to-game to-game)
+    (chaoslauncher/start!)
     (client/start-game client {:async false
                                :debug-connection true
-                               :log-verbosely true})
-    (println "TODO: The game should now be over and I should shut down now")
-    #_(chaoslauncher/stop!)
-    #_(shutdown-agents)))
+                               :log-verbosely true})))

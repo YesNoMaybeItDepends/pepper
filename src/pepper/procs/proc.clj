@@ -2,18 +2,41 @@
   (:require
    [clojure.core.async.flow :as flow]))
 
+(defn state->pid
+  [state]
+  (::flow/pid state))
+
+(defn state->proc-def
+  [state]
+  (:proc-def state))
+
+(defn msg->port-id
+  [{:keys [msg-id proc-def] :as msg}]
+  (msg-id (:ins proc-def)))
+
+(defn msg->proc-id
+  [msg]
+  (:proc-id msg))
+
+(defn msg->coord
+  [msg]
+  [(msg->proc-id msg) (msg->port-id msg)])
+
+(defn init-state
+  [args proc-fn]
+  (assoc args :proc-def (proc-fn)))
+
 (defn init-message
   "proc state + port id + message -> formatted message"
-  [{:keys [::flow/pid proc-def]
-    :as state} port msg]
-  {:proc-id pid
-   :proc-def proc-def
-   :msg-id port
+  [state inid msg]
+  {:proc-id (state->pid state)
+   :proc-def (state->proc-def state)
+   :msg-id inid
    :msg msg})
 
 (defn process-message
-  "Given messsage, process message. More like format?"
-  [{:keys [proc-id proc-def msg-id msg] :as m}]
-  (if-let [port-id (msg-id (:ins proc-def))]
-    {[proc-id port-id] [(assoc m :msg-id port-id)]}
+  "Given messsage, process message. More like format? Returns {[coord] [msg]}"
+  [{:keys [proc-id proc-def msg-id] :as msg}]
+  (if-let [port-id (msg->port-id msg)]
+    {(msg->coord msg) [(assoc msg :msg-id port-id)]}
     {}))
