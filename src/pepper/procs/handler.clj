@@ -32,10 +32,12 @@
 (defn transform [{:keys [game request] :as state} id msg]
   (case id
     :request [(assoc state :request (:request msg)) nil]
-    :from-game (do (when (fn? (:request state)) (request game))
-                   [(assoc state :request false)
-                    {:out [msg]
-                     :to-game ["DONE"]}])
+    :from-game (do
+                 (when (= 5 (game/get-frame-count game)) (game/pause-game game))
+                 (when (fn? (:request state)) (request game))
+                 [(assoc state :request false)
+                  {:out [msg]
+                   :to-game ["DONE"]}])
     #_(let [req (handle-game-request game request)]
         [(assoc state :request nil)
          {:to-game ["DONE"]

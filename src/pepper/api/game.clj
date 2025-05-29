@@ -1,6 +1,13 @@
 (ns pepper.api.game
   (:import (bwapi Game Text)))
 
+(defn with-game
+  [f & args]
+  (fn [game]
+    (apply f game args)))
+
+;;;;
+
 (defn get-frame-count [game]
   (.getFrameCount game))
 
@@ -8,7 +15,7 @@
   (if game (.drawTextScreen game x y text (into-array Text []))
       (println "got no game sire...")))
 
-(defn with-game
-  [f & args]
-  (fn [game]
-    (apply f game args)))
+(defn pause-game
+  [game]
+  (.pauseGame game))
+

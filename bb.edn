@@ -1,0 +1,7 @@
+{:tasks
+ {hello-world {:doc "Prints hello world"
+               :task (println "hello world")}
+  wait-for-port {:doc "Waits for port localhost:7888"
+                 :task (wait/wait-for-port "localhost" 7888)}
+  run-pepper {:doc "Runs the bot"
+              :task (clojure "-M -m pepper.core")}}}
