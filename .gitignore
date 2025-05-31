@@ -262,3 +262,6 @@ config.local.edn
 
 ### Misc ###
 .ignore
+
+### Logs ###
+.log.edn

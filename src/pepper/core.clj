@@ -4,10 +4,17 @@
    [clojure.core.async.flow :as flow]
    [clojure.core.async.flow-monitor :as flow-monitor]
    [pepper.api.client :as client]
-   [pepper.procs.asker :as asker]
    [pepper.procs.handler :as handler]
+   [pepper.procs.game :as game]
    [pepper.utils.chaoslauncher :as chaoslauncher]
-   [pepper.utils.repl :as repl]))
+   [pepper.utils.repl :as repl]
+   [taoensso.telemere :as t]))
+
+(defn init-logging []
+  (t/add-handler! :file-handler (t/handler:file {:path ".log.edn"
+                                                 :output-fn (t/pr-signal-fn {:pr-fn :edn})})))
+
+(init-logging)
 
 (defonce state (atom nil))
 (defonce flow-monitor false)
@@ -18,22 +25,26 @@
                                        :args {:game game
                                               :from-game from-game
                                               :to-game to-game}}
-                             :asker {:proc (flow/process #'asker/proc)}}
-                     :conns [[[:handler :out] [:asker :trigger]]
-                             [[:asker :question] [:handler :request]]]}))
+                             :game {:proc (flow/process #'game/proc)
+                                    :args {:game game}}}
+                     :conns [[[:handler :out] [:game :game-event]]]}))
+
+(defn init-flow-monitor
+  "TODO: flow-monitor throws error"
+  [_flow]
+  (when (true? flow-monitor)
+    (alter-var-root #'flow-monitor (fn [x] (flow-monitor/start-server _flow)))))
 
 (defn init-flow
-  "TODO: flow-monitor throws error"
   [from-game to-game game]
-  (let [f (create-flow from-game to-game game)
-        chs (flow/start f)]
+  (let [_flow (create-flow from-game to-game game)
+        channels (flow/start _flow)]
     (swap! state assoc
-           :flow f
-           :report-chan (:report-chan chs)
-           :error-chan (:error-chan chs))
-    (when (true? flow-monitor)
-      (alter-var-root #'flow-monitor (fn [x] (flow-monitor/start-server f))))
-    (flow/resume f)
+           :flow _flow
+           :report-chan (:report-chan channels)
+           :error-chan (:error-chan channels))
+    (init-flow-monitor _flow)
+    (flow/resume _flow)
     true))
 
 (defn handle-on-start [event from-game to-game]
@@ -44,34 +55,36 @@
 
 (defn handle-on-frame
   [event from-game to-game]
-  (let [p (a/>!! from-game event)
-        t (a/<!! to-game)]
-    (println t)
-    t))
+  (let [to-flow (a/>!! from-game event)
+        from-flow (a/<!! to-game)]
+    from-flow))
 
 (defn handle-on-end
+  "TODO: The game should now be over and I should shut down now"
   [event from-game to-game]
-  (println "TODO: The game should now be over and I should shut down now")
+  (t/event! :handle-on-end-start)
   (let [state @state
         flow (:flow state)
         #_repl #_(:repl state)]
-    (println "Shutting down from event handler...")
     (flow/stop flow)
     (repl/stop-server!)
     (chaoslauncher/stop!)
     (Thread/sleep 1000)
+    (t/event! :handle-on-end-shutting-down)
     (shutdown-agents)))
 
 (defn event-handler
-  [from-game to-game event]
-  (case (:event event)
-    :on-start (#'handle-on-start event from-game to-game)
-    :on-frame (#'handle-on-frame event from-game to-game)
-    :on-end (#'handle-on-end event from-game to-game)
-    (println event)))
+  [from-game to-game {:keys [event] :as _event}]
+  (t/event! event {:when #{:on-start :on-end}})
+  (case event
+    :on-start (#'handle-on-start _event from-game to-game)
+    :on-frame (#'handle-on-frame _event from-game to-game)
+    :on-end (#'handle-on-end _event from-game to-game)
+    nil))
 
 (defn -main
   []
+  (t/event! :main-start)
   (let [from-game (a/chan (a/sliding-buffer 10))
         to-game (a/chan (a/sliding-buffer 10))
         client (client/make-client (partial #'event-handler from-game to-game))]
@@ -81,7 +94,8 @@
            :to-game to-game)
     (chaoslauncher/start!)
     (client/start-game client {:async false
-                               :debug-connection true
-                               :log-verbosely true}))
-  (println "Shutting down...")
+                               :debug-connection false
+                               :log-verbosely false}))
+  (t/event! :main-shutting-down)
   (shutdown-agents))
+

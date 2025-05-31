@@ -1,7 +1,6 @@
 (ns user
   (:require
-   [user.portal :refer [start-portal!]]
-   [portal.api :as p]
+   [pepper.utils.portal :as portal]
    [clojure.reflect :as reflect]
    [clojure.core.async :as a]
    [clojure.core.async.flow :as flow]
@@ -14,16 +13,24 @@
    [clojure.spec.alpha :as s]
    [pepper.core :as pepper]
    [pepper.procs.hello-world :as hello-world]
-   [flow-storm.api :as fs-api]))
+   [flow-storm.api :as fs-api]
+   [taoensso.telemere :as t]))
 
-(defonce portal (atom (start-portal!)))
-(defonce flowstorm (do (fs-api/local-connect)
-                       true))
+(defn init? [k]
+  (k {:portal true
+      :flowstorm false
+      :pepper false}))
 
-(when false
-  (try (pepper/-main)
-       (catch Exception e (println e)))
-  #_(def bot (pepper/-main)))
+(def portal (when (init? :portal)
+              (atom (portal/start!))))
+
+(def flowstorm (when (init? :flowstorm)
+                 (fs-api/local-connect)
+                 true))
+
+(comment (try (pepper/-main)
+              (catch Exception e (println e)))
+         #_())
 
 (comment ;;;; Test flow  
 

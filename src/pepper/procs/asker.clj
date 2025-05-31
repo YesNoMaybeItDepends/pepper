@@ -10,7 +10,7 @@
   ([args] (proc/init-state args #'proc))
   ([state transition] state)
   ([state input-id input]
-   (println input-id "->" input)
+   #_(println input-id "->" input)
    (case input-id
      :trigger (let [req (game/with-game game/draw-text-screen
                           100 100 (str (inst-ms (java.time.Instant/now))))]

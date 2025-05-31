@@ -23,10 +23,8 @@
    transition]
   state)
 
-#_(defn handle-game-request [game {:keys [pid inid request] :as message}]
-    (when (fn? request) {[pid inid] [(request game)]}))
-
 (defn handle-game-request [game {:keys [pid inid request] :as message}]
+  #_(when (fn? request) {[pid inid] [(request game)]})
   (when (fn? request) {:out [(request game)]}))
 
 (defn transform [{:keys [game request] :as state} id msg]
@@ -44,13 +42,15 @@
           :out (filterv some? [seq])}])))
 
 (defn proc
+  "TODO: deal with this telemere quote
+   > \"Do not log mutable values, since rendering is done asynchronously you could be logging a different state. If values are mutable capture the current state (deref) and log it.\""
   ([] (#'describe))
   ([args] (#'init args))
   ([state lifecycle] (#'transition state lifecycle))
   ([state id msg] (#'transform state id msg)))
 
 (defn test-draw-text
-  "Assumes pid :handler with inid :request"
+  "Assumes pid :handler with inid :request "
   [f]
   (let [msg {:pid :test
              :inid :in
