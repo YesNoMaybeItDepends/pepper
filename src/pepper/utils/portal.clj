@@ -8,6 +8,6 @@
 
 (defn stop! [portal]
   (remove-tap #'p/submit)
-  (p/close)
+  (when-some [p portal] (p/close p))
   (p/stop)
   nil)

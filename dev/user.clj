@@ -14,7 +14,8 @@
    [pepper.core :as pepper]
    [pepper.procs.hello-world :as hello-world]
    [flow-storm.api :as fs-api]
-   [taoensso.telemere :as t]))
+   [taoensso.telemere :as t]
+   [pepper.utils.chaoslauncher :refer [stop!]]))
 
 (defn init? [k]
   (k {:portal true

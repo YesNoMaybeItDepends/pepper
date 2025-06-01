@@ -31,7 +31,7 @@
   (case id
     :request [(assoc state :request (:request msg)) nil]
     :from-game (do
-                 (when (= 5 (game/get-frame-count game)) (game/pause-game game))
+                 #_(when (= 5 (game/get-frame-count game)) (game/pause-game game))
                  (when (fn? (:request state)) (request game))
                  [(assoc state :request false)
                   {:out [msg]

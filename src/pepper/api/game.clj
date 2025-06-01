@@ -19,3 +19,13 @@
   [game]
   (.pauseGame game))
 
+(defn set-local-speed
+  [game speed]
+  (.setLocalSpeed game (speed {:fastest 42
+                               :faster 48
+                               :fast 56
+                               :normal 67
+                               :slow 83
+                               :slower 111
+                               :slowest 167}
+                              42)))

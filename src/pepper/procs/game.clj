@@ -7,8 +7,12 @@
 (defn game-event-handler
   [state {:keys [event] :as in}]
   (case event
-    :on-frame (do (when (:on-start? state) (println "on-start?" (:on-start? state))) [state nil])
-    :on-start (do (println "!!!!!!!!!! on start !!!!!!!!!!!!!!!!!") [(assoc state :on-start? true) nil])
+    :on-frame (do
+                #_(when (:on-start? state) (println "on-start?" (:on-start? state)))
+                [state nil])
+    :on-start (do
+                #_(println "!!!!!!!!!! on start !!!!!!!!!!!!!!!!!")
+                [(assoc state :on-start? true) nil])
     [state nil]))
 
 (defn proc

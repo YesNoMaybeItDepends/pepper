@@ -13,10 +13,10 @@
         juji/editscript {:mvn/version "0.6.6"}
         cider/cider-nrepl {:mvn/version "0.55.7"}
         com.taoensso/telemere {:mvn/version "1.0.1"}
-        com.github.JavaBWAPI/JBWAPI {:mvn/version "2.1.0"}}
+        com.github.JavaBWAPI/JBWAPI {:mvn/version "2.1.0"}
+        djblue/portal {:mvn/version "0.58.5"}}
  :aliases {:dev {:extra-paths ["dev"]
                  :classpath-overrides {org.clojure/clojure nil}
-                 :extra-deps {djblue/portal {:mvn/version "0.58.5"}
-                              com.github.flow-storm/clojure {:mvn/version "1.12.0-9"}
+                 :extra-deps {com.github.flow-storm/clojure {:mvn/version "1.12.0-9"}
                               com.github.flow-storm/flow-storm-dbg {:mvn/version "4.4.1"}}}
            #_:run #_{:main-opts ["-m" "pepper.core"]}}}

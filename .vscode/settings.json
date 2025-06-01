@@ -8,7 +8,7 @@
     ".nrepl-port": false,
     ".cpcache": true,
     ".portal": true,
-    ".lsp": true
+    ".lsp/.cache": true
   },
   "search.exclude": {
     ".calva": true,
@@ -19,17 +19,17 @@
     ".nrepl-port": false,
     ".cpcache": true,
     ".portal": true,
-    ".lsp": true
+    ".lsp/.cache": true
   },
-  // "calva.replConnectSequences": [
-  //   {
-  //     "projectType": "deps.edn",
-  //     "name": "ligma",
-  //     "menuSelections": {
-  //       "cljAliases": []
-  //     },
-  //     "jackInEnv": {},
-  //     "customJackInCommandLine": "" 
-  //   }
-  // ]
+  "calva.replConnectSequences": [
+    {
+      // "projectType": "generic",
+      "projectType": "deps.edn",
+      "name": "run-pepper",
+      "nReplPortFile": [
+        ".my-port"
+      ],
+      // "customJackInCommandLine": "pwsh -c ligma.ps1"
+    }
+  ]
 }

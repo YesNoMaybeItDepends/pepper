@@ -3,5 +3,9 @@
                :task (println "hello world")}
   wait-for-port {:doc "Waits for port localhost:7888"
                  :task (wait/wait-for-port "localhost" 7888)}
+  #_test-new-cmd #_{:doc "try to open a new cmd"
+                    :requires ([babashka.fs :as fs]
+                               [babashka.process :as p])
+                    :task (p/shell "powershell" "-command" "start-process" "test-run-bot.ps1")}
   run-pepper {:doc "Runs the bot"
               :task (clojure "-M -m pepper.core")}}}

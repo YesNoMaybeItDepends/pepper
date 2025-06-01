@@ -1,2 +1,1 @@
 7888
-;; (vscode/commands.executeCommand "calva.connect" (clj->js {:port "55555" :connectSequence "Generic"}))

@@ -255,7 +255,7 @@ gradle-app.setting
 .nrepl-port
 .cpcache
 .portal
-.lsp
+.lsp/.cache
 
 ### Config ###
 config.local.edn
