@@ -15,7 +15,7 @@
         com.taoensso/telemere {:mvn/version "1.0.1"}
         com.github.JavaBWAPI/JBWAPI {:mvn/version "2.1.0"}
         djblue/portal {:mvn/version "0.58.5"}}
- :aliases {:dev {:extra-paths ["dev"]
+ :aliases {:dev {:extra-paths ["dev", "test"]
                  :classpath-overrides {org.clojure/clojure nil}
                  :extra-deps {com.github.flow-storm/clojure {:mvn/version "1.12.0-9"}
                               com.github.flow-storm/flow-storm-dbg {:mvn/version "4.4.1"}}}
