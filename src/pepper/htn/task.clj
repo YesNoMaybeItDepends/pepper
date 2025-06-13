@@ -7,12 +7,7 @@
    :effects (into [] effects)})
 
 (defn compound [{:keys [name methods] :as task}]
-  (compound/make task))
-
-(defn method [{:keys [name preconditions subtasks]}]
-  {:name name
-   :preconditions (into [] preconditions)
-   :subtasks (into [] subtasks)})
+  (compound/task task))
 
 (defn state [state]
   state)
