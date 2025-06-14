@@ -15,12 +15,14 @@
    [pepper.procs.hello-world :as hello-world]
    [flow-storm.api :as fs-api]
    [taoensso.telemere :as t]
-   [pepper.utils.chaoslauncher :refer [stop!]]))
+   [pepper.utils.chaoslauncher :refer [stop!]]
+   [clojure.spec.test.alpha :as st]))
 
 (defn init? [k]
   (k {:portal true
       :flowstorm false
-      :pepper false}))
+      :pepper false
+      :instrument false}))
 
 (def portal (when (init? :portal)
               (atom (portal/start!))))
@@ -28,6 +30,9 @@
 (def flowstorm (when (init? :flowstorm)
                  (fs-api/local-connect)
                  true))
+
+(when (init? :instrument)
+  (st/instrument))
 
 (comment (try (pepper/-main)
               (catch Exception e (println e)))
