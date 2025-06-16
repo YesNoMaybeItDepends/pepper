@@ -1,23 +1,20 @@
 (ns pepper.htn.planner
-  (:require [clojure.spec.alpha :as s]))
+  (:require [clojure.spec.alpha :as s]
+            [pepper.htn.impl.utils :as u]
+            [pepper.htn.impl.compound :as compound]
+            [pepper.htn.impl.primitive :as primitive]
+            [pepper.htn.impl.planning :as planning]))
 
-(defn empty-sequence? [coll]
-  (not (seq? (seq coll))))
+(defn state [state] state)
 
-(defn all-preconditions-true [preconditions x]
-  (if (empty-sequence? preconditions)
-    true
-    (if ((apply every-pred (into [] preconditions)) x)
-      true
-      false)))
+(defn plan [state domain]
+  (planning/decompose state domain))
 
-(defn plan [{:keys [methods] :as compound-task} state]
-  (-> (reduce (fn [acc {:keys [preconditions effects] :as method}]
-                (if (all-preconditions-true preconditions state)
-                  (conj acc effects)
-                  acc))
-              [] methods)
-      flatten))
-
-(defn execute [plan state]
+(defn execute [state plan]
   (reduce (fn [acc curr] (curr acc)) state plan))
+
+(defn task [type map-args]
+  (case type
+    :primitive (primitive/task map-args)
+    :compound (compound/task map-args)
+    :method (compound/method map-args)))

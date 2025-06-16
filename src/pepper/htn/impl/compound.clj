@@ -29,18 +29,18 @@
     (when-not (every? #((apply every-pred method-rules) %) methods)
       (format "Not every method is valid"))))
 
-(defn method [{:keys [name preconditions tasks]
+(defn method [{:keys [name preconditions subtasks]
                :or {name ""
                     preconditions []
-                    tasks []}
+                    subtasks []}
                :as method}]
   {:name (if (some? name) name "")
    :preconditions (if (vector? preconditions)
                     (into [] preconditions)
                     [])
-   :tasks (if (vector? tasks)
-            (into [] tasks)
-            [])})
+   :subtasks (if (vector? subtasks)
+               (into [] subtasks)
+               [])})
 
 ;;;; tasks
 
