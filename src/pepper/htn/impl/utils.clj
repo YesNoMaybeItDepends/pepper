@@ -9,7 +9,7 @@
           predicates))
 
 (defn primitive? [m]
-  (some? (:operator m)))
+  (some? (:task/operator m)))
 
 (defn compound? [m]
-  (some? (:methods m)))
+  (some? (:task/methods m)))

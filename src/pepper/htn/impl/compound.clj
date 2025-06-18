@@ -1,72 +1,29 @@
-(ns pepper.htn.impl.compound)
+(ns pepper.htn.impl.compound
+  (:require
+   [clojure.spec.alpha :as s]))
 
-;;;; shared
+(s/def :task/name keyword?)
+(s/def :task/preconditions (s/coll-of fn? :kind vector?))
+(s/def :task/subtask (s/or :primitive :task/primitive :compound :task/compound))
+(s/def :task/subtasks (s/coll-of :task/subtask))
 
-(defn assert-preconditions [{:keys [preconditions]}]
-  (cond
-    (nil? preconditions) "preconditions is nil"
-    (not (seq? (seq preconditions))) "preconditions is not a seq"
-    (not (every? fn? preconditions)) "not every precondition is a function"))
+(s/def :task/method (s/keys :req [:task/name
+                                  :task/preconditions
+                                  :task/subtasks]))
+(s/fdef method
+  :args (s/cat :method :task/method)
+  :ret :task/method)
 
-(defn assert-method [method]
-  (cond
-    (nil? method) "method is nil"))
+(defn method [method]
+  method)
 
-;;;; methods
+(s/def :task/methods (s/coll-of :task/method))
+(s/def :task/compound (s/keys :req [:task/name
+                                    :task/methods]))
 
-(def method-rules
-  [assert-method
-   assert-preconditions])
+(s/fdef task
+  :args (s/cat :task :task/compound)
+  :ret :task/compound)
 
-(defn validate-method [method]
-  (->> method-rules
-       (map #(% method))
-       (remove nil?)
-       seq))
-
-(defn assert-every-method-valid [compound-task]
-  (let [methods (:methods compound-task)]
-    (when-not (every? #((apply every-pred method-rules) %) methods)
-      (format "Not every method is valid"))))
-
-(defn method [{:keys [name preconditions subtasks]
-               :or {name ""
-                    preconditions []
-                    subtasks []}
-               :as method}]
-  {:name (if (some? name) name "")
-   :preconditions (if (vector? preconditions)
-                    (into [] preconditions)
-                    [])
-   :subtasks (if (vector? subtasks)
-               (into [] subtasks)
-               [])})
-
-;;;; tasks
-
-(defn assert-has-methods-key [compound-task]
-  (when (not (contains? compound-task :methods))
-    (format "The compound task has no :methods key. Compound task: %s" compound-task)))
-
-(defn assert-methods-not-empty [compound-task]
-  (when (not (seq? (seq (:methods compound-task))))
-    (format "The list of methods for this compound-task is empty. Compound task: %s" compound-task)))
-
-(def task-rules
-  [assert-has-methods-key
-   assert-methods-not-empty
-   assert-every-method-valid])
-
-(defn validate-task [task]
-  (->> task-rules
-       (map #(% task))
-       (remove nil?)
-       seq))
-
-(defn task [{:keys [name methods]
-             :or {name "" methods []}
-             :as task}]
-  {:name name
-   :methods (if (vector? methods)
-              (into [] methods)
-              [])})
+(defn task [task]
+  task)

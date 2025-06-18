@@ -1,23 +1,24 @@
 (ns pepper.htn.planner-test
   (:require
-   [clojure.test :refer [deftest is]]
-   [pepper.htn.task :as task]
+   [clojure.test :refer [deftest is testing]]
    [pepper.htn.planner :as planner]))
 
 (deftest test-planner
-  (let [state-1 1
-        state-2 2
-        increment-task (task/primitive {:name :increment
-                                        :preconditions []
-                                        :effects [(fn [state] (inc state))]})
-        compound-task (task/compound {:name :test
-                                      :methods [#(println "hi world")]})
-        #_validation #_(planner/validate-compound-task compound-task)
-        plan (planner/plan {:methods [increment-task]}
-                           state-1)
-        _ (println (planner/execute plan state-1))]
-    #_(is (empty? validation))
-    (is (= state-2 (planner/execute plan state-1)))))
+  (testing "I can compose and execute a simple plan to increment a number from 1 to 2"
+    (let [init-state 1
+          goal-state 2
+          primitive-increment (planner/task :primitive {:task/name :compound-increment
+                                                        :task/preconditions []
+                                                        :task/effects []
+                                                        :task/operator (fn [state] (inc state))})
+          method-increment (planner/task :method {:task/name :method-increment
+                                                  :task/preconditions []
+                                                  :task/subtasks [primitive-increment]})
+          compound-increment (planner/task :compound {:task/name :compound-increment
+                                                      :task/methods [method-increment]})
+          plan-increment (planner/plan init-state compound-increment)
+          end-state (planner/execute init-state plan-increment)]
+      (is (= goal-state end-state)))))
 
 #_(let [from-state {:db/items #{{:item/id 1
                                  :item/name :axe}}

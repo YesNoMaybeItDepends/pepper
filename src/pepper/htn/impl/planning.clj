@@ -10,17 +10,17 @@
         (update :tasks into (flatten tasks)))))
 
 (defn decompose-primitive
-  [state {:keys [name preconditions operator]
+  [state {:keys [:task/name :task/preconditions :task/operator]
           :as task}]
   (if (u/all-true? state preconditions)
     {:state state
-     :tasks [{:name name
-              :operator operator}]}
+     :tasks [{:task/name name
+              :task/operator operator}]}
     nil))
 
 (defn decompose-method
   "Returns map of :state and :tasks"
-  [state {:keys [preconditions subtasks] :as method}]
+  [state {:keys [:task/preconditions :task/subtasks] :as method}]
   (when (u/all-true? state preconditions)
     (reduce (fn [acc subtask]
               (if-let [res (decompose state subtask)]
@@ -33,7 +33,7 @@
 (defn decompose-compound
   "Returns map of :state and :tasks"
   [state
-   {:keys [name methods]
+   {:keys [:task/name :task/methods]
     :as task}]
   (reduce (fn [_ method]
             (when-let [res (decompose-method state method)]

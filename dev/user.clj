@@ -9,7 +9,7 @@
    [clojure.java.io :as io]
    [clojure.repl :as repl]
    [clojure.pprint :as pprint]
-   [zprint.zprint :as zp]
+   [zprint.core :as zp]
    [clojure.spec.alpha :as s]
    [pepper.core :as pepper]
    [pepper.procs.hello-world :as hello-world]
@@ -22,7 +22,9 @@
   (k {:portal true
       :flowstorm false
       :pepper false
-      :instrument false}))
+      :instrument true
+      :zprint true
+      :tests true}))
 
 (def portal (when (init? :portal)
               (atom (portal/start!))))
@@ -32,7 +34,14 @@
                  true))
 
 (when (init? :instrument)
-  (st/instrument))
+  (tap> {:spec-instrumented-fns (st/instrument)}))
+
+(when (init? :zprint)
+  (add-tap zp/zprint))
+
+(when (init? :tests)
+  (require 'pepper.core-test
+           'pepper.htn.planner-test))
 
 (comment (try (pepper/-main)
               (catch Exception e (println e)))

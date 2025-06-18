@@ -18,20 +18,5 @@
   :ret :task/ret)
 
 (defn task
-  [{:keys [name preconditions effects operator]
-    :or {name ""
-         preconditions []
-         effects []
-         operator (fn [x] x)}
-    :as task}]
-  {:name name
-   :preconditions (if (vector? preconditions)
-                    (into [] preconditions)
-                    [])
-   :effects (if (vector? effects)
-              (into [] effects)
-              [])
-   :operator (if (fn? operator)
-               operator
-               (fn [x] x))})
-
+  [task]
+  task)
