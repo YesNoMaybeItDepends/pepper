@@ -4,21 +4,70 @@
    [pepper.htn.planner :as planner]))
 
 (deftest test-planner
-  (testing "I can compose and execute a simple plan to increment a number from 1 to 2"
-    (let [init-state 1
-          goal-state 2
-          primitive-increment (planner/task :primitive {:task/name :compound-increment
-                                                        :task/preconditions []
-                                                        :task/effects []
-                                                        :task/operator (fn [state] (inc state))})
-          method-increment (planner/task :method {:task/name :method-increment
-                                                  :task/preconditions []
-                                                  :task/subtasks [primitive-increment]})
-          compound-increment (planner/task :compound {:task/name :compound-increment
-                                                      :task/methods [method-increment]})
-          plan-increment (planner/plan init-state compound-increment)
-          end-state (planner/execute init-state plan-increment)]
-      (is (= goal-state end-state)))))
+  (let [add-precondition-fn (fn [task precondition]
+                              (update task :task/preconditions conj precondition))
+
+        add-subtask-fn (fn [method subtask]
+                         (update method :task/subtasks conj subtask))
+
+        add-method-fn (fn [compound-task method]
+                        (update compound-task :task/methods conj method))
+
+        plan-and-execute-fn (fn [state domain]
+                              (let [plan (planner/plan state domain)]
+                                (planner/execute state plan)))
+
+        tester (planner/task :compound {:task/name :tester
+                                        :task/methods []})
+
+        method (planner/task :method {:task/name :method
+                                      :task/preconditions []
+                                      :task/subtasks []})
+
+        increment-number (planner/task :primitive {:task/name :increment-number
+                                                   :task/preconditions []
+                                                   :task/effects []
+                                                   :task/operator (fn [state] (inc state))})]
+
+    (testing "I can compose and execute a simple plan to increment a number from 1 to 2"
+      (let [init-state 1
+            goal-state 2
+            method (add-subtask-fn method increment-number)
+            tester (add-method-fn tester method)]
+        (is (= goal-state (plan-and-execute-fn init-state tester)))))
+
+    (testing "I can compose and execute a simple plan to increment a number from 1 to 3 by having 2 primitive incrementing tasks"
+      (let [init-state 1
+            goal-state 3
+            method (add-subtask-fn method increment-number)
+            method (add-subtask-fn method increment-number)
+            tester (add-method-fn tester method)]
+        (is (= goal-state (plan-and-execute-fn init-state tester)))))
+
+    (testing "I can compose and execute a simple plan that will only increment a number if it's smaller than 1"
+      (let [init-state 1
+            condition-fn (fn [state] (< state 1))
+            task (add-precondition-fn increment-number condition-fn)
+            method (add-subtask-fn method task)
+            tester (add-method-fn tester method)]
+        (is (= 1 (plan-and-execute-fn 0 tester)))
+        (is (= 1 (plan-and-execute-fn 1 tester)))
+        (is (= 2 (plan-and-execute-fn 2 tester)))))
+
+    (testing "I can compose and execute a simple plan that will only increment a number two times if it's smaller than 1"
+      (let [init-state 1
+            condition-fn (fn [state] (< state 1))
+            task (add-precondition-fn increment-number condition-fn)
+            method (add-subtask-fn method task)
+            method (add-subtask-fn method increment-number)
+            tester (add-method-fn tester method)]
+        (is (= 2 (plan-and-execute-fn 0 tester)))
+        (is (= 1 (plan-and-execute-fn 1 tester)))
+        (is (= 2 (plan-and-execute-fn 2 tester)))))
+
+    (testing "The order in which I evaluate subtask preconditions doesn't matter")
+    (testing "I can compose and execute a plan with 2 methods, and it will execute only one of those methods")
+    (testing "effects are taken into account, and only during planning")))
 
 #_(let [from-state {:db/items #{{:item/id 1
                                  :item/name :axe}}
