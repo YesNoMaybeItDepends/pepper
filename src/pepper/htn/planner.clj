@@ -14,7 +14,7 @@
    
    Outputs a list of primitive tasks"
   [state domain]
-  (:tasks (planning/decompose state domain)))
+  (:tasks (planning/decompose state domain 0)))
 
 (defn execute
   "Taking a list of primitive tasks, applies their operators to the given state, returning the final state"

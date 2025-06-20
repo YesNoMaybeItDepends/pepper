@@ -3,11 +3,20 @@
 
 (declare decompose)
 
-(defn merge-result [acc {:keys [state tasks] :as res}]
-  (when (some? res)
+(defn indexed [subtasks]
+  (keep-indexed (fn [idx subtask]
+                  [idx subtask])
+                subtasks))
+
+(defn merge-result [acc {:as curr
+                         :keys [state
+                                tasks
+                                mtr]}]
+  (when (some? curr)
     (-> acc
         (assoc :state state)
-        (update :tasks into (flatten tasks)))))
+        (update :tasks into (flatten tasks))
+        (update :mtr into (flatten mtr)))))
 
 (defn apply-effect [state effect]
   (effect state))
@@ -20,41 +29,54 @@
                  :task/preconditions
                  :task/effects
                  :task/operator]
-          :as task}]
+          :as task}
+   mtr]
   (if (u/all-true? state preconditions)
     {:state (apply-effects state effects)
      :tasks [{:task/name name
+              :mtr mtr
               :task/preconditions preconditions
-              :task/operator operator}]}
+              :task/operator operator}]
+     :mtr mtr}
     nil))
 
 (defn decompose-method
   "Returns map of :state and :tasks"
-  [state {:keys [:task/preconditions :task/subtasks] :as method}]
+  [state
+   {:as method
+    :keys [:task/preconditions
+           :task/subtasks]}
+   [tidx midx]]
   (when (u/all-true? state preconditions)
-    (reduce (fn [acc subtask]
-              (if-let [res (decompose (:state acc) subtask)]
+    (reduce (fn [acc
+                 [sidx subtask]]
+              (if-let [res (decompose (:state acc) subtask [tidx midx sidx])]
                 (merge-result acc res)
                 (reduced nil)))
             {:state state
-             :tasks []}
-            subtasks)))
+             :tasks []
+             :mtr [midx]}
+            (indexed subtasks))))
 
 (defn decompose-compound
   "Returns map of :state and :tasks"
   [state
    {:keys [:task/name :task/methods]
-    :as task}]
-  (reduce (fn [_ method]
-            (when-let [res (decompose-method state method)]
+    :as task}
+   tidx]
+  (reduce (fn [_ [midx method]]
+            (when-let [res (decompose-method state method [tidx midx])]
               (reduced (merge-result {:state state
-                                      :tasks []}
+                                      :tasks []
+                                      :mtr []}
                                      res))))
-          {}
-          methods))
+          {:state state
+           :tasks []
+           :mtr [tidx]}
+          (indexed methods)))
 
-(defn decompose [state decomposable]
+(defn decompose [state decomposable idx]
   (condp apply [decomposable]
-    u/primitive? (decompose-primitive state decomposable)
-    u/compound? (decompose-compound state decomposable)
+    u/primitive? (decompose-primitive state decomposable idx)
+    u/compound? (decompose-compound state decomposable idx)
     nil))

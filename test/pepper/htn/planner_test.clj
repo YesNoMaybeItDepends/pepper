@@ -106,7 +106,21 @@
             tester (add-method-fn tester method)
             plan (planner/plan 0 tester)]
         (is (thrown? Exception (planner/execute 2 plan)))
-        #_(is (= 2 (planner/execute 2 plan)))))))
+        #_(is (= 2 (planner/execute 2 plan)))))
+
+    (testing "plans have an MTR"
+      (let [task-even (add-operator-fn primitive (fn [state] :even))
+            task-uneven (add-operator-fn primitive (fn [state] :uneven))
+            handle-even (-> (add-precondition-fn method even?)
+                            (add-subtask-fn task-even))
+            handle-uneven (-> (add-precondition-fn method (complement even?))
+                              (add-subtask-fn task-uneven))
+            tester (-> (add-method-fn tester handle-even)
+                       (add-method-fn handle-uneven))
+            plan-even (planner/plan 0 tester)
+            plan-uneven (planner/plan 1 tester)]
+        (is (= [0 0 0] (:mtr (first plan-even))))
+        (is (= [0 1 0] (:mtr (first plan-uneven))))))))
 
 #_(let [from-state {:db/items #{{:item/id 1
                                  :item/name :axe}}
