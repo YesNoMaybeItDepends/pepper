@@ -16,7 +16,8 @@
    [flow-storm.api :as fs-api]
    [taoensso.telemere :as t]
    [pepper.utils.chaoslauncher :refer [stop!]]
-   [clojure.spec.test.alpha :as st]))
+   [clojure.spec.test.alpha :as st]
+   [portal.api :as p]))
 
 (defn init? [k]
   (k {:portal true

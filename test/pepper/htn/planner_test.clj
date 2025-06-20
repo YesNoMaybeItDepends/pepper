@@ -1,11 +1,18 @@
 (ns pepper.htn.planner-test
   (:require
    [clojure.test :refer [deftest is testing]]
-   [pepper.htn.planner :as planner]))
+   [pepper.htn.planner :as planner]
+   [clojure.string :as str]))
 
 (deftest test-planner
-  (let [add-precondition-fn (fn [task precondition]
+  (let [add-operator-fn (fn [primitive operator]
+                          (assoc primitive :task/operator operator))
+
+        add-precondition-fn (fn [task precondition]
                               (update task :task/preconditions conj precondition))
+
+        add-effect-fn (fn [task effect]
+                        (update task :task/effects conj effect))
 
         add-subtask-fn (fn [method subtask]
                          (update method :task/subtasks conj subtask))
@@ -23,11 +30,12 @@
         method (planner/task :method {:task/name :method
                                       :task/preconditions []
                                       :task/subtasks []})
+        primitive (planner/task :primitive {:task/name :primitive
+                                            :task/preconditions []
+                                            :task/effects []
+                                            :task/operator identity})
 
-        increment-number (planner/task :primitive {:task/name :increment-number
-                                                   :task/preconditions []
-                                                   :task/effects []
-                                                   :task/operator (fn [state] (inc state))})]
+        increment-number (add-operator-fn primitive inc)]
 
     (testing "I can compose and execute a simple plan to increment a number from 1 to 2"
       (let [init-state 1
@@ -65,9 +73,40 @@
         (is (= 1 (plan-and-execute-fn 1 tester)))
         (is (= 2 (plan-and-execute-fn 2 tester)))))
 
-    (testing "The order in which I evaluate subtask preconditions doesn't matter")
-    (testing "I can compose and execute a plan with 2 methods, and it will execute only one of those methods")
-    (testing "effects are taken into account, and only during planning")))
+    (testing "effects are taken into account, and only during planning"
+      (let [condition-fn (fn [state] (< state 1))
+            effect-fn inc
+            task-1 (-> increment-number
+                       (add-precondition-fn condition-fn)
+                       (add-effect-fn effect-fn))
+            task-2 (-> increment-number
+                       (add-precondition-fn condition-fn))
+            method (-> method
+                       (add-subtask-fn task-1)
+                       (add-subtask-fn task-2))
+            tester (add-method-fn tester method)]
+        (is (= 0 (plan-and-execute-fn 0 tester)))))
+
+    (testing "I can compose and execute a plan with 2 methods, and it will execute only one of those methods"
+      (let [task-even (add-operator-fn primitive (fn [state] :even))
+            task-uneven (add-operator-fn primitive (fn [state] :uneven))
+            handle-even (-> (add-precondition-fn method even?)
+                            (add-subtask-fn task-even))
+            handle-uneven (-> (add-precondition-fn method (complement even?))
+                              (add-subtask-fn task-uneven))
+            tester (-> (add-method-fn tester handle-even)
+                       (add-method-fn handle-uneven))]
+        (is (= :even (plan-and-execute-fn 0 tester)))
+        (is (= :uneven (plan-and-execute-fn 1 tester)))))
+
+    (testing "executing a plan will __throw__ if the state upon which the plan is being executed is no longer valid for any of the plan tasks"
+      (let [condition-fn (fn [state] (< state 1))
+            task (add-precondition-fn increment-number condition-fn)
+            method (add-subtask-fn method task)
+            tester (add-method-fn tester method)
+            plan (planner/plan 0 tester)]
+        (is (thrown? Exception (planner/execute 2 plan)))
+        #_(is (= 2 (planner/execute 2 plan)))))))
 
 #_(let [from-state {:db/items #{{:item/id 1
                                  :item/name :axe}}

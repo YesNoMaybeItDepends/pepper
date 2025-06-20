@@ -3,18 +3,28 @@
 
 (declare decompose)
 
-(defn merge-result [acc {:keys [state tasks] :as curr}]
-  (when (some? curr)
+(defn merge-result [acc {:keys [state tasks] :as res}]
+  (when (some? res)
     (-> acc
         (assoc :state state)
         (update :tasks into (flatten tasks)))))
 
+(defn apply-effect [state effect]
+  (effect state))
+
+(defn apply-effects [state effects]
+  (reduce apply-effect state effects))
+
 (defn decompose-primitive
-  [state {:keys [:task/name :task/preconditions :task/operator]
+  [state {:keys [:task/name
+                 :task/preconditions
+                 :task/effects
+                 :task/operator]
           :as task}]
   (if (u/all-true? state preconditions)
-    {:state state
+    {:state (apply-effects state effects)
      :tasks [{:task/name name
+              :task/preconditions preconditions
               :task/operator operator}]}
     nil))
 
@@ -23,7 +33,7 @@
   [state {:keys [:task/preconditions :task/subtasks] :as method}]
   (when (u/all-true? state preconditions)
     (reduce (fn [acc subtask]
-              (if-let [res (decompose state subtask)]
+              (if-let [res (decompose (:state acc) subtask)]
                 (merge-result acc res)
                 (reduced nil)))
             {:state state
@@ -38,7 +48,8 @@
   (reduce (fn [_ method]
             (when-let [res (decompose-method state method)]
               (reduced (merge-result {:state state
-                                      :tasks []} res))))
+                                      :tasks []}
+                                     res))))
           {}
           methods))
 
