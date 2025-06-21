@@ -16,8 +16,13 @@
    [flow-storm.api :as fs-api]
    [taoensso.telemere :as t]
    [pepper.utils.chaoslauncher :refer [stop!]]
-   [clojure.spec.test.alpha :as st]
-   [portal.api :as p]))
+   #_[clojure.spec.test.alpha :as st]
+   [portal.api :as p]
+   [clojure.tools.namespace.find :as ns-find]
+   [clojure.java.classpath :as cp]
+   [clojure.tools.namespace.parse :as ns-parse]
+   [clojure.string :as str]
+   [user.specs :as specs]))
 
 (defn init? [k]
   (k {:portal true
@@ -34,19 +39,31 @@
                  (fs-api/local-connect)
                  true))
 
-(when (init? :instrument)
-  (tap> {:spec-instrumented-fns (st/instrument)}))
-
 (when (init? :zprint)
   (add-tap zp/zprint))
 
-(when (init? :tests)
-  (require 'pepper.core-test
-           'pepper.htn.planner-test))
+(when (init? :instrument)
+  (specs/instrument))
 
 (comment (try (pepper/-main)
               (catch Exception e (println e)))
          #_())
+
+(comment "Trying to load all test namespaces"
+
+         (defn is-test-dir [file]
+           (and (true? (.isDirectory file))
+                (= "test" (.getName file))))
+
+         (defn find-test-dir []
+           (first (filter is-test-dir (cp/classpath))))
+
+         (defn find-test-namespaces []
+           (ns-find/find-namespaces-in-dir (find-test-dir)))
+
+         #_())
+
+
 
 (comment ;;;; Test flow  
 
@@ -68,3 +85,4 @@
   (flow/stop f)
 
   #_())
+

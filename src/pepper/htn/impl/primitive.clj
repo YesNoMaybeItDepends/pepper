@@ -2,7 +2,7 @@
   (:require [clojure.spec.alpha :as s]))
 
 (s/def :task/name           keyword?)
-(s/def :task/preconditions  (s/coll-of fn? :kind vector?))
+(s/def :task/preconditions  (s/coll-of ifn? :kind vector?))
 (s/def :task/effects        (s/coll-of fn? :kind vector?))
 (s/def :task/operator       fn?)
 (s/def :task/primitive      (s/keys :req [:task/name

@@ -38,3 +38,11 @@
     :primitive (primitive/task map-args)
     :compound (compound/task map-args)
     :method (compound/method map-args)))
+
+;; primitive -> task
+;; method -> option
+;; compound -> choice
+
+;; primitive -> action
+;; method -> option
+;; compound -> task ;; i dont like this as much, doesnt imply choosing

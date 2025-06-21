@@ -3,7 +3,7 @@
    [clojure.spec.alpha :as s]))
 
 (s/def :task/name keyword?)
-(s/def :task/preconditions (s/coll-of fn? :kind vector?))
+(s/def :task/preconditions (s/coll-of ifn? :kind vector?))
 (s/def :task/subtask (s/or :primitive :task/primitive :compound :task/compound))
 (s/def :task/subtasks (s/coll-of :task/subtask))
 

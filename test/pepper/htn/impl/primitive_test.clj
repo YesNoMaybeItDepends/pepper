@@ -1,31 +1,43 @@
 (ns pepper.htn.impl.primitive-test
   (:require
    [clojure.test :refer [deftest is testing]]
-   [pepper.htn.impl.primitive :as t]))
+   [clojure.spec.test.alpha :as st]
+   [clojure.spec.alpha :as s]
+   [pepper.htn.impl.primitive :as p]))
 
-
+(st/instrument)
+(s/check-asserts true)
 
 (deftest test-task
-  (testing "Testing that a primitive task"
+  (testing "Primitive tasks"
+    (let [valid-primitive {:task/name :some-primitive
+                           :task/preconditions []
+                           :task/effects [inc]
+                           :task/operator inc}
+          invalid-primitive {:task/name :some-primitive
+                             :task/preconditions []
+                             :task/effects [inc]
+                             :task/operator nil}]
+      (is (some? (p/task valid-primitive)))
+      (is (thrown? Exception (p/task invalid-primitive)))))
 
-    (testing "has a name"
-      (is (not (nil? (:name (t/task {})))))
-      (is (not (nil? (:name (t/task {:name "hello"}))))))
-
-    (testing "has a set (vector) of preconditions"
-      (is (vector? (:preconditions (t/task {}))))
-      (is (vector? (:preconditions (t/task {:preconditions nil}))))
-      (is (vector? (:preconditions (t/task {:preconditions []}))))
-      (is (vector? (:preconditions (t/task {:preconditions [1]})))))
-
-    (testing "has a set (vector) of effects"
-      (is (vector? (:effects (t/task {}))))
-      (is (vector? (:effects (t/task {:effects nil}))))
-      (is (vector? (:effects (t/task {:effects []}))))
-      (is (vector? (:effects (t/task {:effects [1]})))))
-
-    (testing "has an operator function"
-      (is (fn? (:operator (t/task {}))))
-      (is (fn? (:operator (t/task {:operator 1}))))
-      (is (fn? (:operator (t/task {:operator (fn [x] x)})))))))
-
+  (testing "preconditions can be keywords"
+    (is (some? (p/task {:task/name :some-primitive
+                        :task/preconditions [:something]
+                        :task/effects []
+                        :task/operator identity}))))
+  (testing "preconditions can be anonymous"
+    (is (some? (p/task {:task/name :some-primitive
+                        :task/preconditions [#(:something %)]
+                        :task/effects []
+                        :task/operator identity}))))
+  (testing "effects can be anonymous"
+    (is (some? (p/task {:task/name :some-primitive
+                        :task/preconditions []
+                        :task/effects [#(assoc % :something true)]
+                        :task/operator identity}))))
+  (testing "operators can be anonymous"
+    (is (some? (p/task {:task/name :some-primitive
+                        :task/preconditions []
+                        :task/effects []
+                        :task/operator #(assoc % :something true)})))))
