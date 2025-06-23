@@ -12,7 +12,7 @@
    [zprint.core :as zp]
    [clojure.spec.alpha :as s]
    [pepper.core :as pepper]
-   [pepper.procs.hello-world :as hello-world]
+   [pepper.procs.testing.hello-world :as hello-world]
    [flow-storm.api :as fs-api]
    [taoensso.telemere :as t]
    [pepper.utils.chaoslauncher :refer [stop!]]

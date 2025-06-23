@@ -1,4 +1,4 @@
-(ns pepper.procs.hello-world
+(ns pepper.procs.testing.hello-world
   (:require
    [clojure.core.async.flow :as flow]
    [pepper.procs.proc :as proc]))

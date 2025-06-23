@@ -1,4 +1,4 @@
-(ns pepper.procs.asker
+(ns pepper.procs.testing.asker
   (:require
    [pepper.api.game :as game]
    [pepper.procs.proc :as proc]))
