@@ -1,9 +1,9 @@
-(ns pepper.interop.core-test
+(ns pepper.interop-test
   (:require
    [clojure.test :refer [deftest is testing]]
    [clojure.spec.test.alpha :as st]
    [clojure.spec.alpha :as s]
-   [pepper.interop.core :as i]))
+   [pepper.interop :as i]))
 
 (st/instrument)
 (s/check-asserts true)

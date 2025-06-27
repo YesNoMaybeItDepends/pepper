@@ -1,4 +1,4 @@
-(ns pepper.interop.core
+(ns pepper.interop
   (:require [clojure.spec.alpha :as s]))
 
 ;;;; request

@@ -4,7 +4,7 @@
             [pepper.htn.planner :as planner]
             [pepper.htn.impl.primitive :as primitive]
             [pepper.htn.impl.compound :as compound]
-            [pepper.interop.core :as interop]))
+            [pepper.interop :as interop]))
 
 (defn instrument []
   (tap> {:spec-instrumented-fns (st/instrument)}))
