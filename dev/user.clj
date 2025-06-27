@@ -24,6 +24,25 @@
    [clojure.string :as str]
    [user.specs :as specs]))
 
+(defn disable-namespace-maps
+  "Change how a map like this is printed `{:some-ns/kw1 1 :some-ns/kw2 2}`
+   
+   Before -> `#:some-ns{:kw1 1 :kw2 2}`
+   
+   After -> `{:some-ns/kw1 1 :some-ns/kw2 2}`
+   
+   IMPORTANT: Can't eval automatically during Calva jack-in?
+
+   - [ ] TODO: fix that so I don't have to eval this manually"
+  []
+  (set! *print-namespace-maps* false))
+
+(comment
+
+  (disable-namespace-maps)
+
+  #_())
+
 (defn init? [k]
   (k {:portal true
       :flowstorm false

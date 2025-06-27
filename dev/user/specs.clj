@@ -3,7 +3,8 @@
             [clojure.spec.test.alpha :as st]
             [pepper.htn.planner :as planner]
             [pepper.htn.impl.primitive :as primitive]
-            [pepper.htn.impl.compound :as compound]))
+            [pepper.htn.impl.compound :as compound]
+            [pepper.interop.core :as interop]))
 
 (defn instrument []
   (tap> {:spec-instrumented-fns (st/instrument)}))
