@@ -58,7 +58,7 @@
                     request
                     response]} (get-in data [:hello-world])
             router (i/router routes)
-            api (i/api-handler router)]
+            api (i/root-handler router)]
 
         (testing "handles route"
           (is (= response (api request))))))))

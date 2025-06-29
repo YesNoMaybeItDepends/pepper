@@ -98,7 +98,7 @@
         :as request}]
     (get-in routes id)))
 
-;;;; api
+;;;; root-handler
 
 (def help:ring-handler
   "Ring works like this:
@@ -113,13 +113,12 @@
 
   "See docstring")
 
-(defn api-handler
+(defn root-handler
   "TODO: add middleware
    TODO: handle empty middleware"
   ([router]
 
    (fn [request]
-     (let [{:keys [handler
-                   middleware]} (router request)
+     (let [{:keys [handler middleware]} (router request)
            #_handler #_(wrap-middleware handler middleware)]
        (handler request)))))
