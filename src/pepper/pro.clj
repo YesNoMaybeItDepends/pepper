@@ -4,4 +4,4 @@
 (defonce store (atom {}))
 
 (defn main []
-  (pepper/-main))
+  (pepper/-main store))
