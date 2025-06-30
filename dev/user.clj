@@ -1,6 +1,6 @@
 (ns user
   (:require
-   [pepper.utils.portal :as portal]
+   [pepper.systems.portal :as portal]
    [clojure.reflect :as reflect]
    [clojure.core.async :as a]
    [clojure.core.async.flow :as flow]

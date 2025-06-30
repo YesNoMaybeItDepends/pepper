@@ -1,4 +1,4 @@
-(ns pepper.utils.portal
+(ns pepper.systems.portal
   (:require [portal.api :as p]))
 
 (defn start! []

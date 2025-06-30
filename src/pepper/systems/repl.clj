@@ -1,4 +1,4 @@
-(ns pepper.utils.repl
+(ns pepper.systems.repl
   (:require [nrepl.server :as nrepl]
             [cider.nrepl :as cider]))
 

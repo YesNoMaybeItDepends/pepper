@@ -8,9 +8,9 @@
    [pepper.procs.handler :as handler]
    [pepper.procs.game :as game]
    [pepper.utils.chaoslauncher :as chaoslauncher]
-   [pepper.utils.repl :as repl]
+   [pepper.systems.repl :as repl]
    [taoensso.telemere :as t]
-   [pepper.utils.portal :as portal]))
+   [pepper.systems.portal :as portal]))
 
 (defn init-logging []
   (t/add-handler! :file-handler (t/handler:file {:path ".log"
