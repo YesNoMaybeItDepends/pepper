@@ -73,6 +73,30 @@
       (when (= :on-end event)
         (shutdown-agents)))))
 
+#_(def interceptors ;; dev-interceptors
+    "TODO: group by hook?"
+    [#_{:hook [:api :on-start :before]
+        :fn println
+        :args ["[:api :on-start :before] interceptor"]}
+
+     {:hook [:api :on-start :before]
+      :fn (fn [api] (.pauseGame (.getGame api)))
+      :args [[:api]]}
+
+     #_{:hook [:api :on-start :after]
+        :fn repl/start-server!
+        :args [[:repl/ref] [:repl/port]]}
+
+     #_{:hook [:api :on-frame :before]
+        :fn println
+        :args ["[:api :on-frame :before] interceptor"]}
+
+     {:hook [:api :on-frame :after]
+      :fn (fn [& args]
+            (when-some [f (repl/dequeue!)]
+              (apply f @store)))
+      :args []}])
+
 (defn- main [store]
   (let [bot (bot store)
         api (client/make-client bot)]

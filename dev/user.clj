@@ -22,7 +22,8 @@
    [clojure.java.classpath :as cp]
    [clojure.tools.namespace.parse :as ns-parse]
    [clojure.string :as str]
-   [user.specs :as specs]))
+   [user.specs :as specs]
+   [pepper.dev :as dev]))
 
 (defn disable-namespace-maps
   "Change how a map like this is printed `{:some-ns/kw1 1 :some-ns/kw2 2}`

@@ -1,11 +1,38 @@
 (ns pepper.core
   (:require
-   [clojure.string :as str]
    [clojure.core.async :as a]
-   [taoensso.telemere :as t]
    [pepper.api.client :as client]
    [pepper.api.game :as game]
-   [pepper.utils.chaoslauncher :as chaoslauncher]))
+   [pepper.utils.chaoslauncher :as chaoslauncher]
+   [taoensso.telemere :as t])
+  (:import
+   [bwapi Game BWClient]))
+
+(defn on-start [{:api/keys [client] :as state} event]
+  (let [performance-metrics (BWClient/.getPerformanceMetrics client)
+        game (BWClient/.getGame client)]
+    (assoc state
+           :api/game game
+           :api/metrics performance-metrics)))
+
+(defn on-frame [{:api/keys [client game] :as state} event]
+  (let [frames-behind (BWClient/.framesBehind client)
+        frame (Game/.getFrameCount game)]
+    (assoc state
+           :game/frame frame
+           :api/frames-behind frames-behind)))
+
+(defn render-state [state event]
+  (let [{game :api/game
+         frame :api/frame
+         frames-behind :api/frames-behind} state]
+    (game/draw-text-screen game 100 100 (str "Frames behind:" frames-behind))
+    (game/draw-text-screen game 200 200 (str "Frame:" frame)))
+  state)
+
+(defn on-end [{:api/keys [client game] :as state} event]
+  (t/event! :on-end)
+  state)
 
 (defn bot
   "TODO: bot could return [in out event-handler], 
@@ -14,17 +41,13 @@
   (a/go-loop [state state]
     (let [event (a/<! in)
           state (case (:event event)
-                  :on-start (let [state (update state :on-start (fnil inc 0))
-                                  state (assoc state :game (.getGame (:api/client state)))]
-                              state)
-                  :on-frame (let [state (update state :on-frame (fnil inc 0))
-                                  _ (game/draw-text-screen (:game state) 100 100 (str (game/get-frame-count (:game state))))]
-                              state)
-                  :on-end (let [state (update state :on-end (fnil inc 0))]
-                            state)
+                  :on-start (on-start state event)
+                  :on-frame (-> state
+                                (on-frame event)
+                                (render-state event))
+                  :on-end (on-end state event)
                   state)
           put? (a/>! out true)]
-      (println state)
       (recur state))))
 
 ;; with channels, events could be piped such as:
@@ -40,8 +63,7 @@
                        [store]
                        (fn [event]
                          ((:api/event-whitelist @store) (:event event))))
-        event-handler (fn event-handler
-                        "TODO: pubsub instead of whitelist"
+        event-handler (fn event-handler ;; "TODO: pubsub instead of whitelist"
                         [input-ch output-ch filter-pred]
                         (fn [event]
                           (when (filter-pred event)
@@ -64,5 +86,5 @@
                             :debug-connection false
                             :log-verbosely false})
     (println "done")
-    (chaoslauncher/stop!) ;; TODO: this should be moved to dev
-    ))
+    (chaoslauncher/stop!))) ;; TODO: this should be moved to dev
+    
