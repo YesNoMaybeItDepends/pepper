@@ -1,4 +1,4 @@
-(ns pepper.systems.flow
+(ns pepper.systems.flow-bot
   (:require
    [clojure.core.async :as a]
    [clojure.core.async.flow :as flow]

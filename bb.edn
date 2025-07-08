@@ -9,5 +9,5 @@
                     :task (p/shell "powershell" "-command" "start-process" "test-run-bot.ps1")}
   test {:doc "Run tests"
         :task (clojure "-X:test")}
-  run-pepper {:doc "Runs the bot"
-              :task (clojure "-M -m pepper.core")}}}
+  run:dev {:doc "Runs the bot from dev"
+           :task (clojure "-A:dev -X pepper.dev/main")}}}
