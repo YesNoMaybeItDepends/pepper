@@ -122,3 +122,67 @@
      (let [{:keys [handler middleware]} (router request)
            #_handler #_(wrap-middleware handler middleware)]
        (handler request)))))
+
+;;;; TODO: junk pls delete me
+
+;; (def queue-test (atom {:a clojure.lang.PersistentQueue/EMPTY
+;;                   :b clojure.lang.PersistentQueue/EMPTY}))
+
+;; (swap! queue-test update-in [:a] conj :hello)
+;; (swap! queue-test update-in [:a] pop)
+;; (let [[old new] (swap-vals! queue-test update-in [:a] pop)]
+;;   (peek (:a old)))
+;; (peek (:a @queue-test))
+
+;;;; nexus-like test
+
+;; (defn action [state & args])
+
+;; (defn effect
+;;   "- context -> map passed to effects
+;;      - dispatch-data -> data that isnt available until dispatch
+;;      - dispatch -> fn to trigger new actions with access to the same cc, store and dispatch-data"
+;;   [{:keys [dispatch-data dispatch] :as context} store & args])
+
+;; (def cc {:cc/effects {:effects/start-repl
+;;                         (fn [ctx store ref port]
+;;                           (repl/start-server! ref port))
+
+;;                         :effects/enqueue
+;;                         (fn [ctx store path x]
+;;                           (swap! store update-in path x))
+
+;;                         :effects/dequeue
+;;                         (fn [ctx store path args]
+;;                           (let [[old _] (swap-vals! store update-in path pop)]
+;;                             (peek (get-in old path))))
+
+;;                         :effects/peek
+;;                         (fn [ctx store path]
+;;                           (peek (get-in )))
+
+;;                         :effects/eval-repl-action
+;;                         (fn [ctx store op]
+;;                           (op)
+;;                           store)}
+
+
+;;           :cc/actions {:repl/start
+;;                         (fn [state] [[:effects/start-repl (get-in state [:repl/ref]) (:repl/port state)]])
+
+;;                         :repl/enqueue
+;;                         (fn [state op] [[:effects/enqueue op]])
+
+;;                         :repl/eval
+;;                         (fn [state] [[:effects/eval-repl-action]])}
+
+;;           :cc/placeholders
+;;           {:placeholders/something :something}
+
+;;           :cc/store->state deref})
+
+;; (defn dispatch [cc store data actions])
+
+;; #_(dispatch {} {})
+
+;; ;;;; interceptors

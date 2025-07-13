@@ -218,3 +218,29 @@
 (defn elapsed-time
   [game]
   (.elapsedTime game))
+
+;;;; more junk to organize
+
+#_(defn routes []
+    {:game {:get-all-units {:handler (partial (fn [game]
+                                                :get-all-units))}}})
+
+(defn routes []
+  {:game {:get-all-units {:handler (fn [game] (.getAllUnits game))}}})
+
+(defn unit [unit]
+  {:id (.getID unit)})
+
+(defn mock-dispatcher [id mock]
+  (case id
+    :get-all-units mock))
+
+(defn game-dispatcher [id game]
+  (case id
+    :get-all-units (->> (.getAllUnits game)
+                        (map unit))))
+
+(defn game-handler [id]
+  (case id
+    :get-all-units []
+    :elapsed-time 2))

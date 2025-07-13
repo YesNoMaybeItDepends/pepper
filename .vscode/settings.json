@@ -29,7 +29,7 @@
       "nReplPortFile": [
         ".my-port"
       ],
-      // "customJackInCommandLine": "pwsh -c ligma.ps1"
+      // "customJackInCommandLine": "pwsh -c start-bot.ps1"
     }
   ]
 }
