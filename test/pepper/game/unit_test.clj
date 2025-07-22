@@ -3,26 +3,17 @@
             [clojure.spec.test.alpha :as st]
             [clojure.spec.alpha :as s]
             [clojure.spec.gen.alpha :as sg]
-            [clojure.reflect :as reflect]
-            [clojure.repl :refer :all]
-            [clojure.java.data :as jd]
-            #_[pepper.core :as core]
             [pepper.game.unit :as unit]
-            [pepper.mocking :as mocking])
-  (:import (bwapi Unit)))
+            [pepper.mocking :as mocking]))
 
 (st/instrument)
 
+;; not sure if it makes sense to test unit yet
+;; since right now it works on both maps and objects
+;; but do I really want that?
+;; im also not sure how to test for something that isnt initialized all at once
 (deftest unit-test
-  (let [mock-unit-opts [[#(.getID %) (int 3)]
-                        [#(.isFlying %) true]
-                        [#(.getType %) bwapi.UnitType/Terran_SCV]]
-        #_mock-unit #_(fn [opts] (mocking/mock Unit opts))
-        mock-unit (mocking/mock Unit mock-unit-opts)]
-    (testing "Can datafy a unit from a bwapi unit"
-      (is (map? (unit/datafy mock-unit))))
-
-    (testing "A unit has an ID"
-      (is (= 3 (-> (unit/datafy mock-unit)
-                   (unit/id)))))))
-
+  (testing "can get id")
+  (testing "can get exists?")
+  (testing "can get worker?")
+  (testing "can get player"))

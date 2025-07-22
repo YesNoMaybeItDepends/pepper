@@ -34,10 +34,18 @@
   (let [state @store
         in-chan (:api/in-chan state)
         out-chan (:api/out-chan state)
-        event
-        {:event :tap}
-        #_{:event :hello-world}]
+        event {:event :tap}] ;; or {:event :hello-world}
     (a/>!! in-chan event)
     (a/<!! out-chan))
+
+  (-> (:api/client @store)
+      .getGame
+      .resumeGame)
+
+  (-> (:api/game @store)
+      .pauseGame)
+
+  (-> (:api/game @store)
+      .resumeGame)
 
   #_())

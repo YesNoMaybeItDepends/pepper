@@ -2,25 +2,30 @@
   (:require [pepper.game.unit :as unit])
   (:import (bwapi Game)))
 
-(defn find-new-units [{:game/keys [units-by-id]} _game]
-  (->> (Game/.getAllUnits _game)
-       (mapv unit/id)
-       (remove units-by-id)
-       (into #{})))
+(defn frame [state]
+  (or (:game/frame state)
+      -1))
 
-(defn get-units-by-id [state]
+(defn units-by-id [state]
   (or (:game/units-by-id state)
       {}))
 
-(defn get-new-units [state]
-  (or (:game/new-units-by-id state)
-      #{}))
+(defn units-by-id-ids [state]
+  (if-some [unit-ids (keys (units-by-id state))]
+    unit-ids
+    '()))
 
-(defn update-state [state _game]
-  {:game/units-by-id (get-units-by-id state)
-   :game/new-units-by-id (conj (get-new-units state)
-                               (find-new-units state _game))})
+(defn update-unit [state unit]
+  (update-in state [:game/units-by-id (unit/id unit)] merge unit))
 
-(defn get-state [state]
-  {:game/units-by-id (get-units-by-id state)
-   :game/new-units-by-id (get-new-units state)})
+(defn update-units [state units]
+  (reduce update-unit state units))
+
+(defn new-unit-id? [state id]
+  (nil? (get (units-by-id state) id)))
+
+(defn filter-new-units [state ids]
+  (filter #(new-unit-id? state %) ids))
+
+(defn map-new-units [state ids]
+  (map #(unit/discover-new-unit % (frame state)) ids))

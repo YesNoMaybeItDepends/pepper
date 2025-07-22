@@ -2,11 +2,15 @@
   (:require
    [clojure.core.async :as a]
    [pepper.api.client :as client]
-   [pepper.api.game :as game]
+   [pepper.api.game :as api-game]
+   [pepper.game.unit :as unit]
+   [pepper.game.game :as game]
    [pepper.utils.chaoslauncher :as chaoslauncher]
    [taoensso.telemere :as t])
   (:import
-   [bwapi Game BWClient]))
+   [bwapi BWClient Game]))
+
+;;;; event -> update model -> do things
 
 (defn on-start [{:api/keys [client] :as state} event]
   (let [game (BWClient/.getGame client)]
@@ -17,19 +21,26 @@
            :game/self (Game/.self game)
            :game/units (Game/.getAllUnits game))))
 
+(defn with-new-units [state unit-ids]
+  (->> (game/filter-new-units state unit-ids)
+       (map #(unit/discover-new-unit % (game/frame state)))
+       (game/update-units state)))
+
 (defn on-frame [{:api/keys [client game] :as state} event]
   (let [frames-behind (BWClient/.framesBehind client)
-        frame (Game/.getFrameCount game)]
-    (assoc state
-           :game/frame frame
-           :api/frames-behind frames-behind)))
+        frame (Game/.getFrameCount game)
+        all-units (Game/.getAllUnits game)]
+    (-> state
+        (assoc :game/frame frame
+               :api/frames-behind frames-behind)
+        (with-new-units (map unit/id all-units)))))
 
 (defn render-state [state event]
   (let [{game :api/game
          frame :game/frame
          frames-behind :api/frames-behind} state]
-    (game/draw-text-screen game 100 100 (str "Frame: " frame))
-    (game/draw-text-screen game 100 110 (str "Frames behind:" frames-behind)))
+    (api-game/draw-text-screen game 100 100 (str "Frame: " frame))
+    (api-game/draw-text-screen game 100 110 (str "Frames behind:" frames-behind)))
   state)
 
 (defn on-end [{:api/keys [client game] :as state} event]
@@ -63,14 +74,6 @@
                            :default))]
       (recur state))))
 
-;; with channels, events could be piped such as:
-;; event
-;; event -> state
-;; event -> state -> intercept-before
-;; event -> state -> intercept-before -> _process_
-;; event -> state -> intercept-before -> _process_ -> intercept-after
-;; event -> state -> intercept-before -> _process_ -> intercept-after -> out
-
 (defn main [store]
   (let [whitelisted? (fn whitelisted?
                        [store]
@@ -101,4 +104,3 @@
                             :log-verbosely false})
     (println "done")
     (chaoslauncher/stop!))) ;; TODO: this should be moved to dev
-    

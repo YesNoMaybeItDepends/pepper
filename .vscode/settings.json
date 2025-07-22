@@ -31,5 +31,6 @@
       ],
       // "customJackInCommandLine": "pwsh -c start-bot.ps1"
     }
-  ]
+  ],
+  "calva.useLegacyReplWindowPath": false,
 }

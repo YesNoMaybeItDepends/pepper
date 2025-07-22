@@ -1,60 +1,56 @@
 (ns pepper.game.game-test
   (:require [clojure.test :refer [deftest is testing]]
             [clojure.spec.test.alpha :as st]
-            [clojure.repl :refer :all]
-            [pepper.game.game :as game]
-            [pepper.mocking :as mocking])
-  (:import (bwapi Game Unit UnitType)))
+            [pepper.game.game :as game]))
 
 (st/instrument)
 
-(defn mock-unit [id]
-  (mocking/mock Unit [[#(Unit/.getID %) (int id)]
-                      [#(Unit/.isFlying %) true]
-                      [#(Unit/.getType %) UnitType/Terran_SCV]]))
+(deftest game-test
+  (testing "has a frame"
+    (is (= 1 (game/frame {:game/frame 1}))))
 
-(defn mock-game [units]
-  (mocking/mock Game [[#(Game/.getAllUnits %) units]]))
+  (testing "has a frame -1 if there's no frame"
+    (is (= -1 (game/frame {}))))
 
-(deftest game-state-test
-  (testing "By default contains units by id"
-    (is (contains? (game/get-state {})
-                   :game/units-by-id)))
+  (testing "has a map of units by id"
+    (is (= {1 {}} (game/units-by-id {:game/units-by-id {1 {}}})))
+    (is (= {} (game/units-by-id {}))))
 
-  (testing "By default units by id is a map"
-    (is (= (-> (game/get-state {})
-               :game/units-by-id)
-           {})))
+  (testing "can get a list of unit ids"
+    (is (= '(1 2) (game/units-by-id-ids {:game/units-by-id {1 {} 2 {}}})))
+    (is (= '() (game/units-by-id-ids {}))))
 
-  (testing "Units by id can be updated"
-    (is (= (-> (game/get-state {:game/units-by-id {1 {:unit/id 1}}})
-               :game/units-by-id)
-           {1 {:unit/id 1}})))
+  (testing "can update a unit"
+    (let [state-1 {:game/units-by-id {}
+                   :game/frame 0}
+          state-2 {:game/units-by-id {1 {:unit/id 1}}
+                   :game/frame 0}]
+      (is (= (game/update-unit state-1 {:unit/id 1})
+             state-2))))
 
-  (testing "By default contains new units by id"
-    (is (contains? (game/get-state {})
-                   :game/new-units-by-id)))
+  (testing "can update a list of units"
+    (let [state-1 {:game/units-by-id {}
+                   :game/frame 0}
+          state-2 {:game/units-by-id {1 {:unit/id 1}
+                                      2 {:unit/id 2}}
+                   :game/frame 0}]
+      (is (= (game/update-units state-1 [{:unit/id 1} {:unit/id 2}])
+             state-2))
+      (is (= (game/update-units state-1 [])
+             state-1))))
 
-  (testing "By default units by id is a set"
-    (is (= (-> (game/get-state {})
-               :game/new-units-by-id)
-           #{})))
+  (testing "can identify a new unit"
+    (is (true? (game/new-unit-id? {} 1)))
+    (is (false? (game/new-unit-id? {:game/units-by-id {1 {}}} 1))))
 
-  (testing "New units can be found"
-    (let [units [(mock-unit 3)]
-          game (mock-game units)
-          state (game/get-state {:game/units-by-id {1 {:unit/id 1}}})]
-      (is (= (game/find-new-units state game)
-             #{3}))))
+  (testing "can find new unit ids from a list of unit ids"
+    (let [state {:game/units-by-id {1 {}
+                                    2 {}}}]
+      (is (= (game/filter-new-units state [1 2 3])
+             '(3)))))
 
-  (testing "New units by id can be updated"
-    (let [units [(mock-unit 3)]
-          game (mock-game units)
-          state (game/get-state {:game/units-by-id {1 {:unit/id 1}}})]
-      (is (= (-> (game/get-state
-                  {:game/new-units-by-id (game/find-new-units state game)})
-                 :game/new-units-by-id)
-             #{3})))))
-
-
-
+  (testing "can map new units"
+    (is (= (game/map-new-units {:game/frame 0} '(1))
+           '({:unit/id 1
+              :unit/frame-discovered 0
+              :unit/last-frame-updated 0})))))
