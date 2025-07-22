@@ -1,29 +1,7 @@
 (ns pepper.api.unit-type
-  "See https://javabwapi.github.io/JBWAPI/bwapi/UnitType.html"
+  "helpers, maybe move somewhere else?"
   (:require [clojure.string :as str])
   (:import (bwapi UnitType)))
-
-(defn supply-provided
-  [unit-type]
-  (.supplyProvided unit-type))
-
-(defn supply-required
-  [unit-type]
-  (.supplyRequired unit-type))
-
-(defn is-building?
-  [unit-type]
-  (.isBuilding unit-type))
-
-(defn is-worker?
-  [unit-type]
-  (.isWorker unit-type))
-
-(defn builds-what
-  [unit-type]
-  (.buildsWhat unit-type))
-
-;; helpers, maybe move somewhere else?
 
 (def ^:private enum-constants
   (.getEnumConstants UnitType))
