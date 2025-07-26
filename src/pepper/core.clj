@@ -99,8 +99,8 @@
            :api/in-chan bot-in
            :api/out-chan bot-out)
     (chaoslauncher/start!) ;; TODO: this should be moved to dev
-    (client/start-game api {:async true
-                            :debug-connection false
-                            :log-verbosely false})
+    (client/start-game! api {:async true
+                             :debug-connection false
+                             :log-verbosely false})
     (println "done")
     (chaoslauncher/stop!))) ;; TODO: this should be moved to dev

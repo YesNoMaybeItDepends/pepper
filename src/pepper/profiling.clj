@@ -1,4 +1,4 @@
-(ns pepper.utils.profiling)
+(ns pepper.profiling)
 
 ;; config
 ;; target-ms -> 20 or 25?
@@ -20,7 +20,7 @@
   (let [sorted (sort times)
         start (first sorted)
         end (last sorted)]
-    (- end start)))
+    (duration start end)))
 
 (defn times-ns->duration-ms [times-ns]
   (ns->ms (times->duration times-ns)))

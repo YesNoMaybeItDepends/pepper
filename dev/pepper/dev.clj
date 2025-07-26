@@ -1,7 +1,7 @@
 (ns pepper.dev
   (:require
    [pepper.core :as pepper]
-   [pepper.systems.logging :as logging]
+   [pepper.logging :as logging]
    [pepper.repl :as repl]
    [clojure.core.async :as a]))
 

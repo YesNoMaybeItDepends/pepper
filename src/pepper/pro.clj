@@ -1,7 +1,7 @@
 (ns pepper.pro
   (:require
    [pepper.core :as pepper]
-   [pepper.systems.logging :as logging]))
+   [pepper.logging :as logging]))
 
 (defonce store (atom {}))
 
