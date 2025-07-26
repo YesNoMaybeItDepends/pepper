@@ -27,5 +27,5 @@
 (defn filter-new-units [state ids]
   (filter #(new-unit-id? state %) ids))
 
-(defn map-new-units [state ids]
-  (map #(unit/discover-new-unit % (frame state)) ids))
+(defn map-new-units [{:api/keys [game] :as state} ids]
+  (map #((unit/read-game-unit game) %) ids))

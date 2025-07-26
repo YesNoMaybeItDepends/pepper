@@ -21,3 +21,15 @@
 
 (defn mock-game [units]
   (mock Game [[#(Game/.getAllUnits %) units]]))
+
+(def obj->key-value-map
+  [[:unit/id Unit/.getID]
+   [:unit/type Unit/.getType]
+   [:unit/is-flying Unit/.isFlying]])
+
+
+(let [u (mock-unit 3)]
+  (reduce (fn [acc [kw m]]
+            (assoc acc kw (m u)))
+          {}
+          obj->key-value-map))

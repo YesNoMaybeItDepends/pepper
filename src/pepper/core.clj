@@ -21,9 +21,9 @@
            :game/self (Game/.self game)
            :game/units (Game/.getAllUnits game))))
 
-(defn with-new-units [state unit-ids]
+(defn with-new-units [{:api/keys [game] :as state} unit-ids]
   (->> (game/filter-new-units state unit-ids)
-       (map #(unit/discover-new-unit % (game/frame state)))
+       (map #((unit/read-game-unit game) %))
        (game/update-units state)))
 
 (defn on-frame [{:api/keys [client game] :as state} event]
