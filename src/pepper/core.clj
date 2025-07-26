@@ -5,8 +5,8 @@
    [pepper.api.game :as api-game]
    [pepper.game.unit :as unit]
    [pepper.game.game :as game]
-   [pepper.utils.chaoslauncher :as chaoslauncher]
-   [taoensso.telemere :as t])
+   [taoensso.telemere :as t]
+   [pepper.config :as config])
   (:import
    [bwapi BWClient Game]))
 
@@ -98,9 +98,9 @@
            :api/event-whitelist #{:on-start :on-frame :on-end}
            :api/in-chan bot-in
            :api/out-chan bot-out)
-    (chaoslauncher/start!) ;; TODO: this should be moved to dev
+    (client/run-starcraft! (client/chaos-launcher-path (config/get-config))) ;; TODO: this should be moved to dev
     (client/start-game! api {:async true
                              :debug-connection false
                              :log-verbosely false})
     (println "done")
-    (chaoslauncher/stop!))) ;; TODO: this should be moved to dev
+    (client/kill-starcraft!))) ;; TODO: this should be moved to dev

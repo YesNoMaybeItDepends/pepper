@@ -123,5 +123,5 @@
   (p/sh "pskill starcraft")
   (p/sh "pskill chaoslauncher"))
 
-(defn chaoslauncher-path [config]
+(defn chaos-launcher-path [config]
   (get-in config [:starcraft :path]))

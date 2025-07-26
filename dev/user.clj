@@ -11,10 +11,8 @@
    [zprint.core :as zp]
    [clojure.spec.alpha :as s]
    [pepper.core :as pepper]
-   [pepper.procs.testing.hello-world :as hello-world]
    [flow-storm.api :as fs-api]
    [taoensso.telemere :as t]
-   [pepper.utils.chaoslauncher :refer [stop!]]
    #_[clojure.spec.test.alpha :as st]
    [portal.api :as portal]
    [clojure.tools.namespace.find :as ns-find]
@@ -138,27 +136,3 @@
            (ns-find/find-namespaces-in-dir (find-test-dir)))
 
          #_())
-
-
-
-(comment ;;;; Test flow  
-
-  (do
-    (def f (flow/create-flow {:procs {:hello-world {:proc (flow/process #'hello-world/proc)}}}))
-    (def chs (flow/start f))
-    (def report-chan (:report-chan chs))
-    (def error-chan (:error-chan chs))
-    (flow/resume f))
-
-  (a/poll! report-chan)
-  (a/poll! error-chan)
-
-  (flow/ping f)
-  (flow/ping-proc f :handler)
-
-  @(flow/inject f [:hello-world :hello] ["good morning"])
-
-  (flow/stop f)
-
-  #_())
-

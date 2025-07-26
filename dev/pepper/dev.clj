@@ -1,8 +1,7 @@
 (ns pepper.dev
   (:require
    [pepper.core :as pepper]
-   [pepper.logging :as logging]
-   [pepper.repl :as repl]
+   [pepper.utils :as utils]
    [clojure.core.async :as a]))
 
 (def initial-bot-state false)
@@ -16,7 +15,7 @@
 (defonce store (atom initial-store-state))
 
 (defn main [& opts]
-  (let [_ (logging/init-logging)]
+  (let [_ (utils/init-logging!)]
     (reset! store initial-store-state)
     (alter-var-root #'bot (constantly (future (pepper/main store))))))
 
