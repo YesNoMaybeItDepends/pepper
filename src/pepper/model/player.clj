@@ -1,4 +1,4 @@
-(ns pepper.game.player
+(ns pepper.model.player
   (:refer-clojure :exclude [name force type])
   (:require [clojure.set :as set])
   (:import

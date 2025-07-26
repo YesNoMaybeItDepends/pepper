@@ -3,8 +3,8 @@
    [clojure.core.async :as a]
    [pepper.api.client :as client]
    [pepper.api.game :as api-game]
-   [pepper.game.unit :as unit]
-   [pepper.game.game :as game]
+   [pepper.model.unit :as unit]
+   [pepper.model.game :as game]
    [taoensso.telemere :as t]
    [pepper.config :as config])
   (:import

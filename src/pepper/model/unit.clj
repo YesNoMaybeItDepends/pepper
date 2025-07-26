@@ -1,6 +1,6 @@
-(ns pepper.game.unit
+(ns pepper.model.unit
   (:refer-clojure :exclude [type])
-  (:require [pepper.game.player :as player])
+  (:require [pepper.model.player :as player])
   (:import
    (bwapi UnitType)))
 

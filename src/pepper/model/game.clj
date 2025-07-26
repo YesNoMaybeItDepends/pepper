@@ -1,5 +1,5 @@
-(ns pepper.game.game
-  (:require [pepper.game.unit :as unit])
+(ns pepper.model.game
+  (:require [pepper.model.unit :as unit])
   (:import (bwapi Game)))
 
 (defn frame [state]
