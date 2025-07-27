@@ -3,48 +3,26 @@
    [clojure.core.async :as a]
    [pepper.api.client :as client]
    [pepper.api.game :as api-game]
-   [pepper.model.unit :as unit]
-   [pepper.model.game :as game]
-   [taoensso.telemere :as t]
+   [pepper.game.unit :as unit]
+   [pepper.game.state :as game-state]
+   [pepper.game.frame :as frame]
+   [taoensso.telemere :as tel]
    [pepper.config :as config])
   (:import
    [bwapi BWClient Game]))
 
-;;;; event -> update model -> do things
-
-(defn on-start [{:api/keys [client] :as state} event]
-  (let [game (BWClient/.getGame client)]
-    (assoc state
-           :api/game game
-           :api/metrics (BWClient/.getPerformanceMetrics client)
-           :game/players (Game/.getPlayers game)
-           :game/self (Game/.self game)
-           :game/units (Game/.getAllUnits game))))
-
-(defn with-new-units [{:api/keys [game] :as state} unit-ids]
-  (->> (game/filter-new-units state unit-ids)
-       (map #((unit/read-game-unit game) %))
-       (game/update-units state)))
+(defn on-start [state event]
+  (assoc state :api/game (BWClient/.getGame (:api/client state))))
 
 (defn on-frame [{:api/keys [client game] :as state} event]
-  (let [frames-behind (BWClient/.framesBehind client)
-        frame (Game/.getFrameCount game)
-        all-units (Game/.getAllUnits game)]
-    (-> state
-        (assoc :game/frame frame
-               :api/frames-behind frames-behind)
-        (with-new-units (map unit/id all-units)))))
-
-(defn render-state [state event]
-  (let [{game :api/game
-         frame :game/frame
-         frames-behind :api/frames-behind} state]
-    (api-game/draw-text-screen game 100 100 (str "Frame: " frame))
-    (api-game/draw-text-screen game 100 110 (str "Frames behind:" frames-behind)))
-  state)
+  (let [frame-data (-> (frame/parse-frame-data game)
+                       (frame/with-event event))]
+    (tel/log! frame-data)
+    (-> (game-state/update-state state frame-data)
+        (game-state/render-state!))))
 
 (defn on-end [{:api/keys [client game] :as state} event]
-  (t/event! :on-end)
+  (tel/event! :on-end)
   state)
 
 (defn event-handler [{event-name :event
@@ -52,9 +30,7 @@
                      state]
   (case event-name
     :on-start (on-start state event)
-    :on-frame (-> state
-                  (on-frame event)
-                  (render-state event))
+    :on-frame (on-frame state event)
     :on-end (on-end state event)
     :tap (do (tap> state)
              state)

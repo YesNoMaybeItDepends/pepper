@@ -5,9 +5,12 @@
 
 ;;;; logging
 
-(defn init-logging! []
-  (t/add-handler! :file-handler (t/handler:file {:path ".log"
+(defn init-logging! [file-name]
+  (t/add-handler! :file-handler (t/handler:file {:path (str file-name ".log")
                                                  :output-fn (t/pr-signal-fn {:pr-fn :edn})})))
+
+(defn stop-logging! []
+  (t/stop-handlers!))
 
 ;;;; interop
 
