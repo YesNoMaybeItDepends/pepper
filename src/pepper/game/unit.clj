@@ -16,7 +16,7 @@
 (defn update-units-by-id [units-by-id units]
   (reduce update-unit-by-id units-by-id units))
 
-(defn parse-unit
+(defn parse-unit!
   "Reads a bwapi unit with a bwapi game"
   [game]
   (fn [unit]

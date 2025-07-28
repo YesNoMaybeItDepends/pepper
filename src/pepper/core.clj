@@ -7,15 +7,19 @@
    [pepper.game.state :as game-state]
    [pepper.game.frame :as frame]
    [taoensso.telemere :as tel]
-   [pepper.config :as config])
+   [pepper.config :as config]
+   [pepper.game.state :as state])
   (:import
-   [bwapi BWClient Game]))
+   [bwapi BWClient Game Player]))
 
-(defn on-start [state event]
-  (assoc state :api/game (BWClient/.getGame (:api/client state))))
+(defn on-start [{:api/keys [client] :as state} event]
+  (let [game (BWClient/.getGame client)]
+    (-> (assoc state :api/game game)
+        (merge (state/init-state
+                (frame/parse-on-start-data game))))))
 
 (defn on-frame [{:api/keys [client game] :as state} event]
-  (let [frame-data (-> (frame/parse-frame-data game)
+  (let [frame-data (-> (frame/parse-on-frame-data game)
                        (frame/with-event event))]
     (tel/log! frame-data)
     (-> (game-state/update-state state frame-data)
