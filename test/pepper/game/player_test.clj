@@ -8,5 +8,4 @@
 
 (st/instrument)
 
-(deftest player-test
-  (testing ""))
+(deftest player-test)

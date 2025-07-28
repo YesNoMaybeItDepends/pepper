@@ -60,3 +60,10 @@
 
 (defn new-unit? [unit]
   (nil? (:frame-discovered unit)))
+
+(defn ours? [state unit]
+  (= (:player-id unit)
+     (:self-id state)))
+
+(defn get-unit [state unit-id]
+  (get-in state [:units-by-id unit-id]))
