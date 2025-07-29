@@ -6,9 +6,11 @@
 
 (def unit-keys #{:id :player-id :type :exists? :idle? :frame-discovered :last-frame-updated})
 
-(defn get-units-by-id [state]
-  (or (:units-by-id state)
-      {}))
+(defn get-units [state]
+  (vals (:units-by-id state)))
+
+(defn get-unit-by-id [state unit-id]
+  (get-in state [:units-by-id unit-id]))
 
 (defn update-unit-by-id [units-by-id unit]
   (update units-by-id (:id unit) merge unit))
@@ -28,14 +30,14 @@
         (assoc :type (bwapi.Unit/.getType unit)) ;; TODO: convert unit type
         (assoc :idle? (bwapi.Unit/.isIdle unit)))))
 
-(def mineral-types
-  #{:mineral
+(def mineral-field-types
+  #{:mineral-field
     UnitType/Resource_Mineral_Field
     UnitType/Resource_Mineral_Field_Type_2
     UnitType/Resource_Mineral_Field_Type_3})
 
-(defn mineral? [unit]
-  (contains? mineral-types (:type unit)))
+(defn mineral-field? [unit]
+  (contains? mineral-field-types (:type unit)))
 
 (def worker-types
   #{:scv :probe :drone
@@ -64,6 +66,3 @@
 (defn ours? [state unit]
   (= (:player-id unit)
      (:self-id state)))
-
-(defn get-unit [state unit-id]
-  (get-in state [:units-by-id unit-id]))
