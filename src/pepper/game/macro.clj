@@ -75,7 +75,7 @@
 (defn filter-pending-jobs [jobs]
   (filterv (complement :run?) jobs))
 
-(defn process-jobs
+(defn process-jobs!
   "Jobs in general should probably be in their own namespace"
   [state game]
   (update

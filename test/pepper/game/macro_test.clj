@@ -119,6 +119,6 @@
                                :result 1
                                :run? true}}}
                (-> state
-                   (macro/process-jobs {})
-                   (macro/process-jobs {})
-                   (macro/process-jobs {}))))))))
+                   (macro/process-jobs! {})
+                   (macro/process-jobs! {})
+                   (macro/process-jobs! {}))))))))

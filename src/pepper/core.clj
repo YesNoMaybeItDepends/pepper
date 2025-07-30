@@ -2,13 +2,13 @@
   (:require
    [clojure.core.async :as a]
    [pepper.api.client :as client]
-   [pepper.api.game :as api-game]
+   [pepper.api.game :as api]
    [pepper.game.unit :as unit]
-   [pepper.game.state :as game-state]
+   [pepper.game.macro :as macro]
+   [pepper.game.state :as state]
    [pepper.game.frame :as frame]
    [taoensso.telemere :as tel]
-   [pepper.config :as config]
-   [pepper.game.state :as state])
+   [pepper.config :as config])
   (:import
    [bwapi BWClient Game Player]))
 
@@ -22,8 +22,10 @@
   (let [frame-data (-> (frame/parse-on-frame-data game)
                        (frame/with-event event))]
     (tel/log! frame-data)
-    (-> (game-state/update-state state frame-data)
-        (game-state/render-state!))))
+    (-> (state/update-state state frame-data)
+        (macro/process-macro)
+        (macro/process-jobs! game)
+        (state/render-state!))))
 
 (defn on-end [{:api/keys [client game] :as state} event]
   (tel/event! :on-end)
