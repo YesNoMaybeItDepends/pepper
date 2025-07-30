@@ -81,4 +81,44 @@
                                     :unit-id 1
                                     :mineral-field-id 2}}}]
         (is (= (macro/process-idle-workers state-1)
-               state-2))))))
+               state-2))))
+
+    (testing "We can get a list of unit jobs"
+      (is (= (macro/get-unit-jobs {:unit-jobs {1 {:unit-id 1}}})
+             [{:unit-id 1}])))
+
+    (testing "We can delete a unit job"
+      (is (= (macro/delete-job {:unit-jobs {1 {:unit-id 1}
+                                            2 {:unit-id 2}}} {:unit-id 1})
+             {:unit-jobs {2 {:unit-id 2}}})))
+
+    (testing "We can filter pending jobs"
+      (is (= (macro/filter-pending-jobs [{:unit-id 1 :run? false}
+                                         {:unit-id 2 :run? true}])
+             [{:unit-id 1 :run? false}])))
+
+    (testing "We can execute a job"
+      (let [dummy-action (fn [game job] (get-in game [:unit-id (:unit-id job) :hello]))]
+        (is (= ((macro/execute-job! {:unit-id {1 {:hello :world}}})
+                {:unit-id 1
+                 :action dummy-action
+                 :run? false})
+               {:unit-id 1
+                :action dummy-action
+                :result :world
+                :run? true}))))
+
+    (testing "We can process jobs, __and for now, only once__"
+      (let [dummy-action (fn [game job]
+                           ((fnil inc 0) (:result job)))
+            state {:unit-jobs {1 {:unit-id 1
+                                  :action dummy-action
+                                  :run? false}}}]
+        (is (= {:unit-jobs {1 {:unit-id 1
+                               :action dummy-action
+                               :result 1
+                               :run? true}}}
+               (-> state
+                   (macro/process-jobs {})
+                   (macro/process-jobs {})
+                   (macro/process-jobs {}))))))))
