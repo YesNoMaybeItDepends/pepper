@@ -1,4 +1,4 @@
-(ns pepper.profiling)
+(ns pepper.utils.profiling)
 
 ;; config
 ;; target-ms -> 20 or 25?

@@ -1,4 +1,4 @@
-(ns pepper.services.config
+(ns pepper.utils.config
   (:require [clojure.edn :as edn]
             [clojure.test :refer [deftest testing is]]))
 
