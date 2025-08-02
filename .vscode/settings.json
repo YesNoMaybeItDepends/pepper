@@ -21,16 +21,5 @@
     ".portal": true,
     ".lsp/.cache": true
   },
-  "calva.replConnectSequences": [
-    {
-      // "projectType": "generic",
-      "projectType": "deps.edn",
-      "name": "run-pepper",
-      "nReplPortFile": [
-        ".my-port"
-      ],
-      // "customJackInCommandLine": "pwsh -c start-bot.ps1"
-    }
-  ],
   "calva.useLegacyReplWindowPath": false,
 }
