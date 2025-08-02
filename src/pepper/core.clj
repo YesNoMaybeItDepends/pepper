@@ -8,7 +8,7 @@
    [pepper.game.state :as state]
    [pepper.game.frame :as frame]
    [taoensso.telemere :as tel]
-   [pepper.config :as config])
+   [pepper.services.config :as config])
   (:import
    [bwapi BWClient Game Player]))
 
