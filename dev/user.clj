@@ -118,21 +118,31 @@
 
   (disable-namespace-maps)
 
-  (try (pepper/-main)
-       (catch Exception e (println e)))
+  (try
+    (dev/main)
+    (catch Exception e (println e)))
+
+  (try
+    (dev/reset)
+    (catch Exception e (println e)))
+
+  @dev/store
+
+  (let [state @dev/store
+        in-chan (:api/in-chan state)
+        out-chan (:api/out-chan state)
+        event {:event :tap}] ;; or {:event :hello-world}
+    (a/>!! in-chan event)
+    (a/<!! out-chan))
+
+  (-> (:api/client @dev/store)
+      .getGame
+      .resumeGame)
+
+  (-> (:api/game @dev/store)
+      .pauseGame)
+
+  (-> (:api/game @dev/store)
+      .resumeGame)
 
   #_())
-
-(comment "Trying to load all test namespaces"
-
-         (defn is-test-dir [file]
-           (and (true? (.isDirectory file))
-                (= "test" (.getName file))))
-
-         (defn find-test-dir []
-           (first (filter is-test-dir (cp/classpath))))
-
-         (defn find-test-namespaces []
-           (ns-find/find-namespaces-in-dir (find-test-dir)))
-
-         #_())

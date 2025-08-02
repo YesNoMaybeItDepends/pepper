@@ -29,74 +29,58 @@
   (reify BWEventListener
 
     (onEnd [this isWinner]
-      (f {:event :on-end
-          :data {:is-winner isWinner}}))
+      (f [:on-end {:is-winner isWinner}]))
 
     (onFrame [this]
-      (f {:event :on-frame}))
+      (f [:on-frame]))
 
     (onNukeDetect [this target]
-      (f {:event :on-nuke-detect
-          :data {:target target}}))
+      (f [:on-nuke-detect {:target target}]))
 
     (onPlayerDropped [this player]
-      (f {:event :on-player-dropped
-          :data {:player player}}))
+      (f [:on-player-dropped {:player player}]))
 
     (onPlayerLeft [this player]
-      (f {:event :on-player-left
-          :data {:player player}}))
+      (f [:on-player-left {:player player}]))
 
     (onReceiveText [this player text]
-      (f {:event :on-receive-text
-          :data {:player player :text text}}))
+      (f [:on-receive-text {:player player :text text}]))
 
     (onSaveGame [this gameName]
-      (f {:event :on-save-game
-          :data {:gameName gameName}}))
+      (f [:on-save-game {:gameName gameName}]))
 
     (onSendText [this text]
-      (f {:event :on-send-text
-          :data {:text text}}))
+      (f [:on-send-text {:text text}]))
 
     (onStart [this]
-      (f {:event :on-start}))
+      (f [:on-start]))
 
     (onUnitComplete [this unit]
-      (f {:event :on-unit-complete
-          :data {:unit unit}}))
+      (f [:on-unit-complete {:unit unit}]))
 
     (onUnitCreate [this unit]
-      (f {:event :on-unit-create
-          :data {:unit unit}}))
+      (f [:on-unit-create {:unit unit}]))
 
     (onUnitDestroy [this unit]
-      (f {:event :on-unit-destroy
-          :data {:unit unit}}))
+      (f [:on-unit-destroy {:unit unit}]))
 
     (onUnitDiscover [this unit]
-      (f {:event :on-unit-discover
-          :data {:unit unit}}))
+      (f [:on-unit-discover {:unit unit}]))
 
     (onUnitEvade [this unit]
-      (f {:event :on-unit-evade
-          :data {:unit unit}}))
+      (f [:on-unit-evade {:unit unit}]))
 
     (onUnitHide [this unit]
-      (f {:event :on-unit-hide
-          :data {:unit unit}}))
+      (f [:on-unit-hide {:unit unit}]))
 
     (onUnitMorph [this unit]
-      (f {:event :on-unit-morph
-          :data {:unit unit}}))
+      (f [:on-unit-morph {:unit unit}]))
 
     (onUnitRenegade [this unit]
-      (f {:event :on-unit-renegade
-          :data {:unit unit}}))
+      (f [:on-unit-renegade {:unit unit}]))
 
     (onUnitShow [this unit]
-      (f {:event :on-unit-show
-          :data {:unit unit}}))))
+      (f [:on-unit-show {:unit unit}]))))
 
 (defn make-client
   [handler-fn]

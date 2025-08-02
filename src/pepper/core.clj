@@ -12,32 +12,29 @@
   (:import
    [bwapi BWClient Game Player]))
 
-(defn on-start [{:api/keys [client] :as state} event]
+(defn on-start [{:api/keys [client] :as state}]
   (let [game (BWClient/.getGame client)]
     (-> (assoc state :api/game game)
         (merge (state/init-state
                 (frame/parse-on-start-data game))))))
 
-(defn on-frame [{:api/keys [client game] :as state} event]
-  (let [frame-data (-> (frame/parse-on-frame-data game)
-                       (frame/with-event event))]
+(defn on-frame [{:api/keys [client game] :as state}]
+  (let [frame-data (-> (frame/parse-on-frame-data game))]
     (tel/log! frame-data)
     (-> (state/update-state state frame-data)
         (macro/process-macro)
         (macro/process-jobs! game)
         (state/render-state!))))
 
-(defn on-end [{:api/keys [client game] :as state} event]
+(defn on-end [{:api/keys [client game] :as state}]
   (tel/event! :on-end)
   state)
 
-(defn event-handler [{event-name :event
-                      :as event}
-                     state]
-  (case event-name
-    :on-start (on-start state event)
-    :on-frame (on-frame state event)
-    :on-end (on-end state event)
+(defn event-handler [[event data] state]
+  (case event
+    :on-start (on-start state)
+    :on-frame (on-frame state)
+    :on-end (on-end state)
     :tap (do (tap> state)
              state)
     :hello-world (do (println "Hello world!")
@@ -49,18 +46,17 @@
    where event-handler is the fn passed to api/make-client to handle events"
   [state in out]
   (a/go-loop [state state]
-    (let [event (a/<! in)
+    (let [[event-id data :as event] (a/<! in)
           state (#'event-handler event state)
-          put? (a/>! out (if-let [event (:event event)]
-                           event
-                           :default))]
+          put? (a/>! out (or event-id
+                             :done))]
       (recur state))))
 
 (defn main [store]
   (let [whitelisted? (fn whitelisted?
                        [store]
-                       (fn [event]
-                         ((:api/event-whitelist @store) (:event event))))
+                       (fn [[event _]]
+                         ((:api/event-whitelist @store) event)))
         ;; "TODO: pubsub instead of whitelist"
         event-handler (fn event-handler
                         [input-ch output-ch filter-pred]
