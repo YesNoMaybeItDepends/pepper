@@ -1,7 +1,7 @@
 (ns pepper.dev
   (:require
    [pepper.core :as pepper]
-   [pepper.utils :as utils]
+   [pepper.utils.logging :as logging]
    [taoensso.telemere :as tel]
    [clojure.core.async :as a]))
 
@@ -16,12 +16,12 @@
 (defonce store (atom initial-store-state))
 
 (defn main [& opts]
-  (let [_ (utils/init-logging! (str (inst-ms (java.time.Instant/now))))]
+  (let [_ (logging/init-logging! (str (inst-ms (java.time.Instant/now))))]
     (reset! store initial-store-state)
     (alter-var-root #'bot (constantly (future (pepper/main store))))))
 
 (defn reset []
-  (utils/stop-logging!)
+  (logging/stop-logging!)
   (reset! bot initial-bot-state)
   (reset! store initial-store-state))
 
