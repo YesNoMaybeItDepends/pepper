@@ -114,6 +114,8 @@
 
   @dev/store
 
+  (tap> @dev/store) ;;;; won't tap the ingame bot state, just the "outer shell"
+
   (let [state @dev/store
         in-chan (:api/in-chan state)
         out-chan (:api/out-chan state)
