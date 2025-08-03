@@ -22,20 +22,6 @@
    [user.specs :as specs]
    [pepper.dev :as dev]))
 
-(defn disable-namespace-maps
-  "Change how a map like this is printed `{:some-ns/kw1 1 :some-ns/kw2 2}`
-   
-   Before -> `#:some-ns{:kw1 1 :kw2 2}`
-   
-   After -> `{:some-ns/kw1 1 :some-ns/kw2 2}`
-   
-   IMPORTANT: Can't eval automatically during Calva jack-in?
-
-   - [ ] TODO: fix that so I don't have to eval this manually
-   - [ ] TODO: Why did I put this inside its own function?"
-  []
-  (set! *print-namespace-maps* false))
-
 ;; Would be better if it was a function that returned the config or something like that
 ;; So that it would be changeable
 (def system-config
@@ -116,7 +102,7 @@
 
 (comment
 
-  (disable-namespace-maps)
+  (set! *print-namespace-maps* false)
 
   (try
     (dev/main)

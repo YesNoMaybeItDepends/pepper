@@ -5,6 +5,7 @@
    [pepper.api.game :as api]
    [pepper.game.unit :as unit]
    [pepper.game.macro :as macro]
+   [pepper.game.jobs :as jobs]
    [pepper.game.state :as state]
    [pepper.game.frame :as frame]
    [taoensso.telemere :as tel]
@@ -23,7 +24,7 @@
     (tel/log! frame-data)
     (-> (state/update-state state frame-data)
         (macro/process-macro)
-        (macro/process-jobs! game)
+        (jobs/process-jobs! game)
         (state/render-state!))))
 
 (defn on-end [{:api/keys [client game] :as state}]
