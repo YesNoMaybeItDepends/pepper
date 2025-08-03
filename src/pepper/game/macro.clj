@@ -57,7 +57,54 @@
   (-> state
       process-idle-workers))
 
-;;;; resources
+;;;; Resources
+
+(defn get-frame-resources [state]
+  (let [self (players/get-self state)]
+    (-> {}
+        (assoc :minerals-total (players/minerals self))
+        (assoc :gas-total (players/gas self))
+        (assoc :supply-total (players/supply-total self))
+        (assoc :supply-used (players/supply-total self)))))
+
+(defn init-resources [state]
+  (assoc state :resources {:gas 0
+                           :minerals 0
+                           :supply [0 0]}))
+
+(defn get-resources [state]
+  (:resources state))
 
 (defn get-minerals [state]
-  (players/get-self state))
+  (:minerals (get-resources state)))
+
+(defn get-gas [state]
+  (:gas (get-resources state)))
+
+(defn get-supply [state]
+  (:supply (get-resources state)))
+
+(defn get-supply-used [state]
+  (let [[used _] (get-supply state)]
+    used))
+
+(defn get-supply-total [state]
+  (let [[_ total] (get-supply state)]
+    total))
+
+(defn supply [[used total]]
+  {:supply-used used
+   :supply-total total})
+
+(defn get-our-minerals [state]
+  (players/minerals (players/get-self state)))
+
+(defn get-our-gas [state]
+  (players/gas (players/get-self state)))
+
+(defn get-our-supply [state]
+  (let [p (players/get-self state)]
+    [(players/supply-used p) (players/supply-total p)]))
+
+(defn update-resources [state resources]
+  (assoc state :resources resources))

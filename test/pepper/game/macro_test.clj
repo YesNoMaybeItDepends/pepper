@@ -1,5 +1,9 @@
 (ns pepper.game.macro-test
-  (:require [clojure.test :refer [deftest is testing use-fixtures]]
+  {:clj-kondo/config '{:lint-as {clojure.test.check.clojure-test/defspec clj-kondo.lint-as/def-catch-all}}}
+  (:require [clojure.test :refer [deftest is testing]]
+            [clojure.test.check.clojure-test :refer [defspec]]
+            [clojure.test.check.properties :as prop]
+            [clojure.test.check.generators :as gen]
             [clojure.spec.test.alpha :as st]
             [clojure.spec.alpha :as s]
             [clojure.spec.gen.alpha :as sg]
@@ -83,3 +87,46 @@
                                     :mineral-field-id 2}}}]
         (is (= (macro/process-idle-workers state-1)
                state-2))))))
+
+;;;; Resources
+
+(def gen-minerals gen/nat)
+(def gen-resources (gen/hash-map
+                    :minerals gen/nat
+                    :gas gen/nat
+                    :supply (gen/tuple gen/nat gen/nat)))
+
+(def gen-state (gen/hash-map :resources gen-resources))
+
+(deftest init-resources-works
+  (is (= {:resources {:minerals 0
+                      :gas 0
+                      :supply [0 0]}}
+         (macro/init-resources {}))))
+
+(defspec get-minerals-works
+  (prop/for-all [state gen-state]
+                (let [minerals (macro/get-minerals state)]
+                  (and (some? minerals)
+                       (int? minerals)))))
+
+(defspec get-gas-works
+  (prop/for-all [state gen-state]
+                (let [gas (macro/get-gas state)]
+                  (and (some? gas)
+                       (int? gas)))))
+
+(defspec get-supply-works
+  (prop/for-all [state gen-state]
+                (let [[used total] (macro/get-supply state)]
+                  ((every-pred some? int?) used total))))
+
+(defspec get-supply-used-works
+  (prop/for-all [state gen-state]
+                (let [[used _] (macro/get-supply state)]
+                  ((every-pred some? int?) used))))
+
+(defspec get-supply-total-works
+  (prop/for-all [state gen-state]
+                (let [[_ total] (macro/get-supply state)]
+                  ((every-pred some? int?) total))))

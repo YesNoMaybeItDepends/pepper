@@ -18,6 +18,10 @@
       (is (= 50 (players/minerals
                  {:minerals 50}))))
 
+    (testing "gas"
+      (is (= 50 (players/gas
+                 {:gas 50}))))
+
     (testing "supply total"
       (is (= 2 (players/supply-total {:supply-total 2}))))
 

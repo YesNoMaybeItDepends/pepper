@@ -10,6 +10,9 @@
 (defn minerals [player]
   (:minerals player))
 
+(defn gas [player]
+  (:gas player))
+
 (defn supply-total [player]
   (:supply-total player))
 
