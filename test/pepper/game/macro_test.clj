@@ -58,10 +58,10 @@
               [1 2]])))
 
     (testing "We can get mineral-fields"
-      (is (= (macro/get-minerals {:units-by-id {1 {:id 1
-                                                   :type :mineral-field}
-                                                2 {:id 2
-                                                   :type :scv}}})
+      (is (= (macro/get-mineral-fields {:units-by-id {1 {:id 1
+                                                         :type :mineral-field}
+                                                      2 {:id 2
+                                                         :type :scv}}})
              [{:id 1 :type :mineral-field}])))
 
     (testing "We can process idle workers in a macro step"

@@ -2,16 +2,22 @@
   (:require
    [pepper.api.game :as api-game]
    [pepper.game.unit :as unit]
-   [pepper.game.player :as player]))
+   [pepper.game.player :as player]
+   [pepper.game.frame :as frame]))
 
-(def state-keys #{:frame :units-by-id})
+(defn set-frame [state frame]
+  (assoc state :frame frame))
+
+(defn get-frame [state]
+  (:frame state))
 
 (defn init-state [opts]
   (if (not= 0 (:frame opts))
     (throw (Exception. "The current frame should be 0"))
-    {:frame (:frame opts)
-     :players-by-id (player/update-players-by-id {} (:players opts))
-     :self-id (:self-id opts)}))
+    (-> {}
+        (set-frame (:frame opts))
+        (player/update-players (:players opts))
+        (player/set-self-id (:self opts)))))
 
 (defn update-state [state frame-data]
   (-> state

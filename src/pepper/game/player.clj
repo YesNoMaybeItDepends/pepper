@@ -4,14 +4,41 @@
   (:import
    (bwapi BWClient Game Player Unit)))
 
+(defn id [player]
+  (:id player))
+
+(defn minerals [player]
+  (:minerals player))
+
+(defn supply-total [player]
+  (:supply-total player))
+
+(defn supply-used [player]
+  (:supply-used player))
+
+;;;; self
+
+(defn set-self-id [state player]
+  (assoc state :self-id (id player)))
+
+(defn get-self-id [state]
+  (:self-id state))
+
 (defn get-self [state]
-  (get-in state [:players-by-id (:self-player-id state)]))
+  (get-in state [:players-by-id (get-self-id state)]))
+
+;;;; players
 
 (defn update-player-by-id [players-by-id player]
   (update players-by-id (:id player) merge player))
 
 (defn update-players-by-id [players-by-id players]
   (reduce update-player-by-id players-by-id players))
+
+(defn update-players [state players]
+  (update state :players-by-id update-players-by-id players))
+
+;;;; parsing
 
 (defn parse-player!
   "Reads a bwapi player with a bwapi game"
@@ -20,8 +47,10 @@
     (-> {}
         (assoc :id (bwapi.Player/.getID player))
         (assoc :name (bwapi.Player/.getName player))
+        (assoc :race (bwapi.Player/.getRace player))
         (assoc :force (bwapi.Player/.getForce player))
         (assoc :color (bwapi.Player/.getColor player))
         (assoc :minerals (bwapi.Player/.minerals player))
         (assoc :gas (bwapi.Player/.gas player))
-        (assoc :race (bwapi.Player/.getRace player)))))
+        (assoc :supply-total (Player/.supplyTotal player))
+        (assoc :supply-used (Player/.supplyUsed player)))))

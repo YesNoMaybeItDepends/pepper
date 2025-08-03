@@ -65,4 +65,4 @@
 
 (defn ours? [state unit]
   (= (:player-id unit)
-     (:self-id state)))
+     (player/get-self-id state)))

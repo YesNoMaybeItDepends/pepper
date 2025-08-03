@@ -1,7 +1,10 @@
 (ns pepper.game.macro
   (:require [pepper.game.unit :as unit]
+            [pepper.game.player :as players]
             [pepper.game.jobs :as jobs])
   (:import (bwapi Unit Game)))
+
+;;;; split mining out to harvesting or mining or something
 
 (defn init-macro [state]
   {:workers #{}
@@ -20,7 +23,7 @@
   (->> (get-workers state)
        (filter :idle?)))
 
-(defn get-minerals [state]
+(defn get-mineral-fields [state]
   (->> (unit/get-units state)
        (filter unit/mineral-field?)))
 
@@ -44,7 +47,7 @@
 
 (defn process-idle-workers [state]
   (let [idle-workers (map :id (get-idle-workers state))
-        mineral-fields (map :id (get-minerals state))
+        mineral-fields (map :id (get-mineral-fields state))
         jobs-to-update (->> (map (assign-random-mineral mineral-fields)
                                  idle-workers)
                             (map mining-job))]
@@ -53,3 +56,8 @@
 (defn process-macro [state]
   (-> state
       process-idle-workers))
+
+;;;; resources
+
+(defn get-minerals [state]
+  (players/get-self state))

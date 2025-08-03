@@ -8,11 +8,12 @@
 (defn parse-on-start-data [game]
   {:frame (Game/.getFrameCount game)
    :players (map (player/parse-player! game) (Game/.getPlayers game))
-   :self-id (Player/.getID (Game/.self game))})
+   :self {:id (Player/.getID (Game/.self game))}})
 
 (defn parse-on-frame-data [game]
   {:frame (Game/.getFrameCount game)
-   :units (map (unit/parse-unit! game) (Game/.getAllUnits game))})
+   :units (map (unit/parse-unit! game) (Game/.getAllUnits game))
+   :players (map (player/parse-player! game) (Game/.getPlayers game))})
 
 (defn with-event [frame event]
   (-> frame

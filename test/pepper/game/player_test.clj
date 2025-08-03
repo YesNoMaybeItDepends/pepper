@@ -3,9 +3,23 @@
             [clojure.spec.test.alpha :as st]
             [clojure.spec.alpha :as s]
             [clojure.spec.gen.alpha :as sg]
-            [pepper.game.unit :as unit]
+            [pepper.game.player :as players]
             [pepper.mocking :as mocking]))
 
 (st/instrument)
 
-(deftest player-test)
+(deftest player-test
+  (testing "We can get a player's"
+
+    (testing "id"
+      (is (= 1 (players/id {:id 1}))))
+
+    (testing "minerals"
+      (is (= 50 (players/minerals
+                 {:minerals 50}))))
+
+    (testing "supply total"
+      (is (= 2 (players/supply-total {:supply-total 2}))))
+
+    (testing "supply used"
+      (is (= 2 (players/supply-used {:supply-used 2}))))))
