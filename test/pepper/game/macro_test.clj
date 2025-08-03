@@ -91,11 +91,16 @@
 ;;;; Resources
 
 (def gen-minerals gen/nat)
+(def gen-gas gen/nat)
+(def gen-supply (gen/fmap
+                 (fn [[x y]]
+                   [x (* x (+ y 1))])
+                 (gen/tuple gen/nat gen/nat)))
 (def gen-resources (gen/hash-map
-                    :minerals gen/nat
-                    :gas gen/nat
-                    :supply (gen/tuple gen/nat gen/nat)))
-
+                    :minerals gen-minerals
+                    :gas gen-gas
+                    :supply gen-supply))
+(def gen-unit-type (gen/elements (into [] (.getEnumConstants UnitType))))
 (def gen-state (gen/hash-map :resources gen-resources))
 
 (deftest init-resources-works
@@ -130,3 +135,25 @@
   (prop/for-all [state gen-state]
                 (let [[_ total] (macro/get-supply state)]
                   ((every-pred some? int?) total))))
+
+(defspec can-afford-everything-when-rich
+  (prop/for-all [state gen-state
+                 unit-type gen-unit-type]
+                (let [state-rich (update state :resources (fn [{minerals :minerals
+                                                                gas :gas
+                                                                [used total] :supply}]
+                                                            {:minerals (+ minerals 1500)
+                                                             :gas (+ gas 1500)
+                                                             :supply [0 1500]}))]
+                  (true? (macro/can-afford? state-rich unit-type)))))
+
+(defspec can-afford-nothing-when-poor
+  (prop/for-all [state gen-state
+                 unit-type gen-unit-type]
+                (let [state-poor (update state :resources (fn [{minerals :minerals
+                                                                gas :gas
+                                                                [used total] :supply}]
+                                                            {:minerals (- minerals 1500)
+                                                             :gas (- gas 1500)
+                                                             :supply [0 0]}))]
+                  (false? (macro/can-afford? state-poor unit-type)))))

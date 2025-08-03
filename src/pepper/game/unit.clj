@@ -6,6 +6,11 @@
 
 (def unit-keys #{:id :player-id :type :exists? :idle? :frame-discovered :last-frame-updated})
 
+(defn type [unit]
+  (cond
+    (map? unit) (:type unit)
+    (instance? UnitType unit) unit))
+
 (defn get-units [state]
   (vals (:units-by-id state)))
 
@@ -60,9 +65,28 @@
   [unit]
   (contains? resource-depot-types (:type unit)))
 
+(defn command-center?
+  [unit]
+  (contains? #{:command-center UnitType/Terran_Command_Center} (type unit)))
+
 (defn new-unit? [unit]
   (nil? (:frame-discovered unit)))
 
 (defn ours? [state unit]
   (= (:player-id unit)
      (player/get-self-id state)))
+
+(defn mineral-cost [unit]
+  (let [type (type unit)]
+    (assert (not (keyword? type)))
+    (UnitType/.mineralPrice type)))
+
+(defn gas-cost [unit]
+  (let [type (type unit)]
+    (assert (not (keyword? type)))
+    (UnitType/.gasPrice type)))
+
+(defn supply-cost [unit]
+  (let [type (type unit)]
+    (assert (not (keyword? type)))
+    (UnitType/.supplyRequired type)))

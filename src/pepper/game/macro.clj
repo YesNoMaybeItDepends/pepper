@@ -1,8 +1,9 @@
 (ns pepper.game.macro
   (:require [pepper.game.unit :as unit]
             [pepper.game.player :as players]
-            [pepper.game.jobs :as jobs])
-  (:import (bwapi Unit Game)))
+            [pepper.game.jobs :as jobs]
+            [pepper.game.player :as player])
+  (:import (bwapi Unit Game UnitType)))
 
 ;;;; split mining out to harvesting or mining or something
 
@@ -18,6 +19,11 @@
   (->> (vals (:units-by-id state))
        (filter #(unit/ours? state %))
        (filter #(unit/worker? %))))
+
+(defn get-command-centers [state]
+  (->> (unit/get-units state)
+       (filter #(unit/ours? state %))
+       (filter #(unit/command-center? %))))
 
 (defn get-idle-workers [state]
   (->> (get-workers state)
@@ -58,6 +64,8 @@
       process-idle-workers))
 
 ;;;; Resources
+;; Refactor resources so that it does not directly depend on state as much (?)
+;; resource state -> update resource state -> get resource state -> ...
 
 (defn get-frame-resources [state]
   (let [self (players/get-self state)]
@@ -92,6 +100,10 @@
   (let [[_ total] (get-supply state)]
     total))
 
+(defn get-supply-available [state]
+  (let [[used total] (get-supply state)]
+    (- total used)))
+
 (defn supply [[used total]]
   {:supply-used used
    :supply-total total})
@@ -108,3 +120,13 @@
 
 (defn update-resources [state resources]
   (assoc state :resources resources))
+
+(defn can-afford? [state unit-type]
+  (let [resources (get-resources state)
+        mineral-cost (unit/mineral-cost unit-type)
+        gas-cost (unit/gas-cost unit-type)
+        supply-cost (unit/supply-cost unit-type)]
+    (and
+     (<= mineral-cost (get-minerals state))
+     (<= gas-cost (get-gas state))
+     (<= supply-cost (get-supply-available state)))))
