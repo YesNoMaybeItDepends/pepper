@@ -1,17 +1,16 @@
 (ns pepper.game.macro-test
   {:clj-kondo/config '{:lint-as {clojure.test.check.clojure-test/defspec clj-kondo.lint-as/def-catch-all}}}
-  (:require [clojure.test :refer [deftest is testing]]
-            [clojure.test.check.clojure-test :refer [defspec]]
-            [clojure.test.check.properties :as prop]
-            [clojure.test.check.generators :as gen]
-            [clojure.spec.test.alpha :as st]
-            [clojure.spec.alpha :as s]
-            [clojure.spec.gen.alpha :as sg]
-            [pepper.game.unit :as unit]
-            [pepper.game.jobs :as jobs]
-            [pepper.game.macro :as macro]
-            [pepper.mocking :as mocking])
-  (:import (bwapi UnitType)))
+  (:require
+   [clojure.spec.test.alpha :as st]
+   [clojure.string :as str]
+   [clojure.test :refer [deftest is testing]]
+   [clojure.test.check.clojure-test :refer [defspec]]
+   [clojure.test.check.generators :as gen]
+   [clojure.test.check.properties :as prop]
+   [pepper.game.jobs :as jobs]
+   [pepper.game.macro :as macro])
+  (:import
+   (bwapi UnitType)))
 
 (st/instrument)
 
@@ -111,29 +110,41 @@
 
 (defspec get-minerals-works
   (prop/for-all [state gen-state]
-                (let [minerals (macro/get-minerals state)]
+                (let [minerals (-> state
+                                   macro/state->resources
+                                   macro/resources->minerals)]
                   (and (some? minerals)
                        (int? minerals)))))
 
 (defspec get-gas-works
   (prop/for-all [state gen-state]
-                (let [gas (macro/get-gas state)]
+                (let [gas (-> state
+                              macro/state->resources
+                              macro/resources->gas)]
                   (and (some? gas)
                        (int? gas)))))
 
 (defspec get-supply-works
   (prop/for-all [state gen-state]
-                (let [[used total] (macro/get-supply state)]
+                (let [[used total] (-> state
+                                       macro/state->resources
+                                       macro/resources->supply)]
                   ((every-pred some? int?) used total))))
 
 (defspec get-supply-used-works
   (prop/for-all [state gen-state]
-                (let [[used _] (macro/get-supply state)]
+                (let [used (-> state
+                               macro/state->resources
+                               macro/resources->supply
+                               macro/supply->supply-used)]
                   ((every-pred some? int?) used))))
 
 (defspec get-supply-total-works
   (prop/for-all [state gen-state]
-                (let [[_ total] (macro/get-supply state)]
+                (let [total (-> state
+                                macro/state->resources
+                                macro/resources->supply
+                                macro/supply->supply-total)]
                   ((every-pred some? int?) total))))
 
 (defspec can-afford-everything-when-rich

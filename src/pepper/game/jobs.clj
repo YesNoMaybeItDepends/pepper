@@ -31,3 +31,7 @@
                      (if (:run? job)
                        job
                        ((execute-job! game) job))))))
+
+(def training-job {:train-unit! :training-unit?
+                   :training-unit? :unit-completed?
+                   :unit-completed? :unit-completed})

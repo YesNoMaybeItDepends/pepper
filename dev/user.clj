@@ -119,7 +119,7 @@
   (let [state @dev/store
         in-chan (:api/in-chan state)
         out-chan (:api/out-chan state)
-        event {:event :tap}] ;; or {:event :hello-world}
+        event [:tap]]
     (a/>!! in-chan event)
     (a/<!! out-chan))
 

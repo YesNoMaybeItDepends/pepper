@@ -2,10 +2,12 @@
   (:require [pepper.game.unit :as unit]
             [pepper.game.player :as players]
             [pepper.game.jobs :as jobs]
-            [pepper.game.player :as player])
+            [pepper.game.player :as player]
+            [clojure.string :as s])
   (:import (bwapi Unit Game UnitType)))
 
 ;;;; split mining out to harvesting or mining or something
+;;;; split this into multiple files haha
 
 (defn init-macro [state]
   {:workers #{}
@@ -59,13 +61,19 @@
                             (map mining-job))]
     (reduce jobs/assign-unit-job state jobs-to-update)))
 
-(defn process-macro [state]
-  (-> state
-      process-idle-workers))
+(defn cost [minerals gas supply]
+  [minerals gas supply])
 
-;;;; Resources
-;; Refactor resources so that it does not directly depend on state as much (?)
-;; resource state -> update resource state -> get resource state -> ...
+(defn unit-type->resource-tuple
+  "Assumes unit-type is a java enum
+   Returns a tuple of [minerals gas supply]
+   TODO: time is also a factor which would nullify this idea"
+  [unit-type]
+  (if (instance? UnitType unit-type)
+    [(unit/mineral-cost unit-type)
+     (unit/gas-cost unit-type)
+     (unit/supply-cost unit-type)]
+    (throw (Exception. "I have to fix unit-type handling lol"))))
 
 (defn get-frame-resources [state]
   (let [self (players/get-self state)]
@@ -75,38 +83,43 @@
         (assoc :supply-total (players/supply-total self))
         (assoc :supply-used (players/supply-total self)))))
 
-(defn init-resources [state]
+(defn init-resources
+  "TODO: resources could be the AVAILABLE [minerals gas supply]
+   for supply, that would be total - used"
+  [state]
   (assoc state :resources {:gas 0
                            :minerals 0
                            :supply [0 0]}))
 
-(defn get-resources [state]
+(defn state->resources [state]
   (:resources state))
 
-(defn get-minerals [state]
-  (:minerals (get-resources state)))
+(defn resources->minerals [resources]
+  (:minerals resources))
 
-(defn get-gas [state]
-  (:gas (get-resources state)))
+(defn resources->gas [resources]
+  (:gas resources))
 
-(defn get-supply [state]
-  (:supply (get-resources state)))
+(defn resources->supply [resources]
+  (:supply resources))
 
-(defn get-supply-used [state]
-  (let [[used _] (get-supply state)]
-    used))
+(defn supply->supply-used [[used _]]
+  used)
 
-(defn get-supply-total [state]
-  (let [[_ total] (get-supply state)]
-    total))
+(defn supply->supply-total [[_ total]]
+  total)
 
-(defn get-supply-available [state]
-  (let [[used total] (get-supply state)]
-    (- total used)))
+(defn supply->supply-available [[used total]]
+  (- total used))
 
 (defn supply [[used total]]
   {:supply-used used
    :supply-total total})
+
+(defn resources->resource-tuple [resources]
+  [(resources->minerals resources)
+   (resources->gas resources)
+   (supply->supply-available (resources->supply resources))])
 
 (defn get-our-minerals [state]
   (players/minerals (players/get-self state)))
@@ -121,12 +134,102 @@
 (defn update-resources [state resources]
   (assoc state :resources resources))
 
+(defn process-resources [state]
+  (-> state
+      (update-resources {:minerals (get-our-minerals state)
+                         :gas (get-our-gas state)
+                         :supply (get-our-supply state)})))
+
+(defn pending-request? [request]
+  (not (:started? request)))
+
+(defn request->requested [request]
+  (:requested request))
+
+(defn request->cost-tuple [request]
+  (-> request
+      request->requested
+      unit-type->resource-tuple))
+
+(defn sum-resource-costs [a b]
+  (mapv + a b))
+
+(defn requests->total-cost [requests]
+  (->> (map request->cost-tuple requests)
+       (reduce sum-resource-costs [0 0 0])))
+
+(defn train-scv-request [unit-id]
+  {:unit-id unit-id
+   :requested UnitType/Terran_SCV
+   :started? false})
+
+(defn already-requested? [state x]
+  (let [c (get-in state [:production :table x])]
+    (and (some? c)
+         (>= c 1))))
+
+(defn init-production [state]
+  (assoc state :production {:queue clojure.lang.PersistentQueue/EMPTY
+                            :table {}}))
+
+(defn get-requests [state]
+  (into [] (get-in state [:production :queue])))
+
+(defn peek-production-request [state]
+  (peek (get-in state [:production :queue])))
+
+(defn add-production-request [state request]
+  (update state :production
+          (fn [p r]
+            (-> p
+                (update :queue conj r)
+                (update-in [:table (:requested r)] (fnil inc 0))))
+          request))
+
+(defn get-total-cost-of-pending-requests [state]
+  (->> (get-requests state)
+       (filter pending-request?)
+       (requests->total-cost)))
+
+(defn take-production-request
+  "state -> [state request]"
+  [state]
+  (let [request (peek (get-in state [:production :queue]))]
+    [(update state :production
+             (fn [p r]
+               (-> p
+                   (update :queue pop)
+                   (update-in [:table (:requested r)] (fnil dec 1))))
+             request)
+     request]))
+
 (defn can-afford? [state unit-type]
-  (let [resources (get-resources state)
-        mineral-cost (unit/mineral-cost unit-type)
-        gas-cost (unit/gas-cost unit-type)
-        supply-cost (unit/supply-cost unit-type)]
-    (and
-     (<= mineral-cost (get-minerals state))
-     (<= gas-cost (get-gas state))
-     (<= supply-cost (get-supply-available state)))))
+  (let [need (unit-type->resource-tuple unit-type)
+        have (-> state
+                 state->resources
+                 resources->resource-tuple)
+        reserved (get-total-cost-of-pending-requests state)]
+    ;; TODO: I forgot to do (- have reserved) to get the real amounts
+    (every? true? (map <= need have))))
+
+(defn add-train-scv-job [state uid]
+  (add-production-request state (train-scv-request uid)))
+
+(defn process-train-workers [state]
+  (let [command-centers (get-command-centers state)]
+    (reduce (fn [state command-center]
+              (if (and (not (already-requested? state UnitType/Terran_SCV))
+                       (can-afford? state UnitType/Terran_SCV))
+                (add-train-scv-job state (unit/id command-center))
+                state))
+            state
+            command-centers)))
+
+(defn process-production! [state game]
+  state)
+
+(defn process-macro [state]
+  (-> state
+      process-resources
+      process-idle-workers
+      process-train-workers))

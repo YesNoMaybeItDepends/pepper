@@ -11,6 +11,9 @@
     (map? unit) (:type unit)
     (instance? UnitType unit) unit))
 
+(defn id [unit]
+  (:id unit))
+
 (defn get-units [state]
   (vals (:units-by-id state)))
 
