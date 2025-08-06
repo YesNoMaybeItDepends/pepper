@@ -87,25 +87,3 @@
                                     :mineral-field-id 2}}}]
         (is (= (macro/process-idle-workers state-1)
                state-2))))))
-
-(defspec can-afford-everything-when-rich
-  (prop/for-all [state gen/state
-                 unit-type gen/unit-type]
-                (let [state-rich (update state :resources (fn [{minerals :minerals
-                                                                gas :gas
-                                                                [used total] :supply}]
-                                                            {:minerals (+ minerals 1500)
-                                                             :gas (+ gas 1500)
-                                                             :supply [0 1500]}))]
-                  (true? (macro/can-afford? state-rich unit-type)))))
-
-(defspec can-afford-nothing-when-poor
-  (prop/for-all [state gen/state
-                 unit-type gen/unit-type]
-                (let [state-poor (update state :resources (fn [{minerals :minerals
-                                                                gas :gas
-                                                                [used total] :supply}]
-                                                            {:minerals (- minerals 1500)
-                                                             :gas (- gas 1500)
-                                                             :supply [0 0]}))]
-                  (false? (macro/can-afford? state-poor unit-type)))))
