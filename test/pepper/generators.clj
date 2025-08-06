@@ -5,21 +5,21 @@
 
 ;;;; Etc
 
-(def gen-unit-type (gen/elements (into [] (.getEnumConstants UnitType))))
+(def unit-type (gen/elements (into [] (.getEnumConstants UnitType))))
 
 ;;;; Resources
 
-(def gen-minerals gen/nat)
-(def gen-gas gen/nat)
-(def gen-supply (gen/fmap
-                 (fn [[x y]]
-                   [x (* x (+ y 1))])
-                 (gen/tuple gen/nat gen/nat)))
-(def gen-resources (gen/hash-map
-                    :minerals gen-minerals
-                    :gas gen-gas
-                    :supply gen-supply))
+(def minerals gen/nat)
+(def gas gen/nat)
+(def supply (gen/fmap
+             (fn [[x y]]
+               [x (* x (+ y 1))])
+             (gen/tuple gen/nat gen/nat)))
+(def resources (gen/hash-map
+                :minerals minerals
+                :gas gas
+                :supply supply))
 
 ;;;; State
 
-(def gen-state (gen/hash-map :resources gen-resources))
+(def state (gen/hash-map :resources resources))
