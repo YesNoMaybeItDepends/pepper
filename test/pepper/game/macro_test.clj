@@ -9,7 +9,7 @@
    [pepper.game.jobs :as jobs]
    [pepper.game.macro :as macro]
    [pepper.game.resources :as resources]
-   [pepper.generators :as gens])
+   [pepper.generators :as gen])
   (:import
    (bwapi UnitType)))
 
@@ -88,54 +88,9 @@
         (is (= (macro/process-idle-workers state-1)
                state-2))))))
 
-;;;; Resources
-
-(deftest init-resources-works
-  (is (= {:resources {:minerals 0
-                      :gas 0
-                      :supply [0 0]}}
-         (resources/init-resources {}))))
-
-(defspec get-minerals-works
-  (prop/for-all [state gens/state]
-                (let [minerals (-> state
-                                   resources/get-state-resources
-                                   resources/get-minerals)]
-                  (and (some? minerals)
-                       (int? minerals)))))
-
-(defspec get-gas-works
-  (prop/for-all [state gens/state]
-                (let [gas (-> state
-                              resources/get-state-resources
-                              resources/get-gas)]
-                  (and (some? gas)
-                       (int? gas)))))
-
-(defspec get-supply-works
-  (prop/for-all [state gens/state]
-                (let [[used total] (-> state
-                                       resources/get-state-resources
-                                       resources/get-supply)]
-                  ((every-pred some? int?) used total))))
-
-(defspec get-supply-used-works
-  (prop/for-all [state gens/state]
-                (let [[used total] (-> state
-                                       resources/get-state-resources
-                                       resources/get-supply)]
-                  ((every-pred some? int?) used))))
-
-(defspec get-supply-total-works
-  (prop/for-all [state gens/state]
-                (let [[used total] (-> state
-                                       resources/get-state-resources
-                                       resources/get-supply)]
-                  ((every-pred some? int?) total))))
-
 (defspec can-afford-everything-when-rich
-  (prop/for-all [state gens/state
-                 unit-type gens/unit-type]
+  (prop/for-all [state gen/state
+                 unit-type gen/unit-type]
                 (let [state-rich (update state :resources (fn [{minerals :minerals
                                                                 gas :gas
                                                                 [used total] :supply}]
@@ -145,8 +100,8 @@
                   (true? (macro/can-afford? state-rich unit-type)))))
 
 (defspec can-afford-nothing-when-poor
-  (prop/for-all [state gens/state
-                 unit-type gens/unit-type]
+  (prop/for-all [state gen/state
+                 unit-type gen/unit-type]
                 (let [state-poor (update state :resources (fn [{minerals :minerals
                                                                 gas :gas
                                                                 [used total] :supply}]
