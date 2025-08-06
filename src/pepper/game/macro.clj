@@ -3,6 +3,7 @@
             [pepper.game.player :as players]
             [pepper.game.jobs :as jobs]
             [pepper.game.player :as player]
+            [pepper.game.resources :as resources]
             [clojure.string :as s])
   (:import (bwapi Unit Game UnitType)))
 
@@ -61,85 +62,6 @@
                             (map mining-job))]
     (reduce jobs/assign-unit-job state jobs-to-update)))
 
-(defn cost [minerals gas supply]
-  [minerals gas supply])
-
-(defn unit-type->resource-tuple
-  "Assumes unit-type is a java enum
-   Returns a tuple of [minerals gas supply]
-   TODO: time is also a factor which would nullify this idea"
-  [unit-type]
-  (if (instance? UnitType unit-type)
-    [(unit/mineral-cost unit-type)
-     (unit/gas-cost unit-type)
-     (unit/supply-cost unit-type)]
-    (throw (Exception. "I have to fix unit-type handling lol"))))
-
-(defn get-frame-resources [state]
-  (let [self (players/get-self state)]
-    (-> {}
-        (assoc :minerals-total (players/minerals self))
-        (assoc :gas-total (players/gas self))
-        (assoc :supply-total (players/supply-total self))
-        (assoc :supply-used (players/supply-total self)))))
-
-(defn init-resources
-  "TODO: resources could be the AVAILABLE [minerals gas supply]
-   for supply, that would be total - used"
-  [state]
-  (assoc state :resources {:gas 0
-                           :minerals 0
-                           :supply [0 0]}))
-
-(defn state->resources [state]
-  (:resources state))
-
-(defn resources->minerals [resources]
-  (:minerals resources))
-
-(defn resources->gas [resources]
-  (:gas resources))
-
-(defn resources->supply [resources]
-  (:supply resources))
-
-(defn supply->supply-used [[used _]]
-  used)
-
-(defn supply->supply-total [[_ total]]
-  total)
-
-(defn supply->supply-available [[used total]]
-  (- total used))
-
-(defn supply [[used total]]
-  {:supply-used used
-   :supply-total total})
-
-(defn resources->resource-tuple [resources]
-  [(resources->minerals resources)
-   (resources->gas resources)
-   (supply->supply-available (resources->supply resources))])
-
-(defn get-our-minerals [state]
-  (players/minerals (players/get-self state)))
-
-(defn get-our-gas [state]
-  (players/gas (players/get-self state)))
-
-(defn get-our-supply [state]
-  (let [p (players/get-self state)]
-    [(players/supply-used p) (players/supply-total p)]))
-
-(defn update-resources [state resources]
-  (assoc state :resources resources))
-
-(defn process-resources [state]
-  (-> state
-      (update-resources {:minerals (get-our-minerals state)
-                         :gas (get-our-gas state)
-                         :supply (get-our-supply state)})))
-
 (defn pending-request? [request]
   (not (:started? request)))
 
@@ -149,14 +71,11 @@
 (defn request->cost-tuple [request]
   (-> request
       request->requested
-      unit-type->resource-tuple))
-
-(defn sum-resource-costs [a b]
-  (mapv + a b))
+      resources/unit-type->cost))
 
 (defn requests->total-cost [requests]
   (->> (map request->cost-tuple requests)
-       (reduce sum-resource-costs [0 0 0])))
+       (reduce resources/sum-quantities [0 0 0])))
 
 (defn train-scv-request [unit-id]
   {:unit-id unit-id
@@ -204,10 +123,10 @@
      request]))
 
 (defn can-afford? [state unit-type]
-  (let [need (unit-type->resource-tuple unit-type)
+  (let [need (resources/unit-type->cost unit-type)
         have (-> state
-                 state->resources
-                 resources->resource-tuple)
+                 resources/get-state-resources
+                 resources/resources->resource-tuple)
         reserved (get-total-cost-of-pending-requests state)]
     ;; TODO: I forgot to do (- have reserved) to get the real amounts
     (every? true? (map <= need have))))
@@ -230,6 +149,6 @@
 
 (defn process-macro [state]
   (-> state
-      process-resources
+      resources/process-resources
       process-idle-workers
       process-train-workers))
