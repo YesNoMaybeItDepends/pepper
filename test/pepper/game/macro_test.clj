@@ -5,11 +5,11 @@
    [clojure.string :as str]
    [clojure.test :refer [deftest is testing]]
    [clojure.test.check.clojure-test :refer [defspec]]
-   [clojure.test.check.generators :as gen]
    [clojure.test.check.properties :as prop]
    [pepper.game.jobs :as jobs]
    [pepper.game.macro :as macro]
-   [pepper.game.resources :as resources])
+   [pepper.game.resources :as resources]
+   [pepper.generators :as gens])
   (:import
    (bwapi UnitType)))
 
@@ -90,19 +90,6 @@
 
 ;;;; Resources
 
-(def gen-minerals gen/nat)
-(def gen-gas gen/nat)
-(def gen-supply (gen/fmap
-                 (fn [[x y]]
-                   [x (* x (+ y 1))])
-                 (gen/tuple gen/nat gen/nat)))
-(def gen-resources (gen/hash-map
-                    :minerals gen-minerals
-                    :gas gen-gas
-                    :supply gen-supply))
-(def gen-unit-type (gen/elements (into [] (.getEnumConstants UnitType))))
-(def gen-state (gen/hash-map :resources gen-resources))
-
 (deftest init-resources-works
   (is (= {:resources {:minerals 0
                       :gas 0
@@ -110,7 +97,7 @@
          (resources/init-resources {}))))
 
 (defspec get-minerals-works
-  (prop/for-all [state gen-state]
+  (prop/for-all [state gens/gen-state]
                 (let [minerals (-> state
                                    resources/get-state-resources
                                    resources/get-minerals)]
@@ -118,7 +105,7 @@
                        (int? minerals)))))
 
 (defspec get-gas-works
-  (prop/for-all [state gen-state]
+  (prop/for-all [state gens/gen-state]
                 (let [gas (-> state
                               resources/get-state-resources
                               resources/get-gas)]
@@ -126,29 +113,29 @@
                        (int? gas)))))
 
 (defspec get-supply-works
-  (prop/for-all [state gen-state]
+  (prop/for-all [state gens/gen-state]
                 (let [[used total] (-> state
                                        resources/get-state-resources
                                        resources/get-supply)]
                   ((every-pred some? int?) used total))))
 
 (defspec get-supply-used-works
-  (prop/for-all [state gen-state]
+  (prop/for-all [state gens/gen-state]
                 (let [[used total] (-> state
                                        resources/get-state-resources
                                        resources/get-supply)]
                   ((every-pred some? int?) used))))
 
 (defspec get-supply-total-works
-  (prop/for-all [state gen-state]
+  (prop/for-all [state gens/gen-state]
                 (let [[used total] (-> state
                                        resources/get-state-resources
                                        resources/get-supply)]
                   ((every-pred some? int?) total))))
 
 (defspec can-afford-everything-when-rich
-  (prop/for-all [state gen-state
-                 unit-type gen-unit-type]
+  (prop/for-all [state gens/gen-state
+                 unit-type gens/gen-unit-type]
                 (let [state-rich (update state :resources (fn [{minerals :minerals
                                                                 gas :gas
                                                                 [used total] :supply}]
@@ -158,8 +145,8 @@
                   (true? (macro/can-afford? state-rich unit-type)))))
 
 (defspec can-afford-nothing-when-poor
-  (prop/for-all [state gen-state
-                 unit-type gen-unit-type]
+  (prop/for-all [state gens/gen-state
+                 unit-type gens/gen-unit-type]
                 (let [state-poor (update state :resources (fn [{minerals :minerals
                                                                 gas :gas
                                                                 [used total] :supply}]
