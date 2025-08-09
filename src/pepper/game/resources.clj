@@ -27,6 +27,12 @@
 (defn sum-quantities [a b]
   (mapv + a b))
 
+(defn combine-quantities [operand a b]
+  (mapv operand a b))
+
+(defn multiply-quantity [quantity by]
+  (mapv #(* by %) quantity))
+
 (defn unit-type->cost
   "Assumes unit-type is a java enum
    Returns cost expressed as a quantity

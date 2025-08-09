@@ -14,13 +14,13 @@
    :macro-orders #{}})
 
 (defn get-workers [state]
-  (->> (vals (:units-by-id state))
+  (->> (unit/get-units state)
        (filter #(unit/ours? state %))
        (filter #(unit/worker? %))))
 
 (defn get-idle-workers [state]
   (->> (get-workers state)
-       (filter :idle?)))
+       (filter unit/idle?)))
 
 (defn get-mineral-fields [state]
   (->> (unit/get-units state)

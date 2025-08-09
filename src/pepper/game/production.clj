@@ -1,14 +1,19 @@
 (ns pepper.game.production
   (:require
+   [pepper.game.jobs :as jobs]
    [pepper.game.resources :as resources]
    [pepper.game.unit :as unit])
   (:import
-   [bwapi UnitType]))
+   [bwapi Game Unit UnitType]))
 
 (defn get-command-centers [state]
   (->> (unit/get-units state)
        (filter #(unit/ours? state %))
        (filter #(unit/command-center? %))))
+
+(defn get-idle-command-centers [state]
+  (->> (get-command-centers state)
+       (filter unit/idle?)))
 
 (defn pending-request? [request]
   (not (:started? request)))
@@ -25,10 +30,21 @@
   (->> (map request->cost-tuple requests)
        (reduce resources/sum-quantities [0 0 0])))
 
+(defn train! [game job]
+  (let [trainer (Game/.getUnit game (:unit-id job))
+        trainee (:requested job)]
+    (Unit/.train trainer trainee)))
+
 (defn train-scv-request [unit-id]
   {:unit-id unit-id
    :requested UnitType/Terran_SCV
    :started? false})
+
+(defn train-scv-job [unit-id]
+  {:job :train-scv
+   :requested UnitType/Terran_SCV
+   :action train!
+   :unit-id unit-id})
 
 (defn already-requested? [state x]
   (let [c (get-in state [:production :table x])]
@@ -70,27 +86,35 @@
              request)
      request]))
 
-(defn can-afford? [state unit-type]
-  (let [need (resources/unit-type->cost unit-type)
-        have (-> state
+(defn can-afford? [state cost]
+  (let [have (-> state
                  resources/get-state-resources
-                 resources/resources->resource-tuple)
-        reserved (get-total-cost-of-pending-requests state)]
-    ;; TODO: I forgot to do (- have reserved) to get the real amounts
-    (every? true? (map <= need have))))
+                 resources/resources->resource-tuple)]
+    (every? true? (map <= cost have))))
 
-(defn add-train-scv-job [state uid]
-  (add-production-request state (train-scv-request uid)))
+;; (defn add-train-scv-request [state uid]
+;;   (add-production-request state (train-scv-request uid)))
 
-(defn process-train-workers [state]
-  (let [command-centers (get-command-centers state)]
-    (reduce (fn [state command-center]
-              (if (and (not (already-requested? state UnitType/Terran_SCV))
-                       (can-afford? state UnitType/Terran_SCV))
-                (add-train-scv-job state (unit/id command-center))
-                state))
-            state
-            command-centers)))
+;; (defn process-train-workers [state]
+;;   (let [command-centers (get-command-centers state)]
+;;     (reduce (fn [state command-center]
+;;               (if (and (not (already-requested? state UnitType/Terran_SCV))
+;;                        (can-afford-unit? state UnitType/Terran_SCV))
+;;                 (add-train-scv-request state (unit/id command-center))
+;;                 state))
+;;             state
+;;             command-centers)))
 
-(defn process-production! [state game]
-  state)
+(defn process-idle-command-centers [state]
+  (let [idle-command-centers (mapv :id (get-idle-command-centers state))
+        scv-cost (resources/unit-type->cost UnitType/Terran_SCV)
+        jobs-to-update (reduce-kv
+                        (fn [acc idx curr]
+                          (if (can-afford? state (-> scv-cost
+                                                     (resources/multiply-quantity idx)
+                                                     (resources/sum-quantities scv-cost)))
+                            (conj acc (train-scv-job curr))
+                            (reduced acc)))
+                        []
+                        idle-command-centers)]
+    (reduce jobs/assign-unit-job state jobs-to-update)))

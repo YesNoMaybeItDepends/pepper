@@ -79,6 +79,9 @@
   (= (:player-id unit)
      (player/get-self-id state)))
 
+(defn idle? [unit]
+  (:idle? unit))
+
 (defn mineral-cost [unit]
   (let [type (type unit)]
     (assert (not (keyword? type)))

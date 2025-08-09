@@ -12,4 +12,4 @@
   (-> state
       resources/process-resources
       gathering/process-idle-workers
-      production/process-train-workers))
+      production/process-idle-command-centers))

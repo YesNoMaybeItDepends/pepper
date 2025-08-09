@@ -26,7 +26,6 @@
     (-> (state/update-state state frame-data)
         (macro/process-macro)
         (jobs/process-jobs! game)
-        (production/process-production! game)
         (state/render-state!))))
 
 (defn on-end [{:api/keys [client game] :as state}]
