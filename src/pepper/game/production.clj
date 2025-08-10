@@ -11,9 +11,16 @@
        (filter #(unit/ours? state %))
        (filter #(unit/command-center? %))))
 
+(defn employed? [state unit]
+  (some? (jobs/get-unit-job state (unit/id unit))))
+
+(defn unemployed? [state unit]
+  ((complement employed?) state unit))
+
 (defn get-idle-command-centers [state]
   (->> (get-command-centers state)
-       (filter unit/idle?)))
+       (filter unit/idle?)
+       (filter #(unemployed? state %))))
 
 (defn pending-request? [request]
   (not (:started? request)))

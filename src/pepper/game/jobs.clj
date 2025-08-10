@@ -1,7 +1,11 @@
-(ns pepper.game.jobs)
+(ns pepper.game.jobs
+  (:import [bwapi Game]))
 
 (defn assign-unit-job [state job]
   (update-in state [:unit-jobs] assoc (:unit-id job) job))
+
+(defn get-jobs-by-unit-id [state]
+  (:unit-jobs state))
 
 (defn get-unit-jobs [state]
   (vals (:unit-jobs state)))
@@ -14,7 +18,8 @@
    (fn [job]
      (assoc job
             :result ((:action job) game job)
-            :run? true))))
+            :run? true
+            :frame-last-executed (Game/.getFrameCount game)))))
 
 (defn dispatch-jobs! [game jobs]
   (mapv (execute-job! game) jobs))
@@ -32,6 +37,5 @@
                        job
                        ((execute-job! game) job))))))
 
-(def training-job {:train-unit! :training-unit?
-                   :training-unit? :unit-completed?
-                   :unit-completed? :unit-completed})
+(defn get-unit-job [state id]
+  (get (get-jobs-by-unit-id state) id))
