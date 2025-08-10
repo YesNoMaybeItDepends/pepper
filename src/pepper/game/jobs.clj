@@ -24,7 +24,21 @@
 (defn with-frame-last-executed! [job game]
   (assoc job :frame-last-executed (Game/.getFrameCount game)))
 
-(defn execute-job! [job game]
+(defn execute-job!
+  "maybe it could be a multi step process ?
+   1. get impure data
+   2. get pure data from impure data
+   3. decide with pure data
+   4. do impure actions
+   5. get pure data from impure actions
+   6. decide
+   
+   maybe a job action could also have ?
+   {:let {:unit [Game/.getUnit unit-id]
+          :gathering? [Unit/.isGatheringMinerals :unit]}
+   :args [:unit :gathering]
+   :fn (fn [gathering?] blablabla)}"
+  [job game]
   ((:action job) game job))
 
 (defn filter-pending-jobs [jobs]
