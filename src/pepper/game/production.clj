@@ -37,10 +37,31 @@
   (->> (map request->cost-tuple requests)
        (reduce resources/sum-quantities [0 0 0])))
 
+(declare train!)
+
+(defn training-completed?! [game job]
+  (let [trainee (Game/.getUnit game (:requested-id job))
+        trainee-completed? (Unit/.isCompleted trainee)]
+    (if trainee-completed?
+      (jobs/mark-job-completed job)
+      job)))
+
+(defn get-trainee! [game job]
+  (let [trainer (Game/.getUnit game (:unit-id job))]
+    (if-some [trainee (Unit/.getBuildUnit trainer)]
+      (assoc job
+             :requested-id (Unit/.getID trainee)
+             :action training-completed?!)
+      (assoc job
+             :action train!))))
+
 (defn train! [game job]
   (let [trainer (Game/.getUnit game (:unit-id job))
-        trainee (:requested job)]
-    (Unit/.train trainer trainee)))
+        unit-type (:requested job)
+        success? (Unit/.train trainer unit-type)]
+    (if success?
+      (assoc job :action get-trainee!)
+      job)))
 
 (defn train-scv-request [unit-id]
   {:unit-id unit-id

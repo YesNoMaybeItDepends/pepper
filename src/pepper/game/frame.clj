@@ -10,8 +10,13 @@
    :players (map (player/parse-player! game) (Game/.getPlayers game))
    :self {:id (Player/.getID (Game/.self game))}})
 
-(defn parse-on-frame-data [game]
+(defn parse-on-frame-data [client game]
   {:frame (Game/.getFrameCount game)
+   :frames-behind (BWClient/.framesBehind client)
+   :latency-frames (Game/.getLatencyFrames game)
+   :latency-time (Game/.getLatencyTime game)
+   :latency-remaining-frames (Game/.getRemainingLatencyFrames game)
+   :latency-remaining-time (Game/.getRemainingLatencyTime game)
    :units (map (unit/parse-unit! game) (Game/.getAllUnits game))
    :players (map (player/parse-player! game) (Game/.getPlayers game))})
 
@@ -28,4 +33,4 @@
   (-> state
       (assoc :frame (:frame frame-data))
       (update :units-by-id unit/update-units-by-id (:units frame-data))
-      (update :player-by-id player/update-players-by-id (:players frame-data))))
+      (update :players-by-id player/update-players-by-id (:players frame-data))))

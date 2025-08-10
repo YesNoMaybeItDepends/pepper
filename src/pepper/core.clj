@@ -21,12 +21,12 @@
                 (frame/parse-on-start-data game))))))
 
 (defn on-frame [{:api/keys [client game] :as state}]
-  (let [frame-data (-> (frame/parse-on-frame-data game))]
-    (tel/log! frame-data)
-    (-> (state/update-state state frame-data)
-        (macro/process-macro)
-        (jobs/process-jobs! game)
-        (state/render-state!))))
+  (tel/log! state)
+  (-> state
+      (state/update-state-with-frame-data (frame/parse-on-frame-data client game))
+      (macro/process-macro)
+      (jobs/process-state-jobs! game)
+      (state/render-state!)))
 
 (defn on-end [{:api/keys [client game] :as state}]
   (tel/event! :on-end)

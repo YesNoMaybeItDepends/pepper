@@ -19,11 +19,14 @@
         (player/update-players (:players opts))
         (player/set-self-id (:self opts)))))
 
-(defn update-state [state frame-data]
+(defn update-state-with-frame-data [state frame-data]
   (-> state
-      (assoc :frame (:frame frame-data))
+      (merge (select-keys frame-data [:frame :frames-behind
+                                      :latency-frames :latency-time
+                                      :latency-remaining-frames
+                                      :latency-remaining-time]))
       (update :units-by-id unit/update-units-by-id (:units frame-data))
-      (update :player-by-id player/update-players-by-id (:players frame-data))))
+      (update :players-by-id player/update-players-by-id (:players frame-data))))
 
 (defn render-state! [state]
   (let [{game :api/game

@@ -31,10 +31,20 @@
   (fn [worker]
     [worker (rand-nth mineral-fields)]))
 
+(defn is-gathering-minerals?! [game job]
+  (let [worker (Game/.getUnit game (:unit-id job))
+        is-gathering-minerals? (Unit/.isGatheringMinerals worker)]
+    (if-not is-gathering-minerals?
+      (jobs/mark-job-completed job)
+      job)))
+
 (defn go-mine! [game job]
   (let [worker (Game/.getUnit game (:unit-id job))
-        mineral-field (Game/.getUnit game (:mineral-field-id job))]
-    (Unit/.gather worker mineral-field)))
+        mineral-field (Game/.getUnit game (:mineral-field-id job))
+        success? (Unit/.gather worker mineral-field)]
+    (if success?
+      (assoc job :action is-gathering-minerals?!)
+      job)))
 
 (defn mining-job [[worker-id mineral-field-id]]
   {:job :mining
