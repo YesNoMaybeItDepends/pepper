@@ -51,16 +51,18 @@
     (if-some [trainee (Unit/.getBuildUnit trainer)]
       (assoc job
              :requested-id (Unit/.getID trainee)
+             :frame-got-trainee-id (Game/.getFrameCount game)
              :action training-completed?!)
-      (assoc job
-             :action train!))))
+      job)))
 
 (defn train! [game job]
   (let [trainer (Game/.getUnit game (:unit-id job))
         unit-type (:requested job)
         success? (Unit/.train trainer unit-type)]
     (if success?
-      (assoc job :action get-trainee!)
+      (assoc job
+             :action get-trainee!
+             :frame-issued-train-command (Game/.getFrameCount game))
       job)))
 
 (defn train-scv-request [unit-id]
