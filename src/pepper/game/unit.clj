@@ -2,6 +2,7 @@
   (:refer-clojure :exclude [type])
   (:require [pepper.game.player :as player]
             [pepper.game.jobs :as jobs]
+            [pepper.game.job :as job]
             [pepper.game.unit :as unit])
   (:import
    (bwapi UnitType)))
@@ -116,11 +117,11 @@
 
 (defn with-job? [state job-type unit]
   (-> (jobs/get-unit-job state (id unit))
-      (jobs/type? job-type)))
+      (job/type? job-type)))
 
 (defn group-workers-by-job [state]
   (->> (get-workers state)
-       (group-by #(jobs/type (jobs/get-unit-job state (id %))))))
+       (group-by #(job/type (jobs/get-unit-job state (id %))))))
 
 (defn get-mineral-fields [state]
   (->> (get-units state)

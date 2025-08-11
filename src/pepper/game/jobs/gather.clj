@@ -1,14 +1,8 @@
 (ns pepper.game.jobs.gather
   (:require
-   [pepper.game.jobs :as jobs])
+   [pepper.game.job :as job])
   (:import
    [bwapi Game Unit]))
-
-(defn started-gathering? [[started? gathering?]]
-  (and (not started?) gathering?))
-
-(defn stopped-gathering? [[started? gathering?]]
-  (and started? (not gathering?)))
 
 (defn is-gathering-minerals?! [game job]
   (let [worker (Game/.getUnit game (:unit-id job))
@@ -16,8 +10,8 @@
         gathering? (Unit/.isGatheringMinerals worker)
         status [started? gathering?]]
     (cond
-      (started-gathering? status) (assoc job :frame-started-gathering-minerals (Game/.getFrameCount game))
-      (stopped-gathering? status) (jobs/mark-job-completed job)
+      (job/started-working? status) (assoc job :frame-started-gathering-minerals (Game/.getFrameCount game))
+      (job/stopped-working? status) (job/set-completed job)
       :else job)))
 
 (defn go-mine! [game job]

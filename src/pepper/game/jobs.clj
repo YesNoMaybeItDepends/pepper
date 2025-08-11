@@ -8,6 +8,7 @@
      POSSIBLE KEYS
        :completed? --> if true, the job will be set to nil"
   (:refer-clojure :exclude [type])
+  (:require [pepper.game.job :as job])
   (:import [bwapi Game]))
 
 (defn assign-unit-job [state job]
@@ -45,22 +46,13 @@
 (defn filter-pending-jobs [jobs]
   (filterv (complement :run?) jobs))
 
-(defn mark-job-completed [job]
-  (assoc job :completed? true))
-
-(defn job-completed? [job]
-  (:completed? job))
-
-(defn process-completed-job [job]
-  nil)
-
 (defn get-unit-job [state id]
   (get (get-jobs-by-unit-id state) id))
 
 (defn process-job! [job game]
   (cond
     (nil? job) nil
-    (job-completed? job) nil
+    (job/completed? job) nil
     :else (-> (execute-job! job game)
               (with-frame-last-executed! game))))
 
@@ -75,16 +67,3 @@
 
 (defn process-state-jobs! [state game]
   (update state :unit-jobs (process-jobs! game)))
-
-(defn validate-job [job]
-  (assert (:action job) "job requires an action")
-  job)
-
-(defn type [job]
-  (:job job))
-
-(defn type? [job job-type]
-  (= job-type (type job)))
-
-(defn unit-id [job]
-  (:unit-id job))

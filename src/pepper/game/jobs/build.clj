@@ -1,5 +1,5 @@
 (ns pepper.game.jobs.build
-  (:require [pepper.game.jobs :as jobs])
+  (:require [pepper.game.job :as job])
   (:import [bwapi Game Unit Player TilePosition]))
 
 (defn api-position->position [api-position]
@@ -24,26 +24,20 @@
 (defn frame-started-building [job]
   (:frame-started-building job))
 
-(defn started-building? [[started? building?]]
-  (and (not started?) building?))
-
-(defn stopped-building? [[started? building?]]
-  (and started? (not building?)))
-
 (declare get-build-location!)
 
 (defn is-building?! [game job]
-  (let [worker (Game/.getUnit game (jobs/unit-id job))
+  (let [worker (Game/.getUnit game (job/unit-id job))
         started? (frame-started-building job)
         building? (Unit/.isConstructing worker)
         status [started? building?]]
     (cond
-      (started-building? status) (assoc job :frame-started-building (Game/.getFrameCount game))
-      (stopped-building? status) (jobs/mark-job-completed job)
+      (job/started-working? status) (assoc job :frame-started-building (Game/.getFrameCount game))
+      (job/stopped-working? status) (job/set-completed job)
       :else job)))
 
 (defn go-build! [game job]
-  (let [worker (Game/.getUnit game (jobs/unit-id job))
+  (let [worker (Game/.getUnit game (job/unit-id job))
         building (building job)
         position (position->api-position (build-location job))
         success? (Unit/.build worker building position)]
@@ -57,7 +51,7 @@
 
 (defn get-build-location! [game job]
   (let [building (building job)
-        worker (Game/.getUnit game (jobs/unit-id job))
+        worker (Game/.getUnit game (job/unit-id job))
         starting-location (Player/.getStartLocation (Game/.self game))
         build-location (Game/.getBuildLocation game building starting-location)]
     (if build-location

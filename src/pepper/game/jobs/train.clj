@@ -1,5 +1,5 @@
 (ns pepper.game.jobs.train
-  (:require [pepper.game.jobs :as jobs])
+  (:require [pepper.game.job :as job])
   (:import
    [bwapi Game Unit UnitType]))
 
@@ -9,7 +9,7 @@
   (let [trainee (Game/.getUnit game (:requested-id job))
         trainee-completed? (Unit/.isCompleted trainee)]
     (if trainee-completed?
-      (jobs/mark-job-completed job)
+      (job/set-completed job)
       job)))
 
 (defn get-trainee! [game job]
