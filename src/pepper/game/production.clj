@@ -1,6 +1,7 @@
 (ns pepper.game.production
   (:require
    [pepper.game.jobs :as jobs]
+   [pepper.game.jobs.train :as train]
    [pepper.game.resources :as resources]
    [pepper.game.unit :as unit])
   (:import
@@ -31,44 +32,10 @@
   (->> (map request->cost-tuple requests)
        (reduce resources/sum-quantities [0 0 0])))
 
-(declare train!)
-
-(defn training-completed?! [game job]
-  (let [trainee (Game/.getUnit game (:requested-id job))
-        trainee-completed? (Unit/.isCompleted trainee)]
-    (if trainee-completed?
-      (jobs/mark-job-completed job)
-      job)))
-
-(defn get-trainee! [game job]
-  (let [trainer (Game/.getUnit game (:unit-id job))]
-    (if-some [trainee (Unit/.getBuildUnit trainer)]
-      (assoc job
-             :requested-id (Unit/.getID trainee)
-             :frame-got-trainee-id (Game/.getFrameCount game)
-             :action training-completed?!)
-      job)))
-
-(defn train! [game job]
-  (let [trainer (Game/.getUnit game (:unit-id job))
-        unit-type (:requested job)
-        success? (Unit/.train trainer unit-type)]
-    (if success?
-      (assoc job
-             :action get-trainee!
-             :frame-issued-train-command (Game/.getFrameCount game))
-      job)))
-
-(defn train-scv-request [unit-id]
-  {:unit-id unit-id
-   :requested UnitType/Terran_SCV
-   :started? false})
-
-(defn train-scv-job [unit-id]
-  {:job :train-scv
-   :requested UnitType/Terran_SCV
-   :action train!
-   :unit-id unit-id})
+;; (defn train-scv-request [unit-id]
+;;   {:unit-id unit-id
+;;    :requested UnitType/Terran_SCV
+;;    :started? false})
 
 (defn already-requested? [state x]
   (let [c (get-in state [:production :table x])]
@@ -131,7 +98,7 @@
                           (if (resources/can-afford? state (-> scv-cost
                                                                (resources/multiply-quantity idx)
                                                                (resources/sum-quantities scv-cost)))
-                            (conj acc (train-scv-job curr))
+                            (conj acc (train/train-scv-job curr))
                             (reduced acc)))
                         []
                         idle-command-centers)]
