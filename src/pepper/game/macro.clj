@@ -2,6 +2,7 @@
   (:require
    [pepper.game.jobs :as jobs]
    [pepper.game.production :as production]
+   [pepper.game.training :as training]
    [pepper.game.resources :as resources]
    [pepper.game.gathering :as gathering]
    [pepper.game.building :as building]
@@ -14,4 +15,4 @@
       resources/process-resources
       gathering/process-idle-workers
       building/process-building
-      production/process-idle-command-centers))
+      training/process-idle-command-centers))
