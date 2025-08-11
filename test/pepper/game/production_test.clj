@@ -24,7 +24,7 @@
                                                             {:minerals (+ minerals 1500)
                                                              :gas (+ gas 1500)
                                                              :supply [0 1500]}))]
-                  (true? (production/can-afford? state-rich (resources/unit-type->cost unit-type))))))
+                  (true? (resources/can-afford? state-rich (resources/unit-type->cost unit-type))))))
 
 (defspec can-afford-nothing-when-poor
   (prop/for-all [state gen/state
@@ -35,4 +35,4 @@
                                                             {:minerals (- minerals 1500)
                                                              :gas (- gas 1500)
                                                              :supply [0 0]}))]
-                  (false? (production/can-afford? state-poor (resources/unit-type->cost unit-type))))))
+                  (false? (resources/can-afford? state-poor (resources/unit-type->cost unit-type))))))

@@ -13,19 +13,6 @@
    :supply-depots #{}
    :macro-orders #{}})
 
-(defn get-workers [state]
-  (->> (unit/get-units state)
-       (filter #(unit/ours? state %))
-       (filter #(unit/worker? %))))
-
-(defn get-idle-workers [state]
-  (->> (get-workers state)
-       (filter unit/idle?)))
-
-(defn get-mineral-fields [state]
-  (->> (unit/get-units state)
-       (filter unit/mineral-field?)))
-
 (defn assign-random-mineral
   [mineral-fields]
   (fn [worker]
@@ -66,8 +53,8 @@
    :mineral-field-id mineral-field-id})
 
 (defn process-idle-workers [state]
-  (let [idle-workers (map :id (get-idle-workers state))
-        mineral-fields (map :id (get-mineral-fields state))
+  (let [idle-workers (map :id (unit/get-idle-workers state))
+        mineral-fields (map :id (unit/get-mineral-fields state))
         jobs-to-update (->> (map (assign-random-mineral mineral-fields)
                                  idle-workers)
                             (map mining-job))]

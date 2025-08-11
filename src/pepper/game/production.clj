@@ -11,16 +11,10 @@
        (filter #(unit/ours? state %))
        (filter #(unit/command-center? %))))
 
-(defn employed? [state unit]
-  (some? (jobs/get-unit-job state (unit/id unit))))
-
-(defn unemployed? [state unit]
-  ((complement employed?) state unit))
-
 (defn get-idle-command-centers [state]
   (->> (get-command-centers state)
        (filter unit/idle?)
-       (filter #(unemployed? state %))))
+       (filter #(unit/unemployed? state %))))
 
 (defn pending-request? [request]
   (not (:started? request)))
@@ -116,12 +110,6 @@
              request)
      request]))
 
-(defn can-afford? [state cost]
-  (let [have (-> state
-                 resources/get-state-resources
-                 resources/resources->resource-tuple)]
-    (every? true? (map <= cost have))))
-
 ;; (defn add-train-scv-request [state uid]
 ;;   (add-production-request state (train-scv-request uid)))
 
@@ -140,9 +128,9 @@
         scv-cost (resources/unit-type->cost UnitType/Terran_SCV)
         jobs-to-update (reduce-kv
                         (fn [acc idx curr]
-                          (if (can-afford? state (-> scv-cost
-                                                     (resources/multiply-quantity idx)
-                                                     (resources/sum-quantities scv-cost)))
+                          (if (resources/can-afford? state (-> scv-cost
+                                                               (resources/multiply-quantity idx)
+                                                               (resources/sum-quantities scv-cost)))
                             (conj acc (train-scv-job curr))
                             (reduced acc)))
                         []

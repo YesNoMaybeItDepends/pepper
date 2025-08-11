@@ -7,6 +7,7 @@
 
      POSSIBLE KEYS
        :completed? --> if true, the job will be set to nil"
+  (:refer-clojure :exclude [type])
   (:import [bwapi Game]))
 
 (defn assign-unit-job [state job]
@@ -78,3 +79,9 @@
 (defn validate-job [job]
   (assert (:action job) "job requires an action")
   job)
+
+(defn type [job]
+  (:job job))
+
+(defn type? [job job-type]
+  (= job-type (type job)))

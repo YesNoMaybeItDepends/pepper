@@ -7,6 +7,7 @@
    [clojure.test.check.clojure-test :refer [defspec]]
    [clojure.test.check.properties :as prop]
    [pepper.game.jobs :as jobs]
+   [pepper.game.unit :as unit]
    [pepper.game.gathering :as gathering]
    [pepper.game.production :as production]
    [pepper.game.resources :as resources]
@@ -37,11 +38,11 @@
                                 :type UnitType/Resource_Mineral_Field_Type_3
                                 :idle? false}}}]
     (testing "We can find our workers"
-      (is (= (gathering/get-workers state)
+      (is (= (unit/get-workers state)
              [{:id 2 :type :scv :idle? false} {:id 3 :type :scv :idle? true}])))
 
     (testing "We can find our idle workers"
-      (is (= (gathering/get-idle-workers state)
+      (is (= (unit/get-idle-workers state)
              [{:id 3 :type :scv :idle? true}])))
 
     (testing "We can assign a unit a new mining job"
@@ -61,10 +62,10 @@
               [1 2]])))
 
     (testing "We can get mineral-fields"
-      (is (= (gathering/get-mineral-fields {:units-by-id {1 {:id 1
-                                                             :type :mineral-field}
-                                                          2 {:id 2
-                                                             :type :scv}}})
+      (is (= (unit/get-mineral-fields {:units-by-id {1 {:id 1
+                                                        :type :mineral-field}
+                                                     2 {:id 2
+                                                        :type :scv}}})
              [{:id 1 :type :mineral-field}])))
 
     (testing "We can process idle workers in a macro step"

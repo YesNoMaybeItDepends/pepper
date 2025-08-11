@@ -2,6 +2,9 @@
   (:require
    [clojure.spec.test.alpha :as st]
    [clojure.test :refer [deftest is testing]]
+   [clojure.test.check.clojure-test :refer [defspec]]
+   [clojure.test.check.properties :as prop]
+   [pepper.generators :as gens]
    [pepper.game.unit :as unit])
   (:import
    [bwapi UnitType]))

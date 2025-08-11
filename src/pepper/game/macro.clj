@@ -4,6 +4,7 @@
    [pepper.game.production :as production]
    [pepper.game.resources :as resources]
    [pepper.game.gathering :as gathering]
+   [pepper.game.building :as building]
    [pepper.game.unit :as unit])
   (:import
    (bwapi Game Unit)))
@@ -12,4 +13,5 @@
   (-> state
       resources/process-resources
       gathering/process-idle-workers
+      building/process-building
       production/process-idle-command-centers))

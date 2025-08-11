@@ -1,6 +1,8 @@
 (ns pepper.game.unit
   (:refer-clojure :exclude [type])
-  (:require [pepper.game.player :as player])
+  (:require [pepper.game.player :as player]
+            [pepper.game.jobs :as jobs]
+            [pepper.game.unit :as unit])
   (:import
    (bwapi UnitType)))
 
@@ -96,3 +98,39 @@
   (let [type (type unit)]
     (assert (not (keyword? type)))
     (UnitType/.supplyRequired type)))
+
+(defn employed? [state unit]
+  (some? (jobs/get-unit-job state (id unit))))
+
+(defn unemployed? [state unit]
+  ((complement employed?) state unit))
+
+(defn get-workers [state]
+  (->> (get-units state)
+       (filter #(ours? state %))
+       (filter #(worker? %))))
+
+(defn get-idle-workers [state]
+  (->> (get-workers state)
+       (filter idle?)))
+
+(defn with-job? [state job-type unit]
+  (-> (jobs/get-unit-job state (id unit))
+      (jobs/type? job-type)))
+
+(defn group-workers-by-job [state]
+  (->> (get-workers state)
+       (group-by #(jobs/type (jobs/get-unit-job state (id %))))))
+
+(defn get-mineral-fields [state]
+  (->> (get-units state)
+       (filter mineral-field?)))
+
+(defn get-idle-or-mining-worker [state]
+  (let [workers-by-job (group-workers-by-job state)
+        worker-id (cond (some? (get workers-by-job nil))
+                        (:id (first (get workers-by-job nil)))
+
+                        (some? (:mining workers-by-job))
+                        (:id (first (:mining workers-by-job))))]
+    (unit/get-unit-by-id state worker-id)))

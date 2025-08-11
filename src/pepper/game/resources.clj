@@ -56,6 +56,12 @@
 (defn get-supply [resources]
   (:supply resources))
 
+(defn supply-capped? [[_ total]]
+  (= 400 total))
+
+(defn supply-blocked? [[used total]]
+  (>= used total))
+
 (defn supply->supply-used [[used _]]
   used)
 
@@ -70,6 +76,10 @@
    (get-gas resources)
    (supply->supply-available (get-supply resources))])
 
+(defn state->available-resources [state]
+  (-> (get-state-resources state)
+      resources->resource-tuple))
+
 (defn- get-our-resources [state]
   (let [p (player/get-self state)]
     {:minerals (player/minerals p)
@@ -81,3 +91,9 @@
 
 (defn process-resources [state]
   (update-resources state (get-our-resources state)))
+
+(defn can-afford? [state cost]
+  (let [have (-> state
+                 get-state-resources
+                 resources->resource-tuple)]
+    (every? true? (map <= cost have))))
