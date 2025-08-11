@@ -1,7 +1,7 @@
 (ns pepper.game.auto-supply
   (:require [pepper.game.resources :as resources]
-            [pepper.game.unit :as unit]
-            [pepper.game.jobs :as jobs])
+            [pepper.game.jobs :as jobs]
+            [pepper.game.jobs.build :as build])
   (:import [bwapi UnitType]))
 
 (def minimum-supply 8)
@@ -22,5 +22,5 @@
 
 (defn building-supply? [state]
   (->> (jobs/get-unit-jobs state)
-       (filter #(jobs/type? % :build-supply-depot))
+       (filter #(= (build/building %) UnitType/Terran_Supply_Depot))
        first))
