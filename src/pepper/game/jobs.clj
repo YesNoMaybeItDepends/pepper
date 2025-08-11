@@ -85,3 +85,6 @@
 
 (defn type? [job job-type]
   (= job-type (type job)))
+
+(defn unit-id [job]
+  (:unit-id job))
