@@ -1,10 +1,9 @@
 (ns pepper.game.building
-  (:require [pepper.game.resources :as resources]
-            [pepper.game.auto-supply :as auto-supply]
+  (:require [pepper.game.auto-supply :as auto-supply]
             [pepper.game.unit :as unit]
             [pepper.game.jobs :as jobs]
             [pepper.game.jobs.build :as build])
-  (:import [bwapi Game Unit UnitType Player TilePosition]))
+  (:import [bwapi UnitType]))
 
 (defn process-building [state]
   (if (and (auto-supply/need-supply? state)
