@@ -1,8 +1,10 @@
 (ns pepper.game.player
   (:refer-clojure :exclude [name force type])
-  (:require [clojure.set :as set])
+  (:require [clojure.set :as set]
+            [pepper.game.color :as color]
+            [pepper.game.race :as race])
   (:import
-   (bwapi BWClient Game Player Unit)))
+   [bwapi BWClient Game Player Unit Force]))
 
 (defn id [player]
   (:id player))
@@ -50,9 +52,9 @@
     (-> {}
         (assoc :id (bwapi.Player/.getID player))
         (assoc :name (bwapi.Player/.getName player))
-        (assoc :race (bwapi.Player/.getRace player))
-        (assoc :force (bwapi.Player/.getForce player))
-        (assoc :color (bwapi.Player/.getColor player))
+        (assoc :race (race/object->keyword (bwapi.Player/.getRace player)))
+        (assoc :force (Force/.getID (bwapi.Player/.getForce player)))
+        (assoc :color (color/object->keyword (bwapi.Player/.getColor player)))
         (assoc :minerals (bwapi.Player/.minerals player))
         (assoc :gas (bwapi.Player/.gas player))
         (assoc :supply-total (Player/.supplyTotal player))
