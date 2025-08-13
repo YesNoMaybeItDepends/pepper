@@ -5,8 +5,10 @@
 (defn- read-edn [file]
   (edn/read-string (slurp file)))
 
-(defn get-config [] (read-edn "config.local.edn"))
+(defn read-config [] (read-edn "config.local.edn"))
 (def ^:private schema (read-edn "config.edn"))
+
+(def config (read-config))
 
 ;;;; TODO: validate configs
 

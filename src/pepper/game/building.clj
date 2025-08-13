@@ -10,5 +10,5 @@
            (auto-supply/can-afford? state)
            (not (auto-supply/building-supply? state)))
     (let [worker (unit/get-idle-or-mining-worker state)]
-      (jobs/assign-unit-job state (build/job (unit/id worker) UnitType/Terran_Supply_Depot)))
+      (jobs/assign-unit-job state (build/job (unit/id worker) :supply-depot)))
     state))

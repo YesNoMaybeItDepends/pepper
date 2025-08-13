@@ -1,7 +1,8 @@
 (ns pepper.game.jobs.train
-  (:require [pepper.game.job :as job])
+  (:require [pepper.game.job :as job]
+            [pepper.game.unit-type :as unit-type])
   (:import
-   [bwapi Game Unit UnitType]))
+   [bwapi Game Unit]))
 
 (declare train!)
 
@@ -23,7 +24,7 @@
 
 (defn train! [game job]
   (let [trainer (Game/.getUnit game (:unit-id job))
-        unit-type (:requested job)
+        unit-type (unit-type/keyword->object (:requested job))
         success? (Unit/.train trainer unit-type)]
     (if success?
       (assoc job
@@ -33,6 +34,6 @@
 
 (defn train-scv-job [unit-id]
   {:job :train-scv
-   :requested UnitType/Terran_SCV
+   :requested :scv
    :action train!
    :unit-id unit-id})

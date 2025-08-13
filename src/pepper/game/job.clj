@@ -28,3 +28,8 @@
 
 (defn set-last-frame-executed [job frame]
   (assoc job :frame-last-executed frame))
+
+(comment "idea"
+         {:im-a-job :blablaba
+          :step :whatever-step
+          :dispatcher-fn (fn dispatcher-fn [job game])})

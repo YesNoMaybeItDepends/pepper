@@ -5,7 +5,8 @@
    [clojure.test.check.clojure-test :refer [defspec]]
    [clojure.test.check.properties :as prop]
    [pepper.generators :as gens]
-   [pepper.game.unit :as unit])
+   [pepper.game.unit :as unit]
+   [pepper.game.unit-type :as unit-type])
   (:import
    [bwapi UnitType]))
 
@@ -27,8 +28,5 @@
     (is (true? (:idle? {:idle? true}))))
 
   (testing "We can know if a unit is a mineral field"
-    (is (true? (->> [{:type :mineral-field}
-                     {:type UnitType/Resource_Mineral_Field}
-                     {:type UnitType/Resource_Mineral_Field_Type_2}
-                     {:type UnitType/Resource_Mineral_Field_Type_3}]
-                    (every? unit/mineral-field?))))))
+    (is (true? (->> [{:type :mineral-field}]
+                    (every? #(unit/type? % unit-type/mineral-field)))))))

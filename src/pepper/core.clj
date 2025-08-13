@@ -14,6 +14,10 @@
   (:import
    [bwapi BWClient Game Player]))
 
+(defn maybe-log-state! [state config]
+  (when (:log? config)
+    (tel/log! (dissoc state :api/client :api/game))))
+
 (defn on-start [{:api/keys [client] :as state}]
   (let [game (BWClient/.getGame client)]
     (-> (assoc state :api/game game)
@@ -21,7 +25,7 @@
                 (frame/parse-on-start-data game))))))
 
 (defn on-frame [{:api/keys [client game] :as state}]
-  (tel/log! state)
+  (maybe-log-state! state config/config)
   (-> state
       (state/update-state-with-frame-data (frame/parse-on-frame-data client game))
       (macro/process-macro)
@@ -78,7 +82,7 @@
            :api/event-whitelist #{:on-start :on-frame :on-end}
            :api/in-chan bot-in
            :api/out-chan bot-out)
-    (client/run-starcraft! (client/chaos-launcher-path (config/get-config))) ;; TODO: this should be moved to dev
+    (client/run-starcraft! (client/chaos-launcher-path (config/read-config))) ;; TODO: this should be moved to dev
     (client/start-game! api {:async true
                              :debug-connection false
                              :log-verbosely false})

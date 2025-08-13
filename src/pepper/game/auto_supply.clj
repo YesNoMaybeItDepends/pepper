@@ -1,8 +1,11 @@
 (ns pepper.game.auto-supply
-  (:require [pepper.game.resources :as resources]
-            [pepper.game.jobs :as jobs]
-            [pepper.game.jobs.build :as build])
-  (:import [bwapi UnitType]))
+  (:require
+   [pepper.game.jobs :as jobs]
+   [pepper.game.jobs.build :as build]
+   [pepper.game.resources :as resources]
+   [pepper.game.unit-type :as unit-type])
+  (:import
+   [bwapi UnitType]))
 
 (def minimum-supply 8)
 
@@ -17,10 +20,10 @@
     (and (not capped?) under-minimum-supply?)))
 
 (defn can-afford? [state]
-  (->> (resources/unit-type->cost UnitType/Terran_Supply_Depot)
+  (->> (unit-type/cost :supply-depot)
        (resources/can-afford? state)))
 
 (defn building-supply? [state]
   (->> (jobs/get-unit-jobs state)
-       (filter #(= (build/building %) UnitType/Terran_Supply_Depot))
+       (filter #(= (build/building %) :supply-depot))
        first))

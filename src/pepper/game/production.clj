@@ -11,14 +11,14 @@
 (defn request->requested [request]
   (:requested request))
 
-(defn request->cost-tuple [request]
-  (-> request
-      request->requested
-      resources/unit-type->cost))
+;; (defn request->cost-tuple [request]
+;;   (-> request
+;;       request->requested
+;;       resources/unit-type->cost))
 
-(defn requests->total-cost [requests]
-  (->> (map request->cost-tuple requests)
-       (reduce resources/sum-quantities [0 0 0])))
+;; (defn requests->total-cost [requests]
+;;   (->> (map request->cost-tuple requests)
+;;        (reduce resources/sum-quantities [0 0 0])))
 
 ;; (defn train-scv-request [unit-id]
 ;;   {:unit-id unit-id
@@ -48,10 +48,10 @@
                 (update-in [:table (:requested r)] (fnil inc 0))))
           request))
 
-(defn get-total-cost-of-pending-requests [state]
-  (->> (get-requests state)
-       (filter pending-request?)
-       (requests->total-cost)))
+;; (defn get-total-cost-of-pending-requests [state]
+;;   (->> (get-requests state)
+;;        (filter pending-request?)
+;;        (requests->total-cost)))
 
 (defn take-production-request
   "state -> [state request]"

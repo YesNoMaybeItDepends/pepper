@@ -1,6 +1,5 @@
 (ns pepper.game.resources
-  (:require [pepper.game.unit :as unit]
-            [pepper.game.player :as player])
+  (:require [pepper.game.player :as player])
   (:import (bwapi UnitType)))
 
 (defn init-resources
@@ -33,16 +32,8 @@
 (defn multiply-quantity [quantity by]
   (mapv #(* by %) quantity))
 
-(defn unit-type->cost
-  "Assumes unit-type is a java enum
-   Returns cost expressed as a quantity
-   TODO: time could also be considered a cost"
-  [unit-type]
-  (if (instance? UnitType unit-type)
-    (quantity (unit/mineral-cost unit-type)
-              (unit/gas-cost unit-type)
-              (unit/supply-cost unit-type))
-    (throw (Exception. "I have to fix unit-type handling lol"))))
+(defn cost [minerals gas supply]
+  [minerals gas supply])
 
 (defn get-state-resources [state]
   (:resources state))
