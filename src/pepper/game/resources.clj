@@ -66,7 +66,7 @@
    (get-gas resources)
    (supply->supply-available (get-supply resources))])
 
-(defn state->available-resources [state]
+(defn get-state-resources-available [state]
   (-> (get-state-resources state)
       resources->resource-tuple))
 
@@ -82,8 +82,13 @@
 (defn process-resources [state]
   (update-resources state (get-our-resources state)))
 
-(defn can-afford? [state cost]
+(defn can-afford?
+  "please stop using this"
+  [state cost]
   (let [have (-> state
                  get-state-resources
                  resources->resource-tuple)]
     (every? true? (map <= cost have))))
+
+(defn can-afford?-v2 [budget cost]
+  (every? true? (map <= cost budget)))
