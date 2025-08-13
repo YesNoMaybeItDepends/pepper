@@ -2,8 +2,7 @@
   (:require
    [clojure.test :refer [deftest is testing]]
    [clojure.spec.test.alpha :as st]
-   [pepper.mocking :as mocking])
-  (:import (bwapi Game Unit UnitType)))
+   [pepper.mocking :as mocking]))
 
 (st/instrument)
 

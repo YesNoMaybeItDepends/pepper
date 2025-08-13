@@ -1,24 +1,8 @@
 (ns user
   (:require
-   [clojure.reflect :as reflect]
    [clojure.core.async :as a]
-   [clojure.core.async.flow :as flow]
-   [clojure.core.async.flow-monitor :as flow-monitor]
-   [clojure.java.process :as process]
-   [clojure.java.io :as io]
-   [clojure.repl :as repl]
-   [clojure.pprint :as pprint]
    [zprint.core :as zp]
-   [clojure.spec.alpha :as s]
-   [pepper.core :as pepper]
-   [flow-storm.api :as fs-api]
-   [taoensso.telemere :as t]
-   #_[clojure.spec.test.alpha :as st]
    [portal.api :as portal]
-   [clojure.tools.namespace.find :as ns-find]
-   [clojure.java.classpath :as cp]
-   [clojure.tools.namespace.parse :as ns-parse]
-   [clojure.string :as str]
    [user.specs :as specs]
    [pepper.dev :as dev]))
 

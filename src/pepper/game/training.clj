@@ -4,9 +4,7 @@
    [pepper.game.jobs.train :as train]
    [pepper.game.resources :as resources]
    [pepper.game.unit :as unit]
-   [pepper.game.unit-type :as unit-type])
-  (:import
-   [bwapi UnitType]))
+   [pepper.game.unit-type :as unit-type]))
 
 (defn get-command-centers [state]
   (->> (unit/get-units state)

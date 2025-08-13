@@ -2,17 +2,14 @@
   (:require
    [clojure.core.async :as a]
    [pepper.api.client :as client]
-   [pepper.api.game :as api]
-   [pepper.game.unit :as unit]
    [pepper.game.macro :as macro]
-   [pepper.game.production :as production]
    [pepper.game.jobs :as jobs]
    [pepper.game.state :as state]
    [pepper.game.frame :as frame]
    [taoensso.telemere :as tel]
    [pepper.utils.config :as config])
   (:import
-   [bwapi BWClient Game Player]))
+   [bwapi BWClient]))
 
 (defn maybe-log-state! [state config]
   (when (:log? config)

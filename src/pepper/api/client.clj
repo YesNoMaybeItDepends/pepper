@@ -1,6 +1,5 @@
 (ns pepper.api.client
-  (:require [clojure.core.async :as a]
-            [babashka.process :as p])
+  (:require [babashka.process :as p])
   (:import (bwapi BWClient BWClientConfiguration BWEventListener)))
 
 (defn make-configuration

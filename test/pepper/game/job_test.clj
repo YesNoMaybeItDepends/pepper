@@ -1,12 +1,6 @@
 (ns pepper.game.job-test
-  (:require [clojure.test :refer [deftest is testing use-fixtures]]
-            [clojure.spec.test.alpha :as st]
-            [clojure.spec.alpha :as s]
-            [clojure.spec.gen.alpha :as sg]
-            [pepper.game.unit :as unit]
-            [pepper.game.jobs :as jobs]
-            [pepper.game.macro :as macro]
-            [pepper.mocking :as mocking]))
+  (:require [clojure.test :refer [is testing]]
+            [pepper.game.jobs :as jobs]))
 
 (testing "We can get a list of unit jobs"
   (is (= (jobs/get-unit-jobs {:unit-jobs {1 {:unit-id 1}}})

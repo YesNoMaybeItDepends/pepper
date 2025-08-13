@@ -2,8 +2,7 @@
   (:require [pepper.game.auto-supply :as auto-supply]
             [pepper.game.unit :as unit]
             [pepper.game.jobs :as jobs]
-            [pepper.game.jobs.build :as build])
-  (:import [bwapi UnitType]))
+            [pepper.game.jobs.build :as build]))
 
 (defn process-building [state]
   (if (and (auto-supply/need-supply? state)

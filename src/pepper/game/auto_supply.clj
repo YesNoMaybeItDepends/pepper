@@ -3,9 +3,7 @@
    [pepper.game.jobs :as jobs]
    [pepper.game.jobs.build :as build]
    [pepper.game.resources :as resources]
-   [pepper.game.unit-type :as unit-type])
-  (:import
-   [bwapi UnitType]))
+   [pepper.game.unit-type :as unit-type]))
 
 (def minimum-supply 8)
 

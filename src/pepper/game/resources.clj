@@ -1,6 +1,5 @@
 (ns pepper.game.resources
-  (:require [pepper.game.player :as player])
-  (:import (bwapi UnitType)))
+  (:require [pepper.game.player :as player]))
 
 (defn init-resources
   "TODO: resources could be the AVAILABLE [minerals gas supply]

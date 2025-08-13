@@ -3,8 +3,7 @@
    [clojure.test :refer [deftest is testing]]
    [clojure.spec.alpha :as s]
    [clojure.spec.test.alpha :as st]
-   [pepper.htn.impl.compound :as c]
-   [pepper.htn.impl.primitive :as p]))
+   [pepper.htn.impl.compound :as c]))
 
 (st/instrument)
 (s/check-asserts true)

@@ -1,9 +1,7 @@
 (ns pepper.dev
   (:require
    [pepper.core :as pepper]
-   [pepper.utils.logging :as logging]
-   [taoensso.telemere :as tel]
-   [clojure.core.async :as a]))
+   [pepper.utils.logging :as logging]))
 
 (def initial-bot-state false)
 (def initial-store-state {:api/event-whitelist #{:on-start :on-frame :on-end}

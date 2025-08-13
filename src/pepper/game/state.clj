@@ -2,8 +2,7 @@
   (:require
    [pepper.api.game :as api-game]
    [pepper.game.unit :as unit]
-   [pepper.game.player :as player]
-   [pepper.game.frame :as frame]))
+   [pepper.game.player :as player]))
 
 (defn set-frame [state frame]
   (assoc state :frame frame))

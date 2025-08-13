@@ -1,10 +1,7 @@
 (ns pepper.game.player-test
   (:require [clojure.test :refer [deftest is testing]]
             [clojure.spec.test.alpha :as st]
-            [clojure.spec.alpha :as s]
-            [clojure.spec.gen.alpha :as sg]
-            [pepper.game.player :as players]
-            [pepper.mocking :as mocking]))
+            [pepper.game.player :as players]))
 
 (st/instrument)
 

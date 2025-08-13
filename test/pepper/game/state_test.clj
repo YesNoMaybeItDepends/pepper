@@ -1,11 +1,7 @@
 (ns pepper.game.state-test
   (:require [clojure.test :refer [deftest is testing]]
             [clojure.spec.test.alpha :as st]
-            [clojure.spec.alpha :as s]
-            [clojure.spec.gen.alpha :as sg]
-            [pepper.game.unit :as unit]
-            [pepper.game.state :as state]
-            [pepper.mocking :as mocking]))
+            [pepper.game.state :as state]))
 
 (st/instrument)
 

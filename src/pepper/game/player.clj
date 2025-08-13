@@ -1,10 +1,9 @@
 (ns pepper.game.player
   (:refer-clojure :exclude [name force type])
-  (:require [clojure.set :as set]
-            [pepper.game.color :as color]
+  (:require [pepper.game.color :as color]
             [pepper.game.race :as race])
   (:import
-   [bwapi BWClient Game Player Unit Force]))
+   [bwapi Player Force]))
 
 (defn id [player]
   (:id player))

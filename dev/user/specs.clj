@@ -1,9 +1,6 @@
 (ns user.specs
-  (:require [clojure.spec.alpha :as s]
-            [clojure.spec.test.alpha :as st]
-            [pepper.htn.planner :as planner]
-            [pepper.htn.impl.primitive :as primitive]
-            [pepper.htn.impl.compound :as compound]))
+  (:require
+   [clojure.spec.test.alpha :as st]))
 
 (defn instrument []
   (tap> {:spec-instrumented-fns (st/instrument)}))

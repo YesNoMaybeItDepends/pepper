@@ -1,9 +1,5 @@
 (ns pepper.game.production
-  "does nothing right now haha"
-  (:require
-   [pepper.game.resources :as resources])
-  (:import
-   [bwapi Game Unit UnitType]))
+  "does nothing right now haha")
 
 (defn pending-request? [request]
   (not (:started? request)))

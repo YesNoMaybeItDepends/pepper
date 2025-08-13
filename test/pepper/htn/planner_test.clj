@@ -3,8 +3,7 @@
    [clojure.test :refer [deftest is testing]]
    [clojure.spec.test.alpha :as st]
    [clojure.spec.alpha :as s]
-   [pepper.htn.planner :as planner]
-   [clojure.string :as str]))
+   [pepper.htn.planner :as planner]))
 
 (st/instrument)
 (s/check-asserts true)
