@@ -6,6 +6,14 @@
 
 (declare train!)
 
+(defn frame-issued-train-command [job]
+  (:frame-issued-train-command job))
+
+(defn train-command-dropped? [trainee frame-issued-train-command frame]
+  (and (not (some? trainee))
+       (>= (- frame frame-issued-train-command)
+           50)))
+
 (defn training-completed?! [game job]
   (let [trainee (Game/.getUnit game (:requested-id job))
         trainee-completed? (Unit/.isCompleted trainee)]
@@ -14,13 +22,17 @@
       job)))
 
 (defn get-trainee! [game job]
-  (let [trainer (Game/.getUnit game (:unit-id job))]
-    (if-some [trainee (Unit/.getBuildUnit trainer)]
+  (let [trainer (Game/.getUnit game (:unit-id job))
+        frame (Game/.getFrameCount game)
+        trainee (Unit/.getBuildUnit trainer)]
+    (if (some? trainee)
       (assoc job
              :requested-id (Unit/.getID trainee)
-             :frame-got-trainee-id (Game/.getFrameCount game)
+             :frame-got-trainee-id frame
              :action training-completed?!)
-      job)))
+      (if (train-command-dropped? trainee (frame-issued-train-command job) frame)
+        (job/set-completed job)
+        job))))
 
 (defn train! [game job]
   (let [trainer (Game/.getUnit game (:unit-id job))
@@ -32,8 +44,14 @@
              :frame-issued-train-command (Game/.getFrameCount game))
       job)))
 
-(defn train-scv-job [unit-id]
-  {:job :train-scv
-   :requested :scv
+(defn job [unit-id unit-type]
+  {:job :train
+   :requested unit-type
    :action train!
    :unit-id unit-id})
+
+;; issue train command -> is training?
+;; or
+;; issue train command -> get trainee
+;; should schedule a timeout anyways
+;;

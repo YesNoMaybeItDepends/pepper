@@ -67,3 +67,7 @@
    :building unit-type
    :action get-build-location!
    :unit-id unit-id})
+
+;; problems
+;; sometimes workers get conflicting build locations (probably)
+;; so they never try building ever again, very sad

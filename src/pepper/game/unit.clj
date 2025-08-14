@@ -53,6 +53,10 @@
   (= (:player-id unit)
      (player/get-self-id state)))
 
+(defn get-our-units [state]
+  (->> (get-units state)
+       (filter #(ours? state %))))
+
 (defn idle? [unit]
   (:idle? unit))
 

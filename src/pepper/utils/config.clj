@@ -6,7 +6,7 @@
   (edn/read-string (slurp file)))
 
 (defn read-config [] (read-edn "config.local.edn"))
-(def ^:private schema (read-edn "config.edn"))
+;; (def ^:private schema (read-edn "config.edn"))
 
 (def config (read-config))
 

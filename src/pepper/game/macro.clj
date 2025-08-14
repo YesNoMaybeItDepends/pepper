@@ -4,10 +4,11 @@
    [pepper.game.gathering :as gathering]
    [pepper.game.jobs :as jobs]
    [pepper.game.jobs.build :as build]
+   [pepper.game.jobs.train :as train]
    [pepper.game.resources :as resources]
-   [pepper.game.training :as training]
    [pepper.game.unit :as unit]
-   [pepper.game.unit-type :as unit-type]))
+   [pepper.game.unit-type :as unit-type]
+   [pepper.game.job :as job]))
 
 (defn already-building? [building state]
   (->> (jobs/get-unit-jobs state)
@@ -32,10 +33,33 @@
       (jobs/assign-unit-job state (build/job (unit/id some-worker) :barracks))
       state)))
 
+(defn maybe-train-units [state]
+  (let [trains {:command-center :scv
+                :barracks :marine}
+        costs {:scv (unit-type/cost :scv)
+               :marine (unit-type/cost :marine)}
+        trainers (->> (unit/get-our-units state)
+                      (filter #(unit/type? % (keys trains)))
+                      (filter unit/idle?)
+                      (filter #(unit/unemployed? state %)))
+        budget (resources/get-state-resources-available state)
+        [remaining-budget new-training-jobs] (reduce
+                                              (fn [[budget jobs] trainer]
+                                                (let [to-train ((unit/type trainer) trains)
+                                                      to-pay (unit-type/cost to-train)]
+                                                  (if (resources/can-afford?-v2 budget to-pay)
+                                                    [(resources/combine-quantities - budget to-pay)
+                                                     (conj jobs (-> (train/job (unit/id trainer) to-train)
+                                                                    job/new))]
+                                                    (reduced [budget jobs]))))
+                                              [budget []]
+                                              trainers)]
+    (reduce jobs/assign-unit-job state new-training-jobs)))
+
 (defn process-macro [state]
   (-> state
       resources/process-resources
       gathering/process-idle-workers
       maybe-build-supply
       maybe-build-barracks
-      training/process-idle-command-centers))
+      maybe-train-units))

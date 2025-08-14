@@ -30,6 +30,7 @@
       (state/render-state!)))
 
 (defn on-end [{:api/keys [client game] :as state}]
+  (tap> state)
   (tel/event! :on-end)
   state)
 

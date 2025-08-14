@@ -1,5 +1,5 @@
 (ns pepper.game.job
-  (:refer-clojure :exclude [type]))
+  (:refer-clojure :exclude [type new]))
 
 (defn started-working? [[started? working?]]
   (and (not started?) working?))
@@ -28,6 +28,11 @@
 
 (defn set-last-frame-executed [job frame]
   (assoc job :frame-last-executed frame))
+
+(defn new [job]
+  (if (map? job)
+    (assoc job :uuid (random-uuid))
+    {:uuid (random-uuid)}))
 
 (comment "idea"
          {:im-a-job :blablaba
