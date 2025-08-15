@@ -1,14 +1,8 @@
 (ns pepper.game.jobs.build
   (:require [pepper.game.job :as job]
+            [pepper.game.position :as position]
             [pepper.game.unit-type :as unit-type])
-  (:import [bwapi Game Unit Player TilePosition]))
-
-(defn api-position->position [api-position]
-  [(.getX api-position)
-   (.getY api-position)])
-
-(defn position->api-position [[x y]]
-  (TilePosition. x y))
+  (:import [bwapi Game Unit Player]))
 
 (defn building [job]
   (:building job))
@@ -40,7 +34,7 @@
 (defn go-build! [game job]
   (let [worker (Game/.getUnit game (job/unit-id job))
         building (unit-type/keyword->object (building job))
-        position (position->api-position (build-location job))
+        position (position/->bwapi (build-location job))
         success? (Unit/.build worker building position)]
     (if success?
       (assoc job
@@ -57,7 +51,7 @@
         build-location (Game/.getBuildLocation game building starting-location)]
     (if build-location
       (assoc job
-             :build-location (api-position->position build-location)
+             :build-location (position/->data build-location)
              :frame-got-build-location (Game/.getFrameCount game)
              :action go-build!)
       job)))

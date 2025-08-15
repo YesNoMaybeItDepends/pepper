@@ -8,6 +8,9 @@
 (defn id [player]
   (:id player))
 
+(defn force [player]
+  (:force player))
+
 (defn minerals [player]
   (:minerals player))
 
