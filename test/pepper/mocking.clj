@@ -1,6 +1,8 @@
 (ns pepper.mocking
+  (:require [pepper.game.unit :as unit]
+            [pepper.game.unit-type :as unit-type])
   (:import (org.mockito Mockito)
-           (bwapi Game Unit UnitType)))
+           (bwapi Game Unit)))
 
 (defn when-then [x w t]
   (-> (w x)
@@ -14,22 +16,11 @@
           (Mockito/mock class)
           opts))
 
-(defn mock-unit [id]
-  (mock Unit [[#(Unit/.getID %) (int id)]
-              [#(Unit/.isFlying %) true]
-              [#(Unit/.getType %) UnitType/Terran_SCV]]))
+(defn mock-unit
+  "mock a bwapi unit from pure data"
+  [unit]
+  (mock Unit [[#(Unit/.getID %) (int (unit/id unit))]
+              [#(Unit/.getType %) (unit-type/keyword->object (unit/type unit))]]))
 
 (defn mock-game [units]
   (mock Game [[#(Game/.getAllUnits %) units]]))
-
-(def obj->key-value-map
-  [[:unit/id Unit/.getID]
-   [:unit/type Unit/.getType]
-   [:unit/is-flying Unit/.isFlying]])
-
-
-(let [u (mock-unit 3)]
-  (reduce (fn [acc [kw m]]
-            (assoc acc kw (m u)))
-          {}
-          obj->key-value-map))

@@ -1,10 +1,7 @@
 (ns pepper.core-test
   (:require
    [clojure.test :refer [deftest is testing]]
-   [clojure.spec.test.alpha :as st]
    [pepper.mocking :as mocking]))
-
-(st/instrument)
 
 (def data {:unit-opts [[#(.getID %) (int 3)]
                        [#(.isFlying %) true]

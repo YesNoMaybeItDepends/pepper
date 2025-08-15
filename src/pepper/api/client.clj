@@ -2,6 +2,27 @@
   (:require [babashka.process :as p])
   (:import (bwapi BWClient BWClientConfiguration BWEventListener)))
 
+(def event->msg
+  "map of api event to the shape of the event message to be sent"
+  {:on-start [:on-start nil]
+   :on-end [:on-end {:is-winner "isWinner"}]
+   :on-frame [:on-frame nil]
+   :on-save-game [:on-save-game {:gameName "gameName"}]
+   :on-send-text [:on-send-text {:text "text"}]
+   :on-receive-text [:on-receive-text {:player "player" :text "text"}]
+   :on-player-left [:on-player-left {:player "player"}]
+   :on-player-dropped [:on-player-dropped {:player "player"}]
+   :on-nuke-detect [:on-nuke-detect {:position "position"}]
+   :on-unit-complete [:on-unit-complete {:unit "unit"}]
+   :on-unit-create [:on-unit-create {:unit "unit"}]
+   :on-unit-destroy [:on-unit-destroy {:unit "unit"}]
+   :on-unit-discover [:on-unit-discover {:unit "unit"}]
+   :on-unit-evade [:on-unit-evade {:unit "unit"}]
+   :on-unit-hide [:on-unit-hide {:unit "unit"}]
+   :on-unit-morph [:on-unit-morph {:unit "unit"}]
+   :on-unit-renegade [:on-unit-renegade {:unit "unit"}]
+   :on-unit-show [:on-unit-show {:unit "unit"}]})
+
 (defn make-configuration
   ([] (BWClientConfiguration.))
   ([{:keys [async
@@ -33,8 +54,8 @@
     (onFrame [this]
       (f [:on-frame]))
 
-    (onNukeDetect [this target]
-      (f [:on-nuke-detect {:target target}]))
+    (onNukeDetect [this position]
+      (f [:on-nuke-detect {:position position}]))
 
     (onPlayerDropped [this player]
       (f [:on-player-dropped {:player player}]))
