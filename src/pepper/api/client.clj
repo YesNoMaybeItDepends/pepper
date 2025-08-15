@@ -2,26 +2,28 @@
   (:require [babashka.process :as p])
   (:import (bwapi BWClient BWClientConfiguration BWEventListener)))
 
-(def event->msg
-  "map of api event to the shape of the event message to be sent"
-  {:on-start [:on-start nil]
-   :on-end [:on-end {:is-winner "isWinner"}]
-   :on-frame [:on-frame nil]
-   :on-save-game [:on-save-game {:gameName "gameName"}]
-   :on-send-text [:on-send-text {:text "text"}]
-   :on-receive-text [:on-receive-text {:player "player" :text "text"}]
-   :on-player-left [:on-player-left {:player "player"}]
-   :on-player-dropped [:on-player-dropped {:player "player"}]
-   :on-nuke-detect [:on-nuke-detect {:position "position"}]
-   :on-unit-complete [:on-unit-complete {:unit "unit"}]
-   :on-unit-create [:on-unit-create {:unit "unit"}]
-   :on-unit-destroy [:on-unit-destroy {:unit "unit"}]
-   :on-unit-discover [:on-unit-discover {:unit "unit"}]
-   :on-unit-evade [:on-unit-evade {:unit "unit"}]
-   :on-unit-hide [:on-unit-hide {:unit "unit"}]
-   :on-unit-morph [:on-unit-morph {:unit "unit"}]
-   :on-unit-renegade [:on-unit-renegade {:unit "unit"}]
-   :on-unit-show [:on-unit-show {:unit "unit"}]})
+(def event-id->params {:on-start []
+                       :on-end [:is-winner]
+                       :on-frame []
+                       :on-save-game [:game-name]
+                       :on-send-text [:text]
+                       :on-receive-text [:player :text]
+                       :on-player-left [:player]
+                       :on-player-dropped [:player]
+                       :on-nuke-detect [:position]
+                       :on-unit-complete [:unit]
+                       :on-unit-create [:unit]
+                       :on-unit-destroy [:unit]
+                       :on-unit-discover [:unit]
+                       :on-unit-evade [:unit]
+                       :on-unit-hide [:unit]
+                       :on-unit-morph [:unit]
+                       :on-unit-renegade [:unit]
+                       :on-unit-show [:unit]})
+
+(def event-params (into #{} (flatten (vals event-id->params))))
+
+(def event-ids (into #{} (keys event-id->params)))
 
 (defn make-configuration
   ([] (BWClientConfiguration.))
@@ -67,7 +69,7 @@
       (f [:on-receive-text {:player player :text text}]))
 
     (onSaveGame [this gameName]
-      (f [:on-save-game {:gameName gameName}]))
+      (f [:on-save-game {:game-name gameName}]))
 
     (onSendText [this text]
       (f [:on-send-text {:text text}]))

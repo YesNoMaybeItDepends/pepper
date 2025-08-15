@@ -5,11 +5,12 @@
    [clojure.test.check.properties :as prop]
    [pepper.game.resources :as resources]
    [pepper.game.unit-type :as unit-type]
-   [pepper.generators :as gen]))
+   [pepper.generators :as gen]
+   [pepper.generators.unit-gen :as unit-gen]))
 
 (defspec can-afford-everything-when-rich
   (prop/for-all [state gen/state
-                 unit-type gen/unit-type]
+                 unit-type unit-gen/unit-type]
                 (let [state-rich (update state :resources (fn [{minerals :minerals
                                                                 gas :gas
                                                                 [used total] :supply}]
@@ -20,7 +21,7 @@
 
 (defspec can-afford-nothing-when-poor
   (prop/for-all [state gen/state
-                 unit-type gen/unit-type]
+                 unit-type unit-gen/unit-type]
                 (let [state-poor (update state :resources (fn [{minerals :minerals
                                                                 gas :gas
                                                                 [used total] :supply}]
