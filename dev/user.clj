@@ -44,6 +44,12 @@
 (defn get-api-game! []
   (:api/game @dev/store))
 
+(defn pause-game! []
+  (bwapi.Game/.pauseGame (get-api-game!)))
+
+(defn resume-game! []
+  (bwapi.Game/.resumeGame (get-api-game!)))
+
 ;;;; System
 
 (defonce system (atom {}))
@@ -60,5 +66,8 @@
 
   (get-api-client!)
   (get-api-game!)
+
+  (pause-game!)
+  (resume-game!)
 
   #_())
