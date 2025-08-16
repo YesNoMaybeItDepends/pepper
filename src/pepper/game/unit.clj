@@ -3,8 +3,7 @@
   (:require [pepper.game.player :as player]
             [pepper.game.jobs :as jobs]
             [pepper.game.job :as job]
-            [pepper.game.unit-type :as unit-type]
-            [pepper.game.unit :as unit])
+            [pepper.game.unit-type :as unit-type])
   (:import
    (bwapi Unit Game Player)))
 
@@ -94,4 +93,4 @@
 
                         (some? (:mining workers-by-job))
                         (:id (first (:mining workers-by-job))))]
-    (unit/get-unit-by-id state worker-id)))
+    (get-unit-by-id state worker-id)))

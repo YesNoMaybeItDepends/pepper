@@ -65,6 +65,7 @@
         event-handler (fn event-handler
                         [input-ch output-ch filter-pred]
                         (fn [event]
+                          (tel/event! event)
                           (when (filter-pred event)
                             (let [put? (a/>!! input-ch event)
                                   take? (a/<!! output-ch)]
