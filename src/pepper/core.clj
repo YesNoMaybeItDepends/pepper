@@ -6,6 +6,7 @@
    [pepper.game.jobs :as jobs]
    [pepper.game.state :as state]
    [pepper.game.frame :as frame]
+   [pepper.api.bwem :as bwem]
    [taoensso.telemere :as tel]
    [pepper.utils.config :as config])
   (:import
@@ -16,10 +17,12 @@
     (tel/log! (dissoc state :api/client :api/game))))
 
 (defn on-start [{:api/keys [client] :as state}]
-  (let [game (BWClient/.getGame client)]
+  (let [game (BWClient/.getGame client)
+        bwem (bwem/init! game)]
     (-> (assoc state :api/game game)
+        (assoc :api/bwem bwem)
         (merge (state/init-state
-                (frame/parse-on-start-data game))))))
+                (frame/parse-on-start-data game bwem))))))
 
 (defn on-frame [{:api/keys [client game] :as state}]
   (maybe-log-state! state config/config)
@@ -83,6 +86,7 @@
            :api/out-chan bot-out)
     (client/run-starcraft! (client/chaos-launcher-path (config/read-config))) ;; TODO: this should be moved to dev
     (client/start-game! api {:async true
+                             :unlimited-frame-zero true
                              :debug-connection false
                              :log-verbosely false})
     (println "done")

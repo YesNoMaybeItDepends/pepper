@@ -1,14 +1,19 @@
 (ns pepper.game.frame
   (:require [pepper.game.unit :as unit]
-            [pepper.game.player :as player])
+            [pepper.game.player :as player]
+            [pepper.game.map :as map])
   (:import (bwapi BWClient Game Player)))
 
 (def frame-keywords #{:frame :units :events})
 
-(defn parse-on-start-data [game]
+(defn parse-on-start-data
+  "For some reason I don't merge the result of this straight into state?
+   See state/init-state"
+  [game bwem]
   {:frame (Game/.getFrameCount game)
    :players (map (player/parse-player! game) (Game/.getPlayers game))
-   :self {:id (Player/.getID (Game/.self game))}})
+   :self {:id (Player/.getID (Game/.self game))}
+   :map (map/parse-map-on-start! bwem)})
 
 (defn parse-on-frame-data [client game]
   {:frame (Game/.getFrameCount game)

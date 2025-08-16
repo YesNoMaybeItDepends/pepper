@@ -16,7 +16,8 @@
     (-> {}
         (set-frame (:frame opts))
         (player/update-players (:players opts))
-        (player/set-self-id (:self opts)))))
+        (player/set-self-id (:self opts))
+        (assoc :map (:map opts)))))
 
 (defn update-state-with-frame-data [state frame-data]
   (-> state
