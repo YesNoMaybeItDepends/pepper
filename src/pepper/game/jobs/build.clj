@@ -7,11 +7,11 @@
 (defn building [job]
   (:building job))
 
-(defn build-location [job]
-  (:build-location job))
+(defn build-tile [job]
+  (:build-tile job))
 
-(defn frame-got-build-location [job]
-  (:frame-got-build-location job))
+(defn frame-got-build-tile [job]
+  (:frame-got-build-tile job))
 
 (defn frame-issued-build-command [job]
   (:frame-issued-build-command job))
@@ -19,7 +19,7 @@
 (defn frame-started-building [job]
   (:frame-started-building job))
 
-(declare get-build-location!)
+(declare get-build-tile!)
 
 (defn is-building?! [game job]
   (let [worker (Game/.getUnit game (job/unit-id job))
@@ -34,32 +34,32 @@
 (defn go-build! [game job]
   (let [worker (Game/.getUnit game (job/unit-id job))
         building (unit-type/keyword->object (building job))
-        position (position/->bwapi (build-location job))
-        success? (Unit/.build worker building position)]
+        tile (position/->bwapi (build-tile job) :tile-position)
+        success? (Unit/.build worker building tile)]
     (if success?
       (assoc job
              :frame-issued-build-command (Game/.getFrameCount game))
       (assoc job
-             :action get-build-location!
-             :build-location nil
-             :frame-got-build-location nil))))
+             :action get-build-tile!
+             :build-tile nil
+             :frame-got-build-tile nil))))
 
-(defn get-build-location! [game job]
+(defn get-build-tile! [game job]
   (let [building (unit-type/keyword->object (building job))
         worker (Game/.getUnit game (job/unit-id job))
-        starting-location (Player/.getStartLocation (Game/.self game))
-        build-location (Game/.getBuildLocation game building starting-location)]
-    (if build-location
+        starting-tile (Player/.getStartLocation (Game/.self game))
+        build-tile (Game/.getBuildLocation game building starting-tile)]
+    (if build-tile
       (assoc job
-             :build-location (position/->data build-location)
-             :frame-got-build-location (Game/.getFrameCount game)
+             :build-tile (position/->data build-tile)
+             :frame-got-build-tile (Game/.getFrameCount game)
              :action go-build!)
       job)))
 
 (defn job [unit-id unit-type]
   {:job :build
    :building unit-type
-   :action get-build-location!
+   :action get-build-tile!
    :unit-id unit-id})
 
 ;; problems

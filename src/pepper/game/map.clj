@@ -36,7 +36,7 @@
    :mineral-fields (mapv ->id (Base/.getMinerals base))
    :blocking-mineral-fields (mapv ->id (Base/.getBlockingMinerals base))
    :geysers (mapv ->id (Base/.getGeysers base))
-   :resource-depot-location (position/->data (Base/.getLocation base))
+   :resource-depot-tile (position/->data (Base/.getLocation base))
    :center (position/->data (Base/.getCenter base))})
 
 (defn parse-choke-point-on-start! [choke-point]
@@ -52,8 +52,8 @@
    :bases (mapv ->id (Area/.getBases area))
    :choke-points (mapv ->id (Area/.getChokePoints area))
    :accesible-neighbors (mapv ->id (Area/.getAccessibleNeighbors area))
-   :top-left (position/->data (Area/.getTop area))
-   :bottom-right (position/->data (Area/.getBottomRight area))
+   :top-left-tile (position/->data (Area/.getTop area))
+   :bottom-right-tile (position/->data (Area/.getBottomRight area))
    :highest-altitude (Altitude/.intValue (Area/.getHighestAltitude area))
    :lowest-altitude (Altitude/.intValue (Area/.getHighestAltitude area))})
 

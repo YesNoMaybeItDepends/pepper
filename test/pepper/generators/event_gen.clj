@@ -15,7 +15,7 @@
 (def arg-text gen/string-ascii)
 
 (def arg-position (gen/fmap
-                   (fn [pos] (position/->bwapi pos))
+                   (fn [pos] (position/->bwapi pos :position))
                    position-gen/position))
 
 (def arg-player (gen/fmap
