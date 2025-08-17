@@ -1,7 +1,8 @@
 (ns pepper.game.player
   (:refer-clojure :exclude [name force type])
   (:require [pepper.game.color :as color]
-            [pepper.game.race :as race])
+            [pepper.game.race :as race]
+            [pepper.game.position :as position])
   (:import
    [bwapi Player Force]))
 
@@ -22,6 +23,9 @@
 
 (defn supply-used [player]
   (:supply-used player))
+
+(defn starting-base [player]
+  (:starting-base player))
 
 ;;;; self
 
@@ -60,4 +64,5 @@
         (assoc :minerals (bwapi.Player/.minerals player))
         (assoc :gas (bwapi.Player/.gas player))
         (assoc :supply-total (Player/.supplyTotal player))
-        (assoc :supply-used (Player/.supplyUsed player)))))
+        (assoc :supply-used (Player/.supplyUsed player))
+        (assoc :starting-base (position/->data (Player/.getStartLocation player))))))

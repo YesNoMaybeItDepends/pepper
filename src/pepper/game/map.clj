@@ -1,4 +1,5 @@
 (ns pepper.game.map
+  (:refer-clojure :exclude [map])
   (:require [pepper.game.position :as position])
   (:import [bwapi Unit Pair]
            [bwem BWEM Neutral Base Area AreaId BWMap ChokePoint Altitude]))
@@ -8,7 +9,7 @@
     bwem.Neutral (->id (Neutral/.getUnit x))
     bwem.Area (->id (Area/.getId x))
     bwem.AreaId (AreaId/.intValue x)
-    bwem.Base (->id (Base/.getCenter x))
+    bwem.Base (->id (Base/.getLocation x))
     bwem.ChokePoint (->id (ChokePoint/.getCenter x))
     bwapi.Unit (Unit/.getID x)
     bwapi.WalkPosition (position/->data x)
@@ -30,7 +31,7 @@
    (Pair/.getSecond pair)])
 
 (defn parse-base-on-start! [base]
-  {:id (position/->data (Base/.getCenter base)) ;; (random-uuid)
+  {:id (->id base)
    :area (->id (Area/.getId (Base/.getArea base)))
    :area-group (Area/.getGroupId (Base/.getArea base)) ;; nani?
    :mineral-fields (mapv ->id (Base/.getMinerals base))
@@ -40,14 +41,14 @@
    :center (position/->data (Base/.getCenter base))})
 
 (defn parse-choke-point-on-start! [choke-point]
-  {:id (position/->data (ChokePoint/.getCenter choke-point)) ;; (random-uuid)
+  {:id (->id choke-point) ;; (random-uuid)
    :areas (mapv ->id (pair->tuple (ChokePoint/.getAreas choke-point)))
    :blocking-neutral (->id (ChokePoint/.getBlockingNeutral choke-point))
    :center (position/->data (ChokePoint/.getCenter choke-point))
    :geometry (mapv position/->data (ChokePoint/.getGeometry choke-point))})
 
 (defn parse-area-on-start! [area]
-  {:id (->id (Area/.getId area))
+  {:id (->id area)
    :group-id (Area/.getGroupId area)
    :bases (mapv ->id (Area/.getBases area))
    :choke-points (mapv ->id (Area/.getChokePoints area))
@@ -57,8 +58,19 @@
    :highest-altitude (Altitude/.intValue (Area/.getHighestAltitude area))
    :lowest-altitude (Altitude/.intValue (Area/.getHighestAltitude area))})
 
+(defn parse-starting-bases-on-start! [map]
+  (mapv ->id (BWMap/.getStartingLocations map)))
+
 (defn parse-map-on-start! [bwem]
   (let [map (BWEM/.getMap bwem)]
     {:areas (reduce-by-id (mapv parse-area-on-start! (BWMap/.getAreas map)))
      :choke-points (reduce-by-id (mapv parse-choke-point-on-start! (BWMap/.getChokePoints map)))
-     :bases (reduce-by-id (mapv parse-base-on-start! (BWMap/.getBases map)))}))
+     :bases (reduce-by-id (mapv parse-base-on-start! (BWMap/.getBases map)))
+     :starting-bases (parse-starting-bases-on-start! map)}))
+
+(defn map [state]
+  (:map state))
+
+(defn starting-bases [map]
+  (:starting-bases map))
+

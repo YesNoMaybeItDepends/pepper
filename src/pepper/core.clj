@@ -1,15 +1,16 @@
 (ns pepper.core
   (:require
    [clojure.core.async :as a]
+   [pepper.api.bwem :as bwem]
    [pepper.api.client :as client]
    [pepper.api.game :as api-game]
-   [pepper.game.macro :as macro]
-   [pepper.game.jobs :as jobs]
-   [pepper.game.state :as state]
    [pepper.game.frame :as frame]
-   [pepper.api.bwem :as bwem]
-   [taoensso.telemere :as tel]
-   [pepper.utils.config :as config])
+   [pepper.game.jobs :as jobs]
+   [pepper.game.macro :as macro]
+   [pepper.game.military :as military]
+   [pepper.game.state :as state]
+   [pepper.utils.config :as config]
+   [taoensso.telemere :as tel])
   (:import
    [bwapi BWClient Game]))
 
@@ -42,6 +43,7 @@
   (-> state
       (state/update-state-with-frame-data (frame/parse-on-frame-data client game))
       (macro/process-macro)
+      (military/maybe-scout)
       (jobs/process-state-jobs! game)
       (state/render-state!)))
 

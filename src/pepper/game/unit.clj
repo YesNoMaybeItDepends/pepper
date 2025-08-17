@@ -3,7 +3,8 @@
   (:require [pepper.game.player :as player]
             [pepper.game.jobs :as jobs]
             [pepper.game.job :as job]
-            [pepper.game.unit-type :as unit-type])
+            [pepper.game.unit-type :as unit-type]
+            [pepper.game.position :as position])
   (:import
    (bwapi Unit Game Player)))
 
@@ -37,7 +38,10 @@
         (assoc :last-frame-updated (Game/.getFrameCount game))
         (assoc :player-id (Player/.getID (Unit/.getPlayer unit)))
         (assoc :type (unit-type/object->keyword (Unit/.getType unit))) ;; TODO: convert unit type
-        (assoc :idle? (Unit/.isIdle unit)))))
+        (assoc :idle? (Unit/.isIdle unit))
+        (assoc :position (position/->data (Unit/.getPosition unit)))
+        (assoc :tile (position/->data (Unit/.getTilePosition unit)))
+        (assoc :completed? (Unit/.isCompleted unit)))))
 
 (defn type?
   [unit kind]
