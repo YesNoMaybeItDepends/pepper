@@ -12,18 +12,19 @@
     (swap! store assoc :portal/instance instance)))
 
 (defn stop-portal! [store]
-  (let [instance (:portal/instance @store)]
-    (portal/close instance)
-    (portal/stop)
-    (remove-tap #'portal/submit)
-    (swap! store assoc :portal/instance nil)))
+  (portal/close)
+  (portal/stop)
+  (remove-tap #'portal/submit)
+  (swap! store assoc :portal/instance nil))
 
 ;;;; Pepper
 
-(defn start-pepper! []
-  (try
-    (dev/main)
-    (catch Exception e (println e))))
+(defn start-pepper!
+  ([] (start-pepper! {}))
+  ([opts]
+   (try
+     (dev/main opts)
+     (catch Exception e (println e)))))
 
 (defn stop-pepper! []
   (try
@@ -38,36 +39,66 @@
     (a/>!! in-chan event)
     (a/<!! out-chan)))
 
-(defn get-api-client! []
+(defn get-client! []
   (:api/client @dev/store))
 
-(defn get-api-game! []
+(defn get-game! []
   (:api/game @dev/store))
 
+(defn get-bwem! []
+  (:api/bwem @dev/store))
+
 (defn pause-game! []
-  (bwapi.Game/.pauseGame (get-api-game!)))
+  (let [game (get-game!)]
+    (bwapi.Game/.setLocalSpeed game 167)
+    (bwapi.Game/.pauseGame game)))
 
 (defn resume-game! []
-  (bwapi.Game/.resumeGame (get-api-game!)))
+  (let [game (get-game!)]
+    (bwapi.Game/.setLocalSpeed game 42)
+    (bwapi.Game/.resumeGame game)))
+
+(defn store-api! [x]
+  (let [api-keys [:api/client :api/game :api/bwem]
+        store @dev/store]
+    (when (and (not-every? #(some? (% store)) api-keys)
+               (every? #(some? (% x)) api-keys))
+      (remove-tap #'store-api!)
+      (swap! dev/store merge
+             (reduce (fn [m k]
+                       (assoc m k (k x)))
+                     {}
+                     api-keys)))))
 
 ;;;; System
 
 (defonce system (atom {}))
+
+(stop-portal! system)
 (init-portal! system)
+
+(add-tap #'store-api!)
 
 (comment
 
   (set! *print-namespace-maps* false)
 
+  @dev/store
+
+  (start-pepper! {:async? true})
   (start-pepper!)
   (stop-pepper!)
 
+
   (tap-pepper!)
 
-  (get-api-client!)
-  (get-api-game!)
+
+  (get-client!)
+  (get-game!)
+  (get-bwem!)
 
   (pause-game!)
   (resume-game!)
+
 
   #_())

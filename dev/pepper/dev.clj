@@ -13,11 +13,14 @@
 (defonce bot initial-bot-state)
 (defonce store (atom initial-store-state))
 
-(defn main [& opts]
-  (let [_ (logging/init-logging! (str (inst-ms (java.time.Instant/now))))]
-    (reset! store initial-store-state)
-    (alter-var-root #'bot (constantly (pepper/main store)))
-    #_(alter-var-root #'bot (constantly (future (pepper/main store))))))
+(defn main
+  ([] (main {}))
+  ([{:keys [async?]}]
+   (let [_ (logging/init-logging! (str (inst-ms (java.time.Instant/now))))]
+     (reset! store initial-store-state)
+     (if async?
+       (alter-var-root #'bot (constantly (future (pepper/main store))))
+       (alter-var-root #'bot (constantly (pepper/main store)))))))
 
 (defn reset []
   (logging/stop-logging!)

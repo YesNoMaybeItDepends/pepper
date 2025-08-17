@@ -1,3 +1,4 @@
 ;; Replaced with config.local.edn
 {:starcraft {:path "your/absolute/path/to/chaoslauncher.exe"}
- :log? false}
+ :log? false
+ :async? false}

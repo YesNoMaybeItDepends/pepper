@@ -2,6 +2,7 @@
   (:require
    [clojure.core.async :as a]
    [pepper.api.client :as client]
+   [pepper.api.game :as api-game]
    [pepper.game.macro :as macro]
    [pepper.game.jobs :as jobs]
    [pepper.game.state :as state]
@@ -10,19 +11,31 @@
    [taoensso.telemere :as tel]
    [pepper.utils.config :as config])
   (:import
-   [bwapi BWClient]))
+   [bwapi BWClient Game]))
 
 (defn maybe-log-state! [state config]
   (when (:log? config)
-    (tel/log! (dissoc state :api/client :api/game))))
+    (tel/log! (dissoc state :api/client :api/game :map))))
+
+(defn maybe-pause-game! [game config]
+  (let [paused? (Game/.isPaused game)
+        frame (Game/.getFrameCount game)
+        pause? (fn [paused? frame] (and (not paused?)
+                                        (>= frame 50)))]
+    (when (pause? paused? frame)
+      (api-game/set-local-speed game :slowest)
+      (Game/.pauseGame game))))
 
 (defn on-start [{:api/keys [client] :as state}]
+  (tel/event! :on-start)
   (let [game (BWClient/.getGame client)
-        bwem (bwem/init! game)]
-    (-> (assoc state :api/game game)
-        (assoc :api/bwem bwem)
-        (merge (state/init-state
-                (frame/parse-on-start-data game bwem))))))
+        bwem (bwem/init! game)
+        state (-> (assoc state :api/game game)
+                  (assoc :api/bwem bwem)
+                  (merge (state/init-state
+                          (frame/parse-on-start-data game bwem))))]
+    (tap> state)
+    state))
 
 (defn on-frame [{:api/keys [client game] :as state}]
   (maybe-log-state! state config/config)
@@ -60,7 +73,8 @@
       (recur state))))
 
 (defn main [store]
-  (let [whitelisted? (fn whitelisted?
+  (let [config (config/read-config)
+        whitelisted? (fn whitelisted?
                        [store]
                        (fn [[event _]]
                          ((:api/event-whitelist @store) event)))
@@ -68,7 +82,7 @@
         event-handler (fn event-handler
                         [input-ch output-ch filter-pred]
                         (fn [event]
-                          (tel/event! event)
+                          ;; (tel/event! event)
                           (when (filter-pred event)
                             (let [put? (a/>!! input-ch event)
                                   take? (a/<!! output-ch)]
@@ -84,8 +98,8 @@
            :api/event-whitelist #{:on-start :on-frame :on-end}
            :api/in-chan bot-in
            :api/out-chan bot-out)
-    (client/run-starcraft! (client/chaos-launcher-path (config/read-config))) ;; TODO: this should be moved to dev
-    (client/start-game! api {:async true
+    (client/run-starcraft! (client/chaos-launcher-path config)) ;; TODO: this should be moved to dev
+    (client/start-game! api {:async (:async? config) ;; TODO: just pass the client config from our config file, like {:api {:client-config {:async ...}}}
                              :unlimited-frame-zero true
                              :debug-connection false
                              :log-verbosely false})

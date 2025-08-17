@@ -30,7 +30,7 @@
 
 (defn parse-base-on-start! [base]
   {:id (position/->data (Base/.getCenter base)) ;; (random-uuid)
-   :area (Area/.getId (Base/.getArea base))
+   :area (->id (Area/.getId (Base/.getArea base)))
    :area-group (Area/.getGroupId (Base/.getArea base)) ;; nani?
    :mineral-fields (mapv ->id (Base/.getMinerals base))
    :blocking-mineral-fields (mapv ->id (Base/.getBlockingMinerals base))
@@ -46,7 +46,7 @@
    :geometry (mapv position/->data (ChokePoint/.getGeometry choke-point))})
 
 (defn parse-area-on-start! [area]
-  {:id (Area/.getId area)
+  {:id (->id (Area/.getId area))
    :group-id (Area/.getGroupId area)
    :bases (mapv ->id (Area/.getBases area))
    :choke-points (mapv ->id (Area/.getChokePoints area))
