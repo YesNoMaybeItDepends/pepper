@@ -15,6 +15,7 @@
     bwapi.Position (position/->data x)
     bwapi.TilePosition (position/->data x)
     clojure.lang.PersistentArrayMap (:id x)
+    clojure.lang.PersistentHashMap (:id x)
     clojure.lang.PersistentVector x
     nil))
 
