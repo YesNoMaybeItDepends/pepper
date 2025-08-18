@@ -8,7 +8,10 @@
 (defn starting-base-to-scout [job]
   (:starting-base-to-scout job))
 
-(defn yay! [game job]
+(defn yay!
+  "TODO: we need to notify the state of scouting results. 
+   no channels to pass messages, so may need to pass the state and update from here"
+  [game job]
   job)
 
 (defn go-there! [game job]

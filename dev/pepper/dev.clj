@@ -5,11 +5,10 @@
    [pepper.utils.logging :as logging]))
 
 (def initial-bot-state false)
-(def initial-store-state {:api/event-whitelist #{:on-start :on-frame :on-end}
-                          :api/client nil
-                          :api/in-chan nil
-                          :api/out-chan nil
-                          :api/err-chan nil})
+(def initial-store-state {:api/client nil
+                          :client-events-ch nil
+                          :bot-responses-ch nil
+                          :error-ch nil})
 
 (defonce bot initial-bot-state)
 (defonce store (atom initial-store-state))
@@ -42,8 +41,8 @@
 
 (defn tap-pepper! []
   (let [state @store
-        in-chan (:api/in-chan state)
-        out-chan (:api/out-chan state)
+        in-chan (:client-events-ch state)
+        out-chan (:bot-responses-ch state)
         event [:tap]]
     (a/>!! in-chan event)
     (a/<!! out-chan)))

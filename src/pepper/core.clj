@@ -74,36 +74,22 @@
                              :done))]
       (recur state))))
 
+(defn api [to-bot from-bot]
+  (client/make-client (fn [event]
+                        (a/>!! to-bot event)
+                        (a/<!! from-bot))))
+
 (defn main [store]
   (let [config (config/read-config)
-        whitelisted? (fn whitelisted?
-                       [store]
-                       (fn [[event _]]
-                         ((:api/event-whitelist @store) event)))
-        ;; "TODO: pubsub instead of whitelist"
-        event-handler (fn event-handler
-                        [input-ch output-ch filter-pred]
-                        (fn [event]
-                          ;; (tel/event! event)
-                          (when (filter-pred event)
-                            (let [put? (a/>!! input-ch event)
-                                  take? (a/<!! output-ch)]
-                              take?))))
-        bot-in (a/chan)
-        bot-out (a/chan)
-        api-event-whitelist (whitelisted? store)
-        api-handler (event-handler bot-in bot-out api-event-whitelist)
-        api (client/make-client api-handler)
-        _ (bot {:api/client api} bot-in bot-out)]
+        to-bot (a/chan)
+        from-bot (a/chan)
+        api (api to-bot from-bot)
+        bot (bot {:api/client api} to-bot from-bot)]
     (swap! store assoc
            :api/client api
-           :api/event-whitelist #{:on-start :on-frame :on-end}
-           :api/in-chan bot-in
-           :api/out-chan bot-out)
+           :client-events-ch to-bot
+           :bot-responses-ch from-bot)
     (client/run-starcraft! (client/chaos-launcher-path config)) ;; TODO: this should be moved to dev
-    (client/start-game! api {:async (:async? config) ;; TODO: just pass the client config from our config file, like {:api {:client-config {:async ...}}}
-                             :unlimited-frame-zero true
-                             :debug-connection false
-                             :log-verbosely false})
+    (client/start-game! api (:api config))
     (println "done")
     (client/kill-starcraft!))) ;; TODO: this should be moved to dev

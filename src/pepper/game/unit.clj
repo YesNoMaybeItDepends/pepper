@@ -37,7 +37,7 @@
         (assoc :exists? (Unit/.exists unit))
         (assoc :last-frame-updated (Game/.getFrameCount game))
         (assoc :player-id (Player/.getID (Unit/.getPlayer unit)))
-        (assoc :type (unit-type/object->keyword (Unit/.getType unit))) ;; TODO: convert unit type
+        (assoc :type (unit-type/object->keyword (Unit/.getType unit)))
         (assoc :idle? (Unit/.isIdle unit))
         (assoc :position (position/->data (Unit/.getPosition unit)))
         (assoc :tile (position/->data (Unit/.getTilePosition unit)))
