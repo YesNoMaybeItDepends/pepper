@@ -65,5 +65,5 @@
      {}
      jobs)))
 
-(defn process-state-jobs! [state game]
-  (update state :unit-jobs (process-jobs! game)))
+(defn process-state-jobs! [state]
+  (update state :unit-jobs (process-jobs! ((:api state) :game))))

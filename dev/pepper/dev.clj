@@ -1,11 +1,17 @@
 (ns pepper.dev
   (:require
    [clojure.core.async :as a]
-   [pepper.core :as pepper]
-   [pepper.utils.logging :as logging]))
+   [pepper.api.game :as api-game]
+   [pepper.dev.chaos-launcher :as chaos-launcher]
+   [pepper.main :as pepper-main]
+   [pepper.utils.config :as config]
+   [pepper.utils.logging :as logging]
+   [taoensso.telemere :as tel])
+  (:import
+   [bwapi Game]))
 
 (def initial-bot-state false)
-(def initial-store-state {:api/client nil
+(def initial-store-state {:api nil
                           :client-events-ch nil
                           :bot-responses-ch nil
                           :error-ch nil})
@@ -14,24 +20,58 @@
 (defonce store (atom initial-store-state))
 
 (defn main
+  "this is here so i can run dev.main
+   TODO: reconsider start-pepper!"
   ([] (main {}))
-  ([{:keys [async?]}]
+  ([{:keys [async?] :as opts}]
+   (tap> opts)
    (let [_ (logging/init-logging! (str (inst-ms (java.time.Instant/now))))]
      (reset! store initial-store-state)
+     (swap! store merge opts)
      (if async?
-       (alter-var-root #'bot (constantly (future (pepper/main store))))
-       (alter-var-root #'bot (constantly (pepper/main store)))))))
+       (alter-var-root #'bot (constantly (future (pepper-main/main store))))
+       (alter-var-root #'bot (constantly (pepper-main/main store)))))))
 
 (defn reset []
   (logging/stop-logging!)
   (reset! bot initial-bot-state)
   (reset! store initial-store-state))
 
+(defn maybe-log-state! [state]
+  (tel/log! (dissoc state :api :game :map)))
+
+(defn maybe-pause-game! [{:keys [api] :as state}]
+  (let [game (api :game)
+        paused? (Game/.isPaused game)
+        frame (Game/.getFrameCount game)
+        pause? (fn [paused? frame] (and (not paused?)
+                                        (>= frame 50)))]
+    (when (pause? paused? frame)
+      (api-game/set-local-speed game :slowest)
+      (Game/.pauseGame game))))
+
+
+(defn api-config []
+  {:before-start (fn [] (-> (config/read-config)
+                            (chaos-launcher/chaos-launcher-path)
+                            (chaos-launcher/run-starcraft!)))
+   :on-start {:before nil
+              :after nil}
+   :on-frame {:before (fn [system]
+                        (maybe-log-state! system)
+                        (maybe-pause-game! system))
+              :after nil}
+   :on-end {:before nil
+            :after nil}
+   :after-end (fn [] (chaos-launcher/kill-starcraft!))})
+
 (defn start-pepper!
+  "Runs both Starcraft (through Chaoslauncher) and the bot
+   TODO: maybe I shouldn't call this directly, and dev should only expose dev.main? "
   ([] (start-pepper! {}))
   ([opts]
    (try
-     (main opts)
+     (main (merge (api-config) opts))
      (catch Exception e (println e)))))
 
 (defn stop-pepper! []
@@ -48,13 +88,13 @@
     (a/<!! out-chan)))
 
 (defn get-client! []
-  (:api/client @store))
+  (:api @store))
 
 (defn get-game! []
-  (:api/game @store))
+  (:game @store))
 
 (defn get-bwem! []
-  (:api/bwem @store))
+  (:bwem @store))
 
 (defn pause-game! []
   (let [game (get-game!)]
@@ -67,7 +107,7 @@
     (bwapi.Game/.resumeGame game)))
 
 (defn store-api! [x]
-  (let [api-keys [:api/client :api/game :api/bwem]
+  (let [api-keys [:api :game :bwem]
         s @store]
     (when (and (not-every? #(some? (% s)) api-keys)
                (every? #(some? (% x)) api-keys))

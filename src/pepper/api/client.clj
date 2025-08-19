@@ -1,5 +1,4 @@
 (ns pepper.api.client
-  (:require [babashka.process :as p])
   (:import (bwapi BWClient BWClientConfiguration BWEventListener)))
 
 (def event-id->params {:on-start []
@@ -113,21 +112,3 @@
   "Starts the game"
   ([client] (.startGame client))
   ([client config] (.startGame client (make-configuration config))))
-
-;; this should actually be in dev
-
-(defn run-starcraft!
-  "Runs Starcraft by running Chaoslauncher.exe
-   
-   Requires the 'Run Starcraft on Startup' Chaoslauncher setting enabled."
-  [chaos-launcher-path]
-  (p/process chaos-launcher-path))
-
-(defn kill-starcraft!
-  "Kills both Starcraft and Chaoslauncher"
-  []
-  (p/sh "pskill starcraft")
-  (p/sh "pskill chaoslauncher"))
-
-(defn chaos-launcher-path [config]
-  (get-in config [:starcraft :path]))

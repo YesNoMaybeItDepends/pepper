@@ -29,7 +29,7 @@
       (update :players-by-id player/update-players-by-id (:players frame-data))))
 
 (defn render-state! [state]
-  (let [{game :api/game
+  (let [{api :api
          frame :frame} state]
-    (api-game/draw-text-screen game 100 100 (str "Frame: " frame)))
+    (api-game/draw-text-screen (api :game) 100 100 (str "Frame: " frame)))
   state)
