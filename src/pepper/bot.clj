@@ -26,7 +26,7 @@
   (-> state
       (state/update-state-with-frame-data (frame/parse-on-frame-data api))
       (macro/process-macro)
-      (military/maybe-scout)
+      (military/maybe-find-enemy-starting-base)
       (jobs/process-state-jobs!)
       (state/render-state!)))
 
