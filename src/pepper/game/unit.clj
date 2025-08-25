@@ -2,7 +2,7 @@
   (:refer-clojure :exclude [type type?])
   (:require [pepper.game.player :as player]
             [pepper.game.jobs :as jobs]
-            [pepper.game.job :as job]
+            [pepper.bot.job :as job]
             [pepper.game.unit-type :as unit-type]
             [pepper.game.position :as position])
   (:import

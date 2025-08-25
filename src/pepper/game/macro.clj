@@ -2,12 +2,12 @@
   (:require
    [pepper.game.auto-supply :as auto-supply]
    [pepper.game.jobs :as jobs]
-   [pepper.game.jobs.build :as build]
-   [pepper.game.jobs.train :as train]
+   [pepper.bot.jobs.build :as build]
+   [pepper.bot.jobs.train :as train]
    [pepper.game.resources :as resources]
    [pepper.game.unit :as unit]
    [pepper.game.unit-type :as unit-type]
-   [pepper.game.job :as job]))
+   [pepper.bot.job :as job]))
 
 (defn already-building? [building state]
   (->> (jobs/get-unit-jobs state)

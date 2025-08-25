@@ -8,7 +8,7 @@
      POSSIBLE KEYS
        :completed? --> if true, the job will be set to nil"
   (:refer-clojure :exclude [type])
-  (:require [pepper.game.job :as job]
+  (:require [pepper.bot.job :as job]
             [pepper.api :as api])
   (:import [bwapi Game]))
 

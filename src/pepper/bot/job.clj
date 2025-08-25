@@ -1,4 +1,4 @@
-(ns pepper.game.job
+(ns pepper.bot.job
   (:refer-clojure :exclude [type new]))
 
 (defn started-working? [[started? working?]]

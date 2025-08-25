@@ -3,7 +3,7 @@
    [pepper.game.jobs :as jobs]
    [pepper.game.map :as map]
    [pepper.game.player :as player]
-   [pepper.game.jobs.find-enemy-starting-base :as find-enemy-starting-base]
+   [pepper.bot.jobs.find-enemy-starting-base :as find-enemy-starting-base]
    [pepper.game.unit :as unit]))
 
 (defn find-enemy-starting-base-jobs [state]

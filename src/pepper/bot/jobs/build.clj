@@ -1,5 +1,5 @@
-(ns pepper.game.jobs.build
-  (:require [pepper.game.job :as job]
+(ns pepper.bot.jobs.build
+  (:require [pepper.bot.job :as job]
             [pepper.game.position :as position]
             [pepper.game.unit-type :as unit-type])
   (:import [bwapi Game Unit Player]))

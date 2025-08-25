@@ -1,7 +1,7 @@
 (ns pepper.game.auto-supply
   (:require
    [pepper.game.jobs :as jobs]
-   [pepper.game.jobs.build :as build]
+   [pepper.bot.jobs.build :as build]
    [pepper.game.resources :as resources]
    [pepper.game.unit-type :as unit-type]))
 

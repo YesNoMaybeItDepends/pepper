@@ -1,4 +1,4 @@
-(ns pepper.game.production
+(ns pepper.bot.production
   "does nothing right now haha")
 
 (defn pending-request? [request]

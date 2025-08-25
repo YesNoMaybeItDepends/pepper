@@ -1,2 +1,0 @@
-(ns pepper.game.jobs.scout)
-

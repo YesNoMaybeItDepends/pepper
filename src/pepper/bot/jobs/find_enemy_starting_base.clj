@@ -1,6 +1,6 @@
-(ns pepper.game.jobs.find-enemy-starting-base
+(ns pepper.bot.jobs.find-enemy-starting-base
   (:require
-   [pepper.game.job :as job]
+   [pepper.bot.job :as job]
    [pepper.game.position :as position])
   (:import
    [bwapi Game TilePosition Unit]))

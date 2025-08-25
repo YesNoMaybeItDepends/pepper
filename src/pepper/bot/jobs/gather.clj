@@ -1,6 +1,6 @@
 (ns pepper.bot.jobs.gather
   (:require
-   [pepper.game.job :as job])
+   [pepper.bot.job :as job])
   (:import
    [bwapi Game Unit]))
 
