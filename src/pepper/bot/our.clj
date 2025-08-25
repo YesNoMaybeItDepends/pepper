@@ -53,3 +53,6 @@
 
 (defn update-on-start [{:as our :or {}} data]
   (set-player-id our (player-id data)))
+
+(defn update-on-frame [our]
+  our)

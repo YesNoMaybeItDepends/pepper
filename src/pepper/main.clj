@@ -1,7 +1,7 @@
 (ns pepper.main
   (:require
    [clojure.core.async :as a]
-   [pepper.bot :as bot]
+   [pepper.core :as pepper]
    [pepper.api :as api]
    [pepper.utils.config :as config]))
 
@@ -15,15 +15,14 @@
   (get-in deref-store [:after-end]))
 
 (defn main [store]
-  (let [[to-bot from-bot] [(a/chan) (a/chan)]
-        api (api/init to-bot from-bot
+  (let [[from-api to-api] [(a/chan) (a/chan)]
+        api (api/init from-api to-api
                       (get-api-client-config (config/read-config))
                       (get-api-before-start @store)
                       (get-api-after-end @store))
-        bot (bot/init api to-bot from-bot)
+        pepper (pepper/init api from-api to-api)
         _ (swap! store assoc
-                 :pepper {:api api
-                          :bot bot}
-                 :ch-to-bot to-bot
-                 :ch-from-bot from-bot)]
+                 :pepper pepper
+                 :ch-from-api from-api
+                 :ch-to-api to-api)]
     (api/start-game! api)))

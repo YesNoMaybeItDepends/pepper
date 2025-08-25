@@ -1,0 +1,5 @@
+(ns pepper.bot.jobs)
+
+(defn update-on-frame [jobs]
+  #_(jobs/process-state-jobs!)
+  jobs)

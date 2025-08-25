@@ -30,5 +30,6 @@
                       (map gather/mining-job))]
     (reduce jobs/assign-unit-job {} new-jobs))) ;; TODO: fix this
 
-(defn update-on-frame [macro game]
-  (let []))
+(defn update-on-frame [macro]
+  #_(macro/process-macro)
+  macro)

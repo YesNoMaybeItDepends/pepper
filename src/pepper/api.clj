@@ -57,13 +57,13 @@
     (client/start-game! client client-config)
     (when (fn? after-end) (after-end))))
 
-(defn init [to-bot from-bot client-config before-start after-end]
+(defn init [out-ch in-ch client-config before-start after-end]
   {:api/client (client/make-client
                 (fn [event]
-                  (a/>!! to-bot event)
-                  (a/<!! from-bot)))
-   :api/out-ch to-bot
-   :api/in-ch from-bot
+                  (a/>!! out-ch event)
+                  (a/<!! in-ch)))
+   :api/out-ch out-ch
+   :api/in-ch in-ch
    :api/client-config client-config
    :api/before-start before-start
    :api/after-end after-end})

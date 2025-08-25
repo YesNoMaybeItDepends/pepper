@@ -14,8 +14,8 @@
 
 (def initial-bot-state false)
 (def initial-store-state {:api nil
-                          :ch-to-bot nil
-                          :ch-from-bot nil
+                          :ch-from-api nil
+                          :ch-to-api nil
                           :error-ch nil})
 
 (defonce bot initial-bot-state)
@@ -84,8 +84,8 @@
 
 (defn tap-pepper! []
   (let [state @store
-        in-chan (:ch-to-bot state)
-        out-chan (:ch-from-bot state)
+        in-chan (:ch-from-api state)
+        out-chan (:ch-to-api state)
         event [:tap]]
     (a/>!! in-chan event)
     (a/<!! out-chan)))
