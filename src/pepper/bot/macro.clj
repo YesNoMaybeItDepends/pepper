@@ -1,9 +1,11 @@
 (ns pepper.bot.macro
-  (:require [pepper.bot.our :as our]
-            [pepper.game :as game]
-            [pepper.game.unit :as unit]
-            [pepper.game.unit-type :as unit-type]
-            [pepper.bot.jobs.gather :as gather]))
+  (:require
+   [pepper.bot.jobs :as jobs]
+   [pepper.bot.jobs.gather :as gather]
+   [pepper.bot.our :as our]
+   [pepper.game :as game]
+   [pepper.game.unit :as unit]
+   [pepper.game.unit-type :as unit-type]))
 
 (defn workers [our game]
   (->> (our/units our game)
@@ -28,7 +30,7 @@
         new-jobs (->> (map (assign-random-mineral mineral-fields)
                            idle-workers)
                       (map gather/mining-job))]
-    (reduce jobs/assign-unit-job {} new-jobs))) ;; TODO: fix this
+    (reduce jobs/assign-unit-job {} new-jobs)))
 
 (defn update-on-frame [macro]
   #_(macro/process-macro)

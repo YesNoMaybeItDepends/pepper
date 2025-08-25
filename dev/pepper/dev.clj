@@ -4,6 +4,7 @@
    [pepper.api.game :as api-game]
    [pepper.dev.chaos-launcher :as chaos-launcher]
    [pepper.main :as pepper-main]
+   [pepper.core :as pepper]
    [pepper.bot :as _bot]
    [pepper.api :as _api]
    [pepper.utils.config :as config]
@@ -43,7 +44,7 @@
   (tel/log! (dissoc state :api :game :map)))
 
 (defn maybe-pause-game! [system]
-  (let [api (_bot/get-api system)
+  (let [api (pepper/api system)
         game (_api/get-game api)
         paused? (Game/.isPaused game)
         frame (Game/.getFrameCount game)
