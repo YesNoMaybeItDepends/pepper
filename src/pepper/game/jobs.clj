@@ -8,7 +8,8 @@
      POSSIBLE KEYS
        :completed? --> if true, the job will be set to nil"
   (:refer-clojure :exclude [type])
-  (:require [pepper.game.job :as job])
+  (:require [pepper.game.job :as job]
+            [pepper.api :as api])
   (:import [bwapi Game]))
 
 (defn assign-unit-job [state job]
@@ -66,4 +67,5 @@
      jobs)))
 
 (defn process-state-jobs! [state]
-  (update state :unit-jobs (process-jobs! ((:api state) :game))))
+  (let [game (api/get-game (:api state))]
+    (update state :unit-jobs (process-jobs! game))))

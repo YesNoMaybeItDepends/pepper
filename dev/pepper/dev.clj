@@ -4,6 +4,8 @@
    [pepper.api.game :as api-game]
    [pepper.dev.chaos-launcher :as chaos-launcher]
    [pepper.main :as pepper-main]
+   [pepper.bot :as _bot]
+   [pepper.api :as _api]
    [pepper.utils.config :as config]
    [pepper.utils.logging :as logging]
    [taoensso.telemere :as tel])
@@ -40,8 +42,9 @@
 (defn maybe-log-state! [state]
   (tel/log! (dissoc state :api :game :map)))
 
-(defn maybe-pause-game! [{:keys [api] :as state}]
-  (let [game (api :game)
+(defn maybe-pause-game! [system]
+  (let [api (_bot/get-api system)
+        game (_api/get-game api)
         paused? (Game/.isPaused game)
         frame (Game/.getFrameCount game)
         pause? (fn [paused? frame] (and (not paused?)
@@ -88,13 +91,13 @@
     (a/<!! out-chan)))
 
 (defn get-client! []
-  (:api @store))
+  (:api/client @store))
 
 (defn get-game! []
-  (:game @store))
+  (:api/game @store))
 
 (defn get-bwem! []
-  (:bwem @store))
+  (:api/bwem @store))
 
 (defn pause-game! []
   (let [game (get-game!)]
@@ -107,7 +110,8 @@
     (bwapi.Game/.resumeGame game)))
 
 (defn store-api! [x]
-  (let [api-keys [:api :game :bwem]
+  (let [x (:api x)
+        api-keys [:api/client :api/game :api/bwem]
         s @store]
     (when (and (not-every? #(some? (% s)) api-keys)
                (every? #(some? (% x)) api-keys))

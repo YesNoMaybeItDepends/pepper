@@ -1,7 +1,8 @@
 (ns pepper.game.frame
   (:require [pepper.game.unit :as unit]
             [pepper.game.player :as player]
-            [pepper.game.map :as map])
+            [pepper.game.map :as map]
+            [pepper.api :as api])
   (:import (bwapi BWClient Game Player)))
 
 (def frame-keywords #{:frame :units :events})
@@ -10,16 +11,16 @@
   "For some reason I don't merge the result of this straight into state?
    See state/init-state"
   [api]
-  (let [game (api :game)
-        bwem (api :bwem)]
+  (let [game (api/get-game api)
+        bwem (api/get-bwem api)]
     {:frame (Game/.getFrameCount game)
      :players (map (player/parse-player! game) (Game/.getPlayers game))
      :self {:id (Player/.getID (Game/.self game))}
      :map (map/parse-map-on-start! bwem)}))
 
 (defn parse-on-frame-data [api]
-  (let [client (api :client)
-        game (api :game)]
+  (let [client (api/get-client api)
+        game (api/get-game api)]
     {:frame (Game/.getFrameCount game)
      :frames-behind (BWClient/.framesBehind client)
      :latency-frames (Game/.getLatencyFrames game)

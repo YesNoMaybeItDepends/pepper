@@ -1,4 +1,4 @@
-(ns pepper.game.jobs.gather
+(ns pepper.bot.jobs.gather
   (:require
    [pepper.game.job :as job])
   (:import

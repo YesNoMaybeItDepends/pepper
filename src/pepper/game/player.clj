@@ -24,6 +24,11 @@
 (defn supply-used [player]
   (:supply-used player))
 
+(defn supply-available [player]
+  (let [total (supply-total player)
+        used (supply-used player)]
+    (- total used)))
+
 (defn starting-base [player]
   (:starting-base player))
 
@@ -39,6 +44,9 @@
   (get-in state [:players-by-id (get-self-id state)]))
 
 ;;;; players
+
+(defn get-player-by-id [players id]
+  (get players id))
 
 (defn update-player-by-id [players-by-id player]
   (update players-by-id (:id player) merge player))

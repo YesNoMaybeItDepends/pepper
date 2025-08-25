@@ -5,7 +5,7 @@
    [pepper.game.jobs :as jobs]
    [pepper.game.unit :as unit]
    [pepper.game.gathering :as gathering]
-   [pepper.game.jobs.gather :as gather])
+   [pepper.bot.jobs.gather :as gather])
   (:import
    (bwapi UnitType)))
 

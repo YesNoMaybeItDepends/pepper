@@ -1,7 +1,6 @@
 (ns pepper.game.macro
   (:require
    [pepper.game.auto-supply :as auto-supply]
-   [pepper.game.gathering :as gathering]
    [pepper.game.jobs :as jobs]
    [pepper.game.jobs.build :as build]
    [pepper.game.jobs.train :as train]
@@ -59,7 +58,7 @@
 (defn process-macro [state]
   (-> state
       resources/process-resources
-      gathering/process-idle-workers
+      ;; gathering/process-idle-workers
       maybe-build-supply
       maybe-build-barracks
       maybe-train-units))

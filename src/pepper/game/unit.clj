@@ -16,6 +16,9 @@
 (defn id [unit]
   (:id unit))
 
+(defn player-id [unit]
+  (:player-id unit))
+
 (defn get-units [state]
   (vals (:units-by-id state)))
 
