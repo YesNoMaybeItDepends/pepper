@@ -1,4 +1,4 @@
 {:ns-groups [{:pattern ".bwapi." :name bwapi}]
  #_:linters #_{:clojure-lsp/unused-public-var {:level :off}}
- :ignore [:unused-binding
+ :ignore [#_:unused-binding
           #_:unused-private-var]}

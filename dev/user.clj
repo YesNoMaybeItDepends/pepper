@@ -6,7 +6,8 @@
 ;;;; Portal
 
 (defn init-portal! [store]
-  (let [instance (portal/open {:theme :portal.colors/nord})]
+  (let [instance (portal/open {:launcher :vs-code})
+        #_(portal/open {:theme :portal.colors/nord})]
     (add-tap #'portal/submit)
     (swap! store assoc :portal/instance instance)))
 
@@ -30,6 +31,7 @@
   (set! *print-namespace-maps* false)
 
   @dev/store
+  (tap> @dev/store)
 
   (dev/start-pepper! {:async? true})
   (dev/start-pepper!)

@@ -9,48 +9,49 @@
    [pepper.game.macro :as macro]
    [pepper.game.military :as military]
    [pepper.game.state :as state]
+   [pepper.game :as gaem]
+   [pepper.api :as api]
    [pepper.utils.config :as config]
    [taoensso.telemere :as tel])
   (:import
    [bwapi BWClient Game]))
 
-(defn on-start [{:keys [init-api] :as state}]
-  (let [api (init-api)
-        state (-> (assoc state :api api)
-                  (merge (state/init-state
-                          (frame/parse-on-start-data api))))]
+(defn get-api [state]
+  (:api state))
+
+(defn get-game [state]
+  (:game state))
+
+(defn get-bot [state]
+  (:bot state))
+
+(defn on-start [state]
+  (let [state (update state :api api/update-on-start)
+        state (update state :game gaem/update-on-start
+                      (gaem/parse-on-start (get-api state)))]
     (tap> state)
     state))
 
-(defn on-frame [{:keys [api] :as state}]
+(defn on-frame [state]
   (-> state
-      (state/update-state-with-frame-data (frame/parse-on-frame-data api))
+      (state/update-state-with-frame-data (frame/parse-on-frame-data (get-api state)))
       (macro/process-macro)
       (military/maybe-find-enemy-starting-base)
       (jobs/process-state-jobs!)
       (state/render-state!)))
 
-(defn on-end [{:keys [api] :as state}]
+(defn on-end [state]
   state)
 
-(defn api [to-bot from-bot]
-  (let [client (client/make-client
-                (fn [event]
-                  (a/>!! to-bot event)
-                  (a/<!! from-bot)))]
-    [client (fn init []
-              (let [game (BWClient/.getGame client)
-                    bwem (bwem/init! game)]
-                (fn get [x]
-                  (case x
-                    :client client
-                    :game game
-                    :bwem bwem))))]))
+(defn init-state [api]
+  {:api api
+   :game {}
+   :bot {}})
 
-(defn bot [state to-bot from-bot]
-  (a/go-loop [state state]
-    (when-let [[event-id data :as event] (a/<! to-bot)]
-      (let [state (case event-id
+(defn init [api to-bot from-bot]
+  (a/go-loop [state (init-state api)]
+    (when-let [[id data :as event] (a/<! to-bot)]
+      (let [state (case id
                     :on-start (on-start state)
                     :on-frame (on-frame state)
                     :on-end (on-end state)
