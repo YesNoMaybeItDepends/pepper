@@ -20,6 +20,10 @@
   (tap> x)
   x)
 
+(defn rendering [state]
+  (game/render-game! (game state) (api state))
+  state)
+
 ;;;; on start
 
 (defn on-start [state]
@@ -35,7 +39,8 @@
 (defn on-frame [state]
   (let [state (update state :game game/update-on-frame
                       (game/parse-on-frame (api state)))
-        state (update state :bot bot/update-on-frame)]
+        state (update state :bot bot/update-on-frame
+                      (api state) (game state))]
     state))
 
 ;;;; on end
@@ -55,7 +60,9 @@
     (when-let [[id data :as event] (a/<! from-api)]
       (let [state (case id
                     :on-start (tapping (on-start state))
-                    :on-frame (on-frame state)
+                    :on-frame (-> state
+                                  on-frame
+                                  rendering)
                     :on-end (tapping (on-end state))
                     :tap (tapping state)
                     state)]

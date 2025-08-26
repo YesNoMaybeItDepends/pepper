@@ -1,17 +1,9 @@
 (ns pepper.game.unit
   (:refer-clojure :exclude [type type?])
-  (:require [pepper.game.player :as player]
-            [pepper.game.jobs :as jobs]
-            [pepper.bot.job :as job]
-            [pepper.game.unit-type :as unit-type]
+  (:require [pepper.game.unit-type :as unit-type]
             [pepper.game.position :as position])
   (:import
    (bwapi Unit Game Player)))
-
-(def unit-keys #{:id :player-id :type :exists? :idle? :frame-discovered :last-frame-updated})
-
-(defn type [unit]
-  (:type unit))
 
 (defn id [unit]
   (:id unit))
@@ -19,17 +11,32 @@
 (defn player-id [unit]
   (:player-id unit))
 
-(defn get-units [state]
-  (vals (:units-by-id state)))
+(defn idle? [unit]
+  (:idle? unit))
 
-(defn get-unit-by-id [state unit-id]
-  (get-in state [:units-by-id unit-id]))
+(defn exists? [unit]
+  (:exists? unit))
 
-(defn update-unit-by-id [units-by-id unit]
-  (update units-by-id (:id unit) merge unit))
+(defn last-frame-updated [unit]
+  (:last-frame-updated unit))
 
-(defn update-units-by-id [units-by-id units]
-  (reduce update-unit-by-id units-by-id units))
+(defn type [unit]
+  (:type unit))
+
+(defn type?
+  [unit unit-type]
+  (contains? (if (set? unit-type) unit-type
+                 (into #{} (flatten [unit-type])))
+             (type unit)))
+
+(defn frame-discovered [unit]
+  (:frame-discovered unit))
+
+(defn new-unit? [unit]
+  (nil? (frame-discovered unit)))
+
+(defn update-unit [unit new-unit]
+  (merge unit new-unit))
 
 (defn parse-unit!
   "Reads a bwapi unit with a bwapi game"
@@ -46,58 +53,33 @@
         (assoc :tile (position/->data (Unit/.getTilePosition unit)))
         (assoc :completed? (Unit/.isCompleted unit)))))
 
-(defn type?
-  [unit kind]
-  (contains? (if (set? kind) kind
-                 (into #{} (flatten [kind])))
-             (type unit)))
+(defn group-unit-by-keywords
+  ([unit keywords] (group-unit-by-keywords {} unit keywords))
+  ([acc unit keywords]
+   (reduce
+    (fn [acc kw]
+      (update-in acc [kw (kw unit)] (fnil conj #{}) (id unit)))
+    acc
+    keywords)))
 
-(defn new-unit? [unit]
-  (nil? (:frame-discovered unit)))
+(defn group-units-by-keywords [units keywords]
+  (reduce (fn [result unit]
+            (group-unit-by-keywords result unit keywords))
+          {}
+          units))
 
-(defn ours? [state unit]
-  (= (:player-id unit)
-     (player/get-self-id state)))
-
-(defn get-our-units [state]
-  (->> (get-units state)
-       (filter #(ours? state %))))
-
-(defn idle? [unit]
-  (:idle? unit))
-
-(defn employed? [state unit]
-  (some? (jobs/get-unit-job state (id unit))))
-
-(defn unemployed? [state unit]
-  ((complement employed?) state unit))
-
-(defn get-workers [state]
-  (->> (get-units state)
-       (filter #(ours? state %))
-       (filter #(type? % unit-type/worker))))
-
-(defn get-idle-workers [state]
-  (->> (get-workers state)
-       (filter idle?)))
-
-(defn with-job? [state job-type unit]
-  (-> (jobs/get-unit-job state (id unit))
-      (job/type? job-type)))
-
-(defn group-workers-by-job [state]
-  (->> (get-workers state)
-       (group-by #(job/type (jobs/get-unit-job state (id %))))))
-
-(defn get-mineral-fields [state]
-  (->> (get-units state)
-       (filter #(type? % unit-type/mineral-field))))
-
-(defn get-idle-or-mining-worker [state]
-  (let [workers-by-job (group-workers-by-job state)
-        worker-id (cond (some? (get workers-by-job nil))
-                        (:id (first (get workers-by-job nil)))
-
-                        (some? (:mining workers-by-job))
-                        (:id (first (:mining workers-by-job))))]
-    (get-unit-by-id state worker-id)))
+(comment ;; poor man's test
+  (let [input-keywords [:type :player]
+        input-units [{:id 6
+                      :type :scv
+                      :player 1}
+                     {:id 8
+                      :type :marine
+                      :player 2}]
+        output {:type {:scv #{6}
+                       :marine #{8}}
+                :player {1 #{6}
+                         2 #{8}}}]
+    (assert (= (group-units-by-keywords input-units input-keywords)
+               output)))
+  #_())

@@ -32,17 +32,17 @@
 (defn set-map [game map]
   (assoc game :map map))
 
+(defn get-map [game]
+  (:map game))
+
 (defn set-players [game players]
-  (assoc game :players players))
+  (assoc game :players-by-id players))
 
 (defn players-by-id [game]
   (:players-by-id game))
 
-(defn update-players-by-id [game players]
-  (update game :players-by-id player/update-players-by-id players))
-
 (defn set-units [game units]
-  (assoc game :units units))
+  (assoc game :units-by-id units))
 
 (defn units-by-id [game]
   (:units-by-id game))
@@ -50,8 +50,17 @@
 (defn units [game]
   (vals (:units-by-id game)))
 
-(defn update-units-by-id [game units]
-  (update game :units-by-id unit/update-units-by-id units))
+(defn update-units-by-id [units-by-id units]
+  (reduce (fn [units-by-id unit]
+            (update units-by-id (unit/id unit) unit/update-unit unit))
+          (or units-by-id {})
+          units))
+
+(defn update-players-by-id [players-by-id players]
+  (reduce (fn [players-by-id player]
+            (update players-by-id (player/id player) player/update-player player))
+          (or players-by-id {})
+          players))
 
 (defn parse-on-start [api]
   (let [game (api/get-game api)
@@ -64,7 +73,7 @@
 (defn update-on-start [{:as game :or {}} {:keys [frame players map]}]
   (-> game
       (set-frame frame)
-      (update-players-by-id players)
+      (update :players-by-id update-players-by-id players)
       (set-map map)))
 
 (defn parse-on-frame [api]
@@ -86,7 +95,7 @@
                                     latency-time
                                     latency-remaining-frames
                                     latency-remaining-time
-                                    players units]}]
+                                    players-by-id units-by-id]}]
   (-> game
       (set-frame frame)
       (set-frames-behind frames-behind)
@@ -94,8 +103,8 @@
       (set-latency-time latency-time)
       (set-latency-remaining-frames latency-remaining-frames)
       (set-latency-remaining-time latency-remaining-time)
-      (update-players-by-id players)
-      (update-units-by-id units)))
+      (update :players-by-id update-players-by-id players-by-id)
+      (update :units-by-id update-units-by-id units-by-id)))
 
 (defn render-game! [game api]
   (api-game/draw-text-screen

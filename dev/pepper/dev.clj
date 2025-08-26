@@ -5,7 +5,6 @@
    [pepper.dev.chaos-launcher :as chaos-launcher]
    [pepper.main :as pepper-main]
    [pepper.core :as pepper]
-   [pepper.bot :as _bot]
    [pepper.api :as _api]
    [pepper.utils.config :as config]
    [pepper.utils.logging :as logging]

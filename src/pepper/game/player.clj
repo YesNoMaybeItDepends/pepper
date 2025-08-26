@@ -32,30 +32,10 @@
 (defn starting-base [player]
   (:starting-base player))
 
-;;;; self
-
-(defn set-self-id [state player]
-  (assoc state :self-id (id player)))
-
-(defn get-self-id [state]
-  (:self-id state))
-
-(defn get-self [state]
-  (get-in state [:players-by-id (get-self-id state)]))
-
 ;;;; players
 
-(defn get-player-by-id [players id]
-  (get players id))
-
-(defn update-player-by-id [players-by-id player]
-  (update players-by-id (:id player) merge player))
-
-(defn update-players-by-id [players-by-id players]
-  (reduce update-player-by-id players-by-id players))
-
-(defn update-players [state players]
-  (update state :players-by-id update-players-by-id players))
+(defn update-player [player new-player]
+  (merge player new-player))
 
 ;;;; parsing
 

@@ -31,6 +31,9 @@
 (defn supply-used [our game]
   (player/supply-total (player our game)))
 
+(defn supply [our game]
+  [(supply-used our game) (supply-total our game)])
+
 (defn starting-base [our game]
   (player/starting-base (player our game)))
 
@@ -49,7 +52,7 @@
 
 (defn parse-on-start [api]
   (let [game (api/get-game api)]
-    (set-player-id {} (Player/.getID (Game/.self game)))))
+    {:player/id (Player/.getID (Game/.self game))}))
 
 (defn update-on-start [{:as our :or {}} data]
   (set-player-id our (player-id data)))

@@ -68,9 +68,5 @@
      :bases (reduce-by-id (mapv parse-base-on-start! (BWMap/.getBases map)))
      :starting-bases (parse-starting-bases-on-start! map)}))
 
-(defn map [state]
-  (:map state))
-
 (defn starting-bases [map]
   (:starting-bases map))
-
