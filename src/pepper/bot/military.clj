@@ -7,9 +7,9 @@
    [pepper.game.map :as map]
    [pepper.game.unit :as unit]))
 
-(defn update-on-frame [military unit-jobs]
+(defn update-on-frame [[military messages] unit-jobs]
   #_(military/maybe-find-enemy-starting-base)
-  military)
+  [military (or messages [])])
 
 (defn find-enemy-starting-base-jobs [unit-jobs]
   (->> unit-jobs

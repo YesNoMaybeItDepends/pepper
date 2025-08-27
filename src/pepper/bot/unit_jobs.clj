@@ -35,5 +35,8 @@
    {}
    unit-jobs))
 
-(defn update-on-frame [unit-jobs api]
-  (execute-jobs! unit-jobs api))
+(defn update-on-frame [[unit-jobs messages] api]
+  (let [[new-jobs messages] (split-with job/job? (or messages []))
+        unit-jobs (reduce set-unit-job unit-jobs new-jobs)
+        unit-jobs (execute-jobs! unit-jobs api)]
+    [unit-jobs (into [] messages)]))

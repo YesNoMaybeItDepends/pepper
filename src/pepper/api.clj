@@ -60,8 +60,7 @@
 (defn init [out-ch in-ch client-config before-start after-end]
   {:api/client (client/make-client
                 (fn [event]
-                  (a/>!! out-ch event)
-                  (a/<!! in-ch)))
+                  (a/put! out-ch event)))
    :api/out-ch out-ch
    :api/in-ch in-ch
    :api/client-config client-config

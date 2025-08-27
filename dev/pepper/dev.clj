@@ -26,7 +26,6 @@
    TODO: reconsider start-pepper!"
   ([] (main {}))
   ([{:keys [async?] :as opts}]
-   (tap> opts)
    (let [_ (logging/init-logging! (str (inst-ms (java.time.Instant/now))))]
      (reset! store initial-store-state)
      (swap! store merge opts)

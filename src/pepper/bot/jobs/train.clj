@@ -1,5 +1,6 @@
 (ns pepper.bot.jobs.train
   (:require [pepper.bot.job :as job]
+            [pepper.api :as api]
             [pepper.game.unit-type :as unit-type])
   (:import
    [bwapi Game Unit]))
@@ -14,16 +15,16 @@
        (>= (- frame frame-issued-train-command)
            50)))
 
-(defn training-completed?! [game job]
-  (let [trainee (Game/.getUnit game (:requested-id job))
+(defn training-completed?! [api job]
+  (let [trainee (Game/.getUnit (api/get-game api) (:requested-id job))
         trainee-completed? (Unit/.isCompleted trainee)]
     (if trainee-completed?
       (job/set-completed job)
       job)))
 
-(defn get-trainee! [game job]
-  (let [trainer (Game/.getUnit game (:unit-id job))
-        frame (Game/.getFrameCount game)
+(defn get-trainee! [api job]
+  (let [trainer (Game/.getUnit (api/get-game api) (:unit-id job))
+        frame (Game/.getFrameCount (api/get-game api))
         trainee (Unit/.getBuildUnit trainer)]
     (if (some? trainee)
       (assoc job
@@ -34,14 +35,14 @@
         (job/set-completed job)
         job))))
 
-(defn train! [game job]
-  (let [trainer (Game/.getUnit game (:unit-id job))
+(defn train! [api job]
+  (let [trainer (Game/.getUnit (api/get-game api) (:unit-id job))
         unit-type (unit-type/keyword->object (:requested job))
         success? (Unit/.train trainer unit-type)]
     (if success?
       (assoc job
              :action get-trainee!
-             :frame-issued-train-command (Game/.getFrameCount game))
+             :frame-issued-train-command (Game/.getFrameCount (api/get-game api)))
       job)))
 
 (defn job [unit-id unit-type]

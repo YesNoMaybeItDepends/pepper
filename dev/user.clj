@@ -50,3 +50,17 @@
 
 
   #_())
+
+(comment
+
+  ;; (require '[clojure.core.async :as a])
+  ;; (require '[pepper.core :as core])
+  ;; (require '[pepper.bot :as bot])
+  ;; (require '[pepper.game :as game])
+  ;; (require '[pepper.api :as api])
+  ;; (require '[pepper.bot.macro :as bot.macro])
+  ;; (require '[pepper.bot.unit-jobs :as bot.unit-jobs])
+
+  (def selected (first (portal/selected)))
+
+  #_())

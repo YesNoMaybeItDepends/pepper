@@ -29,6 +29,11 @@
   (assert (:action job) "job requires an action")
   job)
 
+(defn job? [job]
+  (and (contains? job :job)
+       (contains? job :action)
+       (contains? job :unit-id)))
+
 (defn type [job]
   (:job job))
 

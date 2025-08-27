@@ -48,45 +48,55 @@
 (defn on-end [state]
   state)
 
+;;;; handlers
+
+(defn handle-error [e state-ref stop-ch]
+  (tap> e)
+  (tap> {:reason :error
+         :state @state-ref})
+  (a/close! stop-ch))
+
+(defn handle-stop [state-ref]
+  (println "pepper stopping")
+  (tap> {:reason :stopping
+         :state @state-ref}))
+
+(defn handle-msg [state [id _ :as msg] stop-ch]
+  (case id
+    :on-start (tapping (on-start state))
+    :on-frame (-> state
+                  on-frame
+                  rendering)
+    :on-end (do (a/close! stop-ch)
+                (tapping (on-end state)))
+    :tap (tapping state)
+    state))
+
+(defn handle-res! [state-ref msg stop-ch]
+  (try
+    (let [new-state (handle-msg @state-ref msg stop-ch)]
+      (swap! state-ref merge new-state))
+    (catch Exception e
+      (handle-error e state-ref stop-ch))))
+
 ;;;; init
+
+(defn stop? [[msg ch] stop-ch]
+  (or (= ch stop-ch)
+      (nil? msg)))
 
 (defn init-state [api]
   {:api api
    :game {}
    :bot {}})
 
-(defn init [api from-api to-api]
-  (a/go-loop [state (init-state api)]
-    (when-let [[id data :as event] (a/<! from-api)]
-      (let [state (case id
-                    :on-start (tapping (on-start state))
-                    :on-frame (-> state
-                                  on-frame
-                                  rendering)
-                    :on-end (tapping (on-end state))
-                    :tap (tapping state)
-                    state)]
-        (a/>! to-api :ack)
-        (recur state)))))
-
-;;;; idea
-
-;; (defn parse! [[state]]
-;;   [state {}])
-
-;; (defn plan! [[state input]]
-;;   [state])
-
-;; (defn execute! [[state]]
-;;   [state])
-
-;; (defn render! [[state]]
-;;   state)
-
-;; (defn _on-frame [state]
-;;   (let [[state _] (-> [state]
-;;                       parse!
-;;                       plan!
-;;                       execute!
-;;                       render!)]
-;;     state))
+(defn init [api from-api state-ref stop-ch]
+  (reset! state-ref (init-state api))
+  (a/go-loop []
+    (when-let [[msg _ :as res] (a/alts! [stop-ch
+                                         from-api]
+                                        :priority true)]
+      (if (stop? res stop-ch)
+        (handle-stop state-ref)
+        (do (handle-res! state-ref msg stop-ch)
+            (recur))))))

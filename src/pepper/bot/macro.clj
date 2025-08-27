@@ -52,17 +52,21 @@
 (defn maybe-train-units [macro]
   macro)
 
-(defn update-on-frame [macro our unit-jobs game]
-  (let [new-jobs []
-        idle-worker-ids (mapv :id (idle-workers our game))
+(defn update-on-frame [[macro messages] our unit-jobs game]
+  (let [idle-worker-ids (mapv :id (idle-workers our game))
         mineral-field-ids (mapv :id (mineral-fields game))
-        new-mining-jobs (mining/new-mining-jobs idle-worker-ids mineral-field-ids)]
-    (-> macro
-        #_(process-idle-workers our game)
-        #_(maybe-build-supply our game unit-jobs)
-        (maybe-build-barracks)
-        (maybe-train-units)
-        (assoc :job-updates new-mining-jobs)
-        #_(update :job-updates into (into [] new-mining-jobs))
-        #_(update :job-updates into (into new-jobs new-mining-jobs)))))
+        new-mining-jobs (mining/new-mining-jobs idle-worker-ids mineral-field-ids)
+        macro (-> macro
+                  maybe-build-barracks
+                  maybe-train-units)
+        messages (into (or messages []) new-mining-jobs)]
+    [macro messages]
+    #_(-> macro
+          #_(process-idle-workers our game)
+          #_(maybe-build-supply our game unit-jobs)
+          (maybe-build-barracks)
+          (maybe-train-units)
+          (assoc :job-updates new-mining-jobs)
+          #_(update :job-updates into (into [] new-mining-jobs))
+          #_(update :job-updates into (into new-jobs new-mining-jobs)))))
 

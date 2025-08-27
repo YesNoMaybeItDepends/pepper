@@ -1,6 +1,7 @@
 (ns pepper.bot.jobs.find-enemy-starting-base
   (:require
    [pepper.bot.job :as job]
+   [pepper.api :as api]
    [pepper.game.position :as position])
   (:import
    [bwapi Game TilePosition Unit]))
@@ -14,9 +15,9 @@
   [game job]
   job)
 
-(defn go-there! [game job]
-  (let [frame (Game/.getFrameCount game)
-        worker (Game/.getUnit game (job/unit-id job))
+(defn go-there! [api job]
+  (let [frame (Game/.getFrameCount (api/get-game api))
+        worker (Game/.getUnit (api/get-game api) (job/unit-id job))
         base (starting-base-to-scout job)
         tile (position/->bwapi base :tile-position)
         position (TilePosition/.toPosition tile)

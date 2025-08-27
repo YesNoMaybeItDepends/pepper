@@ -16,13 +16,18 @@
 
 (defn main [store]
   (let [[from-api to-api] [(a/chan) (a/chan)]
+        pepper-ref (atom {})
+        stop-ch (a/chan)
         api (api/init from-api to-api
                       (get-api-client-config (config/read-config))
                       (get-api-before-start @store)
                       (get-api-after-end @store))
-        pepper (pepper/init api from-api to-api)
+        pepper (pepper/init api from-api pepper-ref stop-ch)
         _ (swap! store assoc
                  :pepper pepper
+                 :pepper-ref pepper-ref
+                 :ch-stop? stop-ch
                  :ch-from-api from-api
                  :ch-to-api to-api)]
-    (api/start-game! api)))
+    (api/start-game! api)
+    (a/close! stop-ch)))

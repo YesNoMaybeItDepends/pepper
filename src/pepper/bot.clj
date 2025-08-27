@@ -32,8 +32,22 @@
 ;;;; on frame
 
 (defn update-on-frame [bot api game]
-  (-> bot
-      (update :our our/update-on-frame)
-      (update :macro macro/update-on-frame (our bot) (unit-jobs bot) game)
-      (update :military military/update-on-frame (unit-jobs bot))
-      (update :unit-jobs unit-jobs/update-on-frame api)))
+  (let [[our messages] [(our/update-on-frame
+                         (our bot))
+                        []]
+
+        [macro messages] (macro/update-on-frame
+                          [(macro bot) messages]
+                          our (unit-jobs bot) game)
+
+        [military messages] (military/update-on-frame
+                             [(military bot) messages]
+                             (unit-jobs bot))
+
+        [unit-jobs messages] (unit-jobs/update-on-frame
+                              [(unit-jobs bot) messages]
+                              api)]
+    (assoc bot
+           :macro macro
+           :military military
+           :unit-jobs unit-jobs)))
