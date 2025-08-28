@@ -47,7 +47,7 @@
         state (update state :game game/update-on-start
                       (game/parse-on-start (api state)))
         state (update state :bot bot/update-on-start
-                      (bot/parse-on-start (api state)))]
+                      (bot/parse-on-start (api state)) (game state))]
     state))
 
 ;;;; on frame

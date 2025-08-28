@@ -10,6 +10,10 @@
   [game x y text]
   (Game/.drawTextScreen game x y text (into-array Text [])))
 
+(defn draw-text-map
+  [game x y text]
+  (Game/.drawTextMap game x y text (into-array Text [])))
+
 (defn set-local-speed
   [game speed]
   (Game/.setLocalSpeed game (speed {:fastest 42

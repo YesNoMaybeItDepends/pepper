@@ -39,8 +39,10 @@
         success? (Unit/.build worker building tile)]
     (if success?
       (assoc job
-             :frame-issued-build-command (Game/.getFrameCount (api/get-game api)))
+             :frame-issued-build-command (Game/.getFrameCount (api/get-game api))
+             :action is-building?!)
       (assoc job
+             :times-retried ((fnil inc 0) (:times-retried job))
              :action get-build-tile!
              :build-tile nil
              :frame-got-build-tile nil))))

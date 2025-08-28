@@ -7,22 +7,16 @@
    [pepper.game.map :as map]
    [pepper.game.unit :as unit]))
 
-(defn update-on-frame [[military messages] unit-jobs]
-  #_(military/maybe-find-enemy-starting-base)
-  [military (or messages [])])
-
 (defn find-enemy-starting-base-jobs [unit-jobs]
-  (->> unit-jobs
-       (filter #(= (:job %) :find-enemy-starting-base))))
+  (filterv #(= (:job %) :find-enemy-starting-base) unit-jobs))
 
 (defn already-scouting? [unit-jobs]
   (first (find-enemy-starting-base-jobs unit-jobs)))
 
 (defn barracks-completed? [our game]
   (not-empty (->> (our/units our game)
-                  ;; (filter #(unit/type? % :barracks))
-                  (filter #(unit/type? % :supply-depot))
-                  (filter :completed?))))
+                  (filterv #(unit/type? % :barracks))
+                  (filterv :completed?))))
 
 (defn enemy-starting-base [military]
   (:enemy-starting-base military))
@@ -53,43 +47,56 @@
 (defn add-unit-finding-enemy-starting-base [military unit-id]
   (update military :units-finding-enemy-starting-base conj unit-id))
 
-(defn update-military [military our game unit-jobs]
-  military)
-
 (defn military [state]
   (:military state))
 
 (defn init-military [our game]
-  {:military {:our-starting-base (fetch-our-starting-base our game)
-              :enemy-starting-base nil
-              :possible-enemy-starting-bases (filterv (complement #{fetch-our-starting-base}) (fetch-all-starting-bases game))
-              :discarded-enemy-starting-bases []
-              :units-finding-enemy-starting-base #{}}}) ;; unit -> base tuple, eg [3 [7 113]]
+  {:our-starting-base (fetch-our-starting-base our game)
+   :enemy-starting-base nil
+   :possible-enemy-starting-bases (filterv (complement #{fetch-our-starting-base}) (fetch-all-starting-bases game))
+   :discarded-enemy-starting-bases []
+   :units-finding-enemy-starting-base #{}}) ;; unit -> base tuple, eg [3 [7 113]]
 
 (defn assign-scouting-job [military worker-id our unit-jobs game]
   (let [possible-enemy-starting-bases (possible-enemy-starting-bases military our game)
         starting-bases-already-being-scouted (starting-bases-already-being-scouted unit-jobs)
         starting-base-to-scout (first possible-enemy-starting-bases) ;; TODO: filter starting-bases-already-being-scouted !!!!!!!
-        job (find-enemy-starting-base/job starting-base-to-scout worker-id)] ;; TODO: if some base to scout then add job and stuff, otherwise skip adding it bro
-    (-> military
-        (add-unit-finding-enemy-starting-base worker-id)
-        (update :job-updates (fn [updates] (into [] (concat ;; wtf 
-                                                     (or updates
-                                                         [])
-                                                     (or job
-                                                         []))))))))
+        job (find-enemy-starting-base/job starting-base-to-scout worker-id)
+        military (add-unit-finding-enemy-starting-base military worker-id)] ;; TODO: if some base to scout then add job and stuff, otherwise skip adding it bro
+    [military [job]]))
+
+(defn assign-scouting-job? [know-enemy-starting-base?
+                            barracks-completed?
+                            already-scouting?
+                            some-available-worker]
+  (and (not know-enemy-starting-base?)
+       barracks-completed?
+       (not already-scouting?)
+       some-available-worker))
 
 (defn maybe-find-enemy-starting-base [military our unit-jobs game]
   (let [know-enemy-starting-base? (know-enemy-starting-base? military)
-        already-scouting? (already-scouting? unit-jobs)
         barracks-completed? (barracks-completed? our game)
-        some-available-worker (macro/get-idle-or-mining-worker our game unit-jobs)]
-    (if (and (not know-enemy-starting-base?)
-             barracks-completed?
-             (not already-scouting?)
-             some-available-worker)
-      (assign-scouting-job military (unit/id some-available-worker) our unit-jobs game)
-      military)))
+        already-scouting? (already-scouting? unit-jobs)
+        some-available-worker (macro/get-idle-or-mining-worker our game unit-jobs)
+        assign-job? (assign-scouting-job? know-enemy-starting-base?
+                                          barracks-completed?
+                                          already-scouting?
+                                          some-available-worker)
+        [military jobs] (if assign-job?
+                          (assign-scouting-job military (unit/id some-available-worker) our unit-jobs game)
+                          [military []])]
+    [military jobs]))
+
+(defn update-military [military our game unit-jobs]
+  military)
+
+(defn update-on-start [our game]
+  (init-military our game))
+
+(defn update-on-frame [[military messages] our unit-jobs game]
+  (let [[military new-jobs] (maybe-find-enemy-starting-base military our (vals unit-jobs) game)]
+    [military (into messages conj (or new-jobs []))]))
 
 ;; (defn possible-enemy-base? [{:keys [possible-enemy-starting-bases]}])
 

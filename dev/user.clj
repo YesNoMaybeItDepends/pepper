@@ -4,15 +4,14 @@
    [clojure.core.async :as a]
    [clojure.pprint :as pprint]
    [portal.api :as portal]
-   [pepper.dev :as dev]   ;; consider these
-   [pepper.core :as core] ;; pepper.core
-   [pepper.api :as api]     ;; pepper.core.api
-   [pepper.game :as game]   ;; pepper.core.game
-   [pepper.bot :as bot]     ;; pepper.core.bot
-   [pepper.bot.unit-jobs :as bot.unit-jobs]
-   [pepper.bot.macro :as bot.macro]
-   [pepper.bot.macro.auto-supply :as macro.auto-supply]
-   [pepper.game.unit :as game.unit]))
+   [pepper.dev :as dev]
+   [user.portal :as user.portal]))
+
+;; consider these
+;; pepper.core
+;; pepper.core.api
+;; pepper.core.game
+;; pepper.core.bot
 
 ;;;; Portal
 
@@ -36,6 +35,8 @@
 (init-portal! system)
 
 (add-tap #'dev/store-api!)
+
+(user.portal/init)
 
 (defn pepper []
   @(:pepper-ref @dev/store))

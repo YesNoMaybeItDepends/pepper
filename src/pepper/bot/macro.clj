@@ -44,7 +44,7 @@
         some-worker (get-idle-or-mining-worker our game unit-jobs)
         already-building? (already-building? :barracks unit-jobs)]
     (if (and (not already-building?) some-worker can-afford?)
-      [macro [(build/job (unit/id some-worker) :barracks)]]
+      [macro [(job/new (build/job (unit/id some-worker) :barracks))]]
       [macro []])))
 
 (defn maybe-build-supply [[macro messages] our game unit-jobs]
@@ -52,7 +52,7 @@
            (auto-supply/can-afford? our game)
            (not (auto-supply/building-supply? unit-jobs)))
     (let [worker (get-idle-or-mining-worker our game unit-jobs)
-          new-job (build/job (unit/id worker) :supply-depot)]
+          new-job (job/new (build/job (unit/id worker) :supply-depot))]
       [macro [new-job]])
     [macro []]))
 
