@@ -49,7 +49,7 @@
   (let [building (unit-type/keyword->object (building job))
         worker (Game/.getUnit (api/get-game api) (job/unit-id job))
         starting-tile (Player/.getStartLocation (Game/.self (api/get-game api)))
-        build-tile (Game/.getBuildLocation (api/get-game api) building starting-tile)]
+        build-tile (Game/.getBuildLocation (api/get-game api) building starting-tile 20)]
     (if build-tile
       (assoc job
              :build-tile (position/->data build-tile)
@@ -66,3 +66,6 @@
 ;; problems
 ;; sometimes workers get conflicting build locations (probably)
 ;; so they never try building ever again, very sad
+;;
+;; sometimes the building command doesnt succeed, why?
+;; could it be because the game was paused or something?

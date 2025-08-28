@@ -54,5 +54,5 @@
    (get-gas resources)
    (supply->supply-available (get-supply resources))])
 
-(defn can-afford?-v2 [budget cost]
+(defn can-afford? [budget cost]
   (every? true? (map <= cost budget)))

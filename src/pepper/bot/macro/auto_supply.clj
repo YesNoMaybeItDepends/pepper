@@ -18,8 +18,8 @@
     (and (not supply-capped?) under-minimum-available-supply?)))
 
 (defn can-afford? [our game]
-  (->> (resources/can-afford?-v2 (our/resources-available our game)
-                                 (unit-type/cost :supply-depot))))
+  (resources/can-afford? (our/resources-available our game)
+                         (unit-type/cost :supply-depot)))
 
 (defn building-supply? [unit-jobs]
   (first (filterv #(= (build/building %) :supply-depot) unit-jobs)))

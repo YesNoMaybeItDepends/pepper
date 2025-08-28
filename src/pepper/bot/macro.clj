@@ -28,19 +28,29 @@
   (let [mining-jobs-by-unit-id (set (->> unit-jobs
                                          (filterv #(job/type? % :mining))
                                          (mapv job/unit-id)))]
-    (filter #(mining-jobs-by-unit-id (unit/id %)) (workers our game))))
+    (filterv #(mining-jobs-by-unit-id (unit/id %)) (workers our game))))
+
+(defn already-building? [building unit-jobs]
+  (some #(#{building} (build/building %)) unit-jobs))
 
 (defn get-idle-or-mining-worker [our game unit-jobs] ;; TODO: iterate over unit-ids instead of units
   (or (first (idle-workers our game))
       (first (mining-workers our game unit-jobs))))
 
-(defn maybe-build-barracks [[macro messages]]
-  [macro []])
+(defn maybe-build-barracks [[macro messages] our game unit-jobs]
+  (let [budget (our/resources-available our game)
+        cost (unit-type/cost :barracks)
+        can-afford? (resources/can-afford? budget cost)
+        some-worker (get-idle-or-mining-worker our game unit-jobs)
+        already-building? (already-building? :barracks unit-jobs)]
+    (if (and (not already-building?) some-worker can-afford?)
+      [macro [(build/job (unit/id some-worker) :barracks)]]
+      [macro []])))
 
 (defn maybe-build-supply [[macro messages] our game unit-jobs]
   (if (and (auto-supply/need-supply? our game)
            (auto-supply/can-afford? our game)
-           (not (auto-supply/building-supply? (vals unit-jobs))))
+           (not (auto-supply/building-supply? unit-jobs)))
     (let [worker (get-idle-or-mining-worker our game unit-jobs)
           new-job (build/job (unit/id worker) :supply-depot)]
       [macro [new-job]])
@@ -58,14 +68,14 @@
                                               (fn [[budget jobs] trainer]
                                                 (let [to-train ((unit/type trainer) trains)
                                                       to-pay (unit-type/cost to-train)]
-                                                  (if (resources/can-afford?-v2 budget to-pay)
+                                                  (if (resources/can-afford? budget to-pay)
                                                     [(resources/combine-quantities - budget to-pay)
                                                      (conj jobs (-> (train/job (unit/id trainer) to-train)
                                                                     job/new))]
                                                     (reduced [budget jobs]))))
                                               [budget []]
                                               trainers)]
-    [macro (or new-training-jobs [])]))
+    [macro new-training-jobs]))
 
 (defn handle-idle-workers [[macro messages] our game]
   (let [idle-worker-ids (mapv :id (idle-workers our game))
@@ -76,7 +86,7 @@
 (defn update-on-frame [[macro messages] our unit-jobs game]
   (let [[macro new-mining-jobs] (handle-idle-workers [macro messages] our game)
         [macro new-training-jobs] (maybe-train-units [macro messages] our game unit-jobs)
-        [macro new-building-jobs] (maybe-build-supply [macro messages] our game unit-jobs)
-        [macro new-build-rax-jobs] (maybe-build-barracks [macro messages])
+        [macro new-building-jobs] (maybe-build-supply [macro messages] our game (vals unit-jobs))
+        [macro new-build-rax-jobs] (maybe-build-barracks [macro messages] our game (vals unit-jobs))
         messages (into (or messages []) (concat new-mining-jobs new-training-jobs new-building-jobs new-build-rax-jobs))]
     [macro messages]))
