@@ -2,7 +2,7 @@
   (:require [pepper.bot.job :as job]
             [pepper.game.unit :as unit]))
 
-(defn get-unit-job [unit-jobs unit-id]
+(defn get-job-by-unit-id [unit-jobs unit-id]
   (get unit-jobs unit-id))
 
 (defn set-unit-job [unit-jobs unit-job]
@@ -13,17 +13,17 @@
 
 (defn units->jobs [jobs units]
   (mapv (fn [unit]
-          (get-unit-job jobs (unit/id unit))) units))
+          (get-job-by-unit-id jobs (unit/id unit))) units))
 
 (defn unit-ids->jobs [jobs unit-ids]
   (mapv (fn [unit-id]
-          (get-unit-job jobs unit-id)) unit-ids))
+          (get-job-by-unit-id jobs unit-id)) unit-ids))
 
 (defn group-jobs-by-type [jobs]
   (group-by job/type jobs))
 
 (defn unit-has-job? [jobs unit-id] ;; employed?
-  (some? (get-unit-job jobs unit-id)))
+  (some? (get-job-by-unit-id jobs unit-id)))
 
 (defn unit-has-no-job? [jobs unit-id]
   ((complement unit-has-job?) jobs unit-id))

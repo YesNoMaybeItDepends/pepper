@@ -83,7 +83,7 @@
   (let [know-enemy-starting-base? (know-enemy-starting-base? military)
         already-scouting? (already-scouting? unit-jobs)
         barracks-completed? (barracks-completed? our game)
-        some-available-worker (macro/get-idle-or-mining-worker)]
+        some-available-worker (macro/get-idle-or-mining-worker our game unit-jobs)]
     (if (and (not know-enemy-starting-base?)
              barracks-completed?
              (not already-scouting?)

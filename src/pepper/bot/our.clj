@@ -29,7 +29,7 @@
   (player/supply-total (player our game)))
 
 (defn supply-used [our game]
-  (player/supply-total (player our game)))
+  (player/supply-used (player our game)))
 
 (defn supply [our game]
   [(supply-used our game) (supply-total our game)])
@@ -44,6 +44,9 @@
   (->> (vals (game/units-by-id game))
        (filterv #(our-unit? % (player-id our)))))
 
+(defn grouped-units [our]
+  (:units our))
+
 (defn units-by-id [our game]
   (->> (units our game)
        (reduce (fn [m u]
@@ -57,5 +60,9 @@
 (defn update-on-start [{:as our :or {}} data]
   (set-player-id our (player-id data)))
 
-(defn update-on-frame [our]
-  our)
+(defn update-on-frame [[our messages] game]
+  (let [group-units-by [:idle? :type]
+        our (assoc our :units (unit/group-units-by-keywords
+                               (units our game)
+                               group-units-by))]
+    [our messages]))

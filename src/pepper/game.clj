@@ -108,5 +108,5 @@
 
 (defn render-game! [game api]
   (api-game/draw-text-screen
-   (api/get-game api) 100 100
+   (api/get-game api) 0 0
    (str "Frame: " (frame game))))

@@ -16,13 +16,29 @@
 
 ;;;; misc
 
-(defn tapping [x]
-  (tap> x)
-  x)
+(defn tapping [state]
+  (tap> {:reason :tapping
+         :state state})
+  state)
 
 (defn rendering [state]
   (game/render-game! (game state) (api state))
+  (bot/render-bot! (bot state) (api state))
   state)
+
+(defn throttling-by-game-frame [state state-fn]
+  (let [to-skip 30
+        now (.getFrameCount (api/get-game (api state)))
+        last (or (:frame-last-run state) 0)
+        can-run? (> (- now last) to-skip)]
+    (if can-run?
+      (state-fn (assoc state :frame-last-run now))
+      state)))
+
+(defn skipping-if-paused [state state-fn]
+  (if-not (.isPaused (api/get-game (api state)))
+    (state-fn state)
+    state))
 
 ;;;; on start
 
@@ -43,6 +59,17 @@
                       (api state) (game state))]
     state))
 
+;; consider...
+;;
+;; (defn parse-on-frame [state])
+;; (defn update-on-frame [state])
+;; (defn render-on-frame [state])
+;; (defn on-frame [state]
+;;   (-> state
+;;       parse-on-frame
+;;       update-on-frame ;; also moving side effects outside from update
+;;       render-on-frame))
+
 ;;;; on end
 
 (defn on-end [state]
@@ -51,9 +78,9 @@
 ;;;; handlers
 
 (defn handle-error [e state-ref stop-ch]
-  (tap> e)
   (tap> {:reason :error
-         :state @state-ref})
+         :state @state-ref
+         :error e})
   (a/close! stop-ch))
 
 (defn handle-stop [state-ref]
@@ -61,11 +88,11 @@
   (tap> {:reason :stopping
          :state @state-ref}))
 
-(defn handle-msg [state [id _ :as msg] stop-ch]
+(defn handle-msg [state [id _ :as _] stop-ch]
   (case id
     :on-start (tapping (on-start state))
     :on-frame (-> state
-                  on-frame
+                  (skipping-if-paused #(throttling-by-game-frame % on-frame))
                   rendering)
     :on-end (do (a/close! stop-ch)
                 (tapping (on-end state)))
