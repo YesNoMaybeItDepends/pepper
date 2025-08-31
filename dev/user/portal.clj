@@ -31,3 +31,19 @@
             jobs-by-unit-id
             new-jobs))
          new-jobs))
+
+;;;; logs
+
+(def logs-meta {:portal.viewer/default :portal.viewer/table
+                :portal.viewer/table {:columns [:id :frame :message :value :time]}})
+
+(def logs (atom (with-meta [] logs-meta)))
+(def log-ids (atom 0))
+
+(defn log! [message value frame]
+  (let [id (swap! log-ids inc)]
+    (swap! logs conj {:id id
+                      :frame frame
+                      :message message
+                      :value value
+                      :time (java.util.Date.)})))

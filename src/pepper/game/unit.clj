@@ -34,6 +34,9 @@
 (defn frame-discovered [unit]
   (:frame-discovered unit))
 
+(defn position [unit]
+  (:position unit))
+
 (defn new-unit? [unit]
   (nil? (frame-discovered unit)))
 

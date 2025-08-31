@@ -15,10 +15,16 @@
   (and started? working?))
 
 (defn set-completed [job]
-  (assoc job :completed? true))
+  (assoc job :job/completed? true))
 
 (defn completed? [job]
-  (:completed? job))
+  (:job/completed? job))
+
+(defn set-cancelled [job]
+  (assoc job :job/cancelled? true))
+
+(defn cancelled? [job]
+  (:job/cancelled? job))
 
 (defn set-run [job]
   (assoc job :run? true))
@@ -71,6 +77,7 @@
   (cond
     (nil? job) nil
     (completed? job) nil
+    (cancelled? job) nil
     :else (-> (execute-action! job api)
               (with-last-frame-executed! api))))
 

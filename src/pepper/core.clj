@@ -29,7 +29,7 @@
 
 (defn rendering [state]
   (game/render-game! (game state) (api state))
-  (bot/render-bot! (bot state) (api state))
+  (bot/render-bot! (bot state) (api state) (game state))
   state)
 
 (defn throttling-by-game-frame [state state-fn]

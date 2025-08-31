@@ -33,9 +33,9 @@
       (job/started-working? job-status) (set-frame-started-gathering-minerals job frame)
       (job/stopped-working? job-status) (job/set-completed job)
       (job/is-working? job-status)      job
-      :else (job/set-completed job))))  ;; something went wrong
+      :else                             (job/set-cancelled job))))  ;; something went wrong
 
-(defn go-mine! [api job]
+(defn go-mine! [api job] ;; check if the command was issued succesfully, otherwise we know something went wrong
   (let [game (api/game api)
         frame (Game/.getFrameCount game)
         worker (Game/.getUnit game (job/unit-id job))

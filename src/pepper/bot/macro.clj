@@ -79,8 +79,6 @@
       (->result macro new-job))
     (->result macro)))
 
-
-
 (defn maybe-train-units [[macro messages] our-units our-player unit-jobs frame]
   (let [trains {:command-center :scv
                 :barracks :marine}

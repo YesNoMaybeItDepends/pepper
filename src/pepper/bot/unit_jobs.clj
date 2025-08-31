@@ -1,6 +1,7 @@
 (ns pepper.bot.unit-jobs
-  (:require [pepper.bot.job :as job]
-            [pepper.game.unit :as unit]))
+  (:require
+   [pepper.bot.job :as job]
+   [pepper.game.unit :as unit]))
 
 (defn get-job-by-unit-id [unit-jobs unit-id]
   (get unit-jobs unit-id))

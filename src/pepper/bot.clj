@@ -12,7 +12,8 @@
    [pepper.game.map :as map]
    [pepper.game.position :as position]
    [pepper.game.unit-type :as unit-type]
-   [user.portal :as portal])
+   [user.portal :as portal]
+   [pepper.game.unit :as unit])
   (:import
    [bwapi Game UnitType]))
 
@@ -92,7 +93,15 @@
 (defn unit-position [unit-obj]
   (position/->data (.getPosition unit-obj)))
 
-;; (.drawLineMap game 0 0 x y bwapi.Color/White)
+(defn render-gather-job [job game _game]
+  (let [{unit-id :unit-id
+         mineral-field-id :mineral-field-id} job
+        units-by-id (game/units-by-id _game)
+        unit (get units-by-id unit-id)
+        [xfrom yfrom] (unit/position unit)
+        mineral (get units-by-id mineral-field-id)
+        [xto yto] (unit/position mineral)]
+    (Game/.drawLineMap game xfrom yfrom xto yto bwapi.Color/Blue)))
 
 (defn render-build-job [job game]
   (when (and (job/type? job :build)
@@ -116,14 +125,16 @@
        #_(filterv #(#{207 12 321 123} (:unit-id %)))
        #_(filterv #(#{:build} (job/type %)))))
 
-(defn render-unit-jobs [unit-jobs game]
+(defn render-unit-jobs [unit-jobs game _game]
   (let [jobs-to-render (filter-jobs-to-render unit-jobs)
         unit-ids (mapv :unit-id jobs-to-render)]
     (portal/update-jobs jobs-to-render)
     (doseq [job jobs-to-render]
-      (render-build-job job game)))
-  #_(api-game/draw-text-screen game 30 30 (edn->str unit-jobs)))
+      (case (:job job)
+        :mining (render-gather-job job game _game)
+        :build (render-build-job job game)
+        :else))))
 
-(defn render-bot! [bot api]
+(defn render-bot! [bot api _game]
   (let [game (api/game api)]
-    (render-unit-jobs (vals (unit-jobs bot)) game)))
+    (render-unit-jobs (vals (unit-jobs bot)) game _game)))
