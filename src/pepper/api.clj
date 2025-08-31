@@ -57,10 +57,17 @@
     (client/start-game! client client-config)
     (when (fn? after-end) (after-end))))
 
+(defn callback-async [out-ch]
+  (fn [event]
+    (a/put! out-ch event)))
+
+(defn callback-blocking [out-ch in-ch]
+  (fn [event]
+    (a/>!! out-ch event)
+    (a/<!! in-ch)))
+
 (defn init [out-ch in-ch client-config before-start after-end]
-  {:api/client (client/make-client
-                (fn [event]
-                  (a/put! out-ch event)))
+  {:api/client (client/make-client (callback-blocking out-ch in-ch))
    :api/out-ch out-ch
    :api/in-ch in-ch
    :api/client-config client-config

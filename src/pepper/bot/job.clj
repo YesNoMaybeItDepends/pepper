@@ -1,14 +1,18 @@
 (ns pepper.bot.job
   (:refer-clojure :exclude [type new])
-  (:require [pepper.api :as api])
+  (:require
+   [pepper.api :as api])
   (:import
-   [bwapi Game]))
+   [bwapi Game Unit]))
 
 (defn started-working? [[started? working?]]
   (and (not started?) working?))
 
 (defn stopped-working? [[started? working?]]
   (and started? (not working?)))
+
+(defn is-working? [[started? working?]]
+  (and started? working?))
 
 (defn set-completed [job]
   (assoc job :completed? true))
@@ -56,10 +60,9 @@
   (set-last-frame-executed job (Game/.getFrameCount
                                 (api/get-game api))))
 
-(defn new [job]
-  (if (map? job)
-    (assoc job :uuid (random-uuid))
-    {:uuid (random-uuid)}))
+(defn init [job frame]
+  ((fnil merge {}) job {:uuid (random-uuid)
+                        :frame-created-job frame}))
 
 (defn execute-action! [job api]
   ((action job) api job))
@@ -70,6 +73,21 @@
     (completed? job) nil
     :else (-> (execute-action! job api)
               (with-last-frame-executed! api))))
+
+(defn debug-job! [job api]
+  (let [game (api/get-game api)
+        unit (Game/.getUnit (unit-id job))]
+    (merge job {:debug-unit {:exists? (Unit/.exists unit)
+                             :completed? (Unit/.isCompleted unit)
+                             :idle? (Unit/.isIdle unit)
+                             :order (Unit/.getOrder unit)
+                             :order-target (Unit/.getOrderTarget unit)
+                             :order-target-position (Unit/.getOrderTargetPosition unit)
+                             :order-timer (Unit/.getOrderTimer unit)
+                             :last-command-frame (Unit/.getLastCommandFrame unit)
+                             :last-command (Unit/.getLastCommand unit)
+                             :can-command (Unit/.canCommand unit)
+                             :can-gather (Unit/.canGather unit)}})))
 
 (comment "idea"
          {:im-a-job :blablaba

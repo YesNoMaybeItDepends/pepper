@@ -1,10 +1,11 @@
 (ns pepper.game
   (:require
+   [pepper.api :as api]
+   [pepper.api.game :as api-game]
    [pepper.game.map :as map]
    [pepper.game.player :as player]
-   [pepper.game.unit :as unit]
-   [pepper.api :as api]
-   [pepper.api.game :as api-game])
+   [pepper.game.position :as position]
+   [pepper.game.unit :as unit])
   (:import
    [bwapi BWClient Game]))
 
@@ -35,11 +36,14 @@
 (defn get-map [game]
   (:map game))
 
-(defn set-players [game players]
-  (assoc game :players-by-id players))
+(defn set-players-by-id [game players-by-id]
+  (assoc game :players-by-id players-by-id))
 
 (defn players-by-id [game]
   (:players-by-id game))
+
+(defn players [game]
+  (vals (players-by-id game)))
 
 (defn set-units [game units]
   (assoc game :units-by-id units))
@@ -48,7 +52,39 @@
   (:units-by-id game))
 
 (defn units [game]
-  (vals (:units-by-id game)))
+  (vals (units-by-id game)))
+
+(defn player-owns-unit? [player unit]
+  (= (player/id player) (unit/player-id unit)))
+
+(defn player-units [player units]
+  (filterv #(player-owns-unit? player %) units))
+
+;; our
+
+(defn our-player [game]
+  (player/our-player (players game)))
+
+(defn our-units [game]
+  (player-units (our-player game) (units game)))
+
+;; enemy
+
+(defn enemy-player [game]
+  (player/enemy-player (players game)))
+
+(defn enemy-units [game]
+  (player-units (enemy-player game) (units game)))
+
+;; neutral
+
+(defn neutral-player [game]
+  (player/neutral-player (players game)))
+
+(defn neutral-units [game]
+  (player-units (neutral-player game) (units game)))
+
+;;;;;;;;;
 
 (defn update-units-by-id [units-by-id units]
   (reduce (fn [units-by-id unit]
@@ -62,18 +98,20 @@
           (or players-by-id {})
           players))
 
+;;;;;;;
+
 (defn parse-on-start [api]
   (let [game (api/get-game api)
         bwem (api/get-bwem api)]
     (-> {}
         (set-frame (Game/.getFrameCount game))
-        (set-players (map (player/parse-player! game) (Game/.getPlayers game)))
+        (set-players-by-id (mapv (player/parse-player! game) (Game/.getPlayers game))) ;; these players are not by id lol, fix this, look at update-on-start
         (set-map (map/parse-map-on-start! bwem)))))
 
-(defn update-on-start [{:as game :or {}} {:keys [frame players map]}]
+(defn update-on-start [{:as game :or {}} {:keys [frame players-by-id map]}]
   (-> game
       (set-frame frame)
-      (update :players-by-id update-players-by-id players)
+      (update :players-by-id update-players-by-id players-by-id)
       (set-map map)))
 
 (defn parse-on-frame [api]
@@ -86,7 +124,7 @@
         (set-latency-time (Game/.getLatencyTime game))
         (set-latency-remaining-frames (Game/.getRemainingLatencyFrames game))
         (set-latency-remaining-time (Game/.getRemainingLatencyTime game))
-        (set-players (map (player/parse-player! game) (Game/.getPlayers game)))
+        (set-players-by-id (map (player/parse-player! game) (Game/.getPlayers game)))
         (set-units (map (unit/parse-unit! game) (Game/.getAllUnits game))))))
 
 (defn update-on-frame [game {:keys [frame
@@ -106,7 +144,20 @@
       (update :players-by-id update-players-by-id players-by-id)
       (update :units-by-id update-units-by-id units-by-id)))
 
+(defn unit-position [unit-obj]
+  (position/->data (.getPosition unit-obj)))
+
+(defn render-units! [units game]
+  (doseq [unit-id (filterv some? (mapv unit/id units))]
+    (let [u (.getUnit game unit-id)
+          [x y] (unit-position u)]
+      (when (and x y)
+        (if (.isCompleted u)
+          (api-game/draw-text-map game x y (str unit-id))
+          (api-game/draw-text-map game x (+ y 10) (str "-> " unit-id)))))))
+
 (defn render-game! [game api]
   (api-game/draw-text-screen
    (api/get-game api) 0 0
-   (str "Frame: " (frame game))))
+   (str "Frame: " (frame game)))
+  (render-units! (units game) (api/get-game api)))

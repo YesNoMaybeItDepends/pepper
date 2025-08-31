@@ -1,10 +1,11 @@
 (ns pepper.game.player
   (:refer-clojure :exclude [name force type])
-  (:require [pepper.game.color :as color]
-            [pepper.game.race :as race]
-            [pepper.game.position :as position])
+  (:require
+   [pepper.game.color :as color]
+   [pepper.game.position :as position]
+   [pepper.game.race :as race])
   (:import
-   [bwapi Player Force]))
+   [bwapi Force Game Player]))
 
 (defn id [player]
   (:id player))
@@ -24,10 +25,16 @@
 (defn supply-used [player]
   (:supply-used player))
 
+(defn supply [player]
+  [(supply-used player) (supply-total player)])
+
 (defn supply-available [player]
   (let [total (supply-total player)
         used (supply-used player)]
     (- total used)))
+
+(defn resources-available [player]
+  [(minerals player) (gas player) (supply-available player)])
 
 (defn starting-base [player]
   (:starting-base player))
@@ -37,20 +44,35 @@
 (defn update-player [player new-player]
   (merge player new-player))
 
+(defn our-player [players]
+  (first (filter :self? players)))
+
+(defn neutral-player [players]
+  (first (filter :neutral? players)))
+
+(defn enemy-player [players]
+  (first (filter :enemy? players)))
+
 ;;;; parsing
 
 (defn parse-player!
-  "Reads a bwapi player with a bwapi game"
-  [game]
-  (fn [player]
-    (-> {}
-        (assoc :id (bwapi.Player/.getID player))
-        (assoc :name (bwapi.Player/.getName player))
-        (assoc :race (race/object->keyword (bwapi.Player/.getRace player)))
-        (assoc :force (Force/.getID (bwapi.Player/.getForce player)))
-        (assoc :color (color/object->keyword (bwapi.Player/.getColor player)))
-        (assoc :minerals (bwapi.Player/.minerals player))
-        (assoc :gas (bwapi.Player/.gas player))
-        (assoc :supply-total (Player/.supplyTotal player))
-        (assoc :supply-used (Player/.supplyUsed player))
-        (assoc :starting-base (position/->data (Player/.getStartLocation player))))))
+  "player-obj -> player"
+  [game-obj]
+  (fn [player-obj]
+    (let [id (Player/.getID player-obj)
+          self-id (Player/.getID (Game/.self game-obj))
+          enemy-id (Player/.getID (Game/.enemy game-obj))]
+      (-> {}
+          (assoc :id id)
+          (assoc :name (Player/.getName player-obj))
+          (assoc :race (race/object->keyword (Player/.getRace player-obj)))
+          (assoc :force (Force/.getID (Player/.getForce player-obj)))
+          (assoc :color (color/object->keyword (Player/.getColor player-obj)))
+          (assoc :minerals (Player/.minerals player-obj))
+          (assoc :gas (Player/.gas player-obj))
+          (assoc :supply-total (Player/.supplyTotal player-obj))
+          (assoc :supply-used (Player/.supplyUsed player-obj))
+          (assoc :starting-base (position/->data (Player/.getStartLocation player-obj)))
+          (assoc :neutral? (Player/.isNeutral player-obj))
+          (assoc :self? (= id self-id))
+          (assoc :enemy? (= id enemy-id))))))

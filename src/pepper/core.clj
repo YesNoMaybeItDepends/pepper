@@ -14,6 +14,12 @@
 (defn bot [state]
   (:bot state))
 
+(defn frame-last-run [state]
+  (:frame-last-run state))
+
+(defn set-last-frame-run [state frame]
+  (assoc state :frame-last-run frame))
+
 ;;;; misc
 
 (defn tapping [state]
@@ -29,10 +35,10 @@
 (defn throttling-by-game-frame [state state-fn]
   (let [to-skip 30
         now (.getFrameCount (api/get-game (api state)))
-        last (or (:frame-last-run state) 0)
+        last (or (frame-last-run state) 0)
         can-run? (> (- now last) to-skip)]
     (if can-run?
-      (state-fn (assoc state :frame-last-run now))
+      (state-fn (set-last-frame-run state now))
       state)))
 
 (defn skipping-if-paused [state state-fn]
@@ -77,16 +83,15 @@
 
 ;;;; handlers
 
-(defn handle-error [e state-ref stop-ch]
-  (tap> {:reason :error
-         :state @state-ref
-         :error e})
-  (a/close! stop-ch))
+(defn handle-error [e store]
+  (tap> {:msg :error
+         :state @store
+         :error e}))
 
-(defn handle-stop [state-ref]
+(defn handle-stop [store]
   (println "pepper stopping")
-  (tap> {:reason :stopping
-         :state @state-ref}))
+  (tap> {:msg :stopping
+         :state @store}))
 
 (defn handle-msg [state [id _ :as _] stop-ch]
   (case id
@@ -99,12 +104,12 @@
     :tap (tapping state)
     state))
 
-(defn handle-res! [state-ref msg stop-ch]
+(defn handle-res! [store msg stop-ch]
   (try
-    (let [new-state (handle-msg @state-ref msg stop-ch)]
-      (swap! state-ref merge new-state))
+    (let [state (handle-msg @store msg stop-ch)]
+      (swap! store merge state))
     (catch Exception e
-      (handle-error e state-ref stop-ch))))
+      (handle-error e store))))
 
 ;;;; init
 
@@ -117,13 +122,14 @@
    :game {}
    :bot {}})
 
-(defn init [api from-api state-ref stop-ch]
-  (reset! state-ref (init-state api))
+(defn init [api from-api to-api store stop-ch]
+  (reset! store (init-state api))
   (a/go-loop []
     (when-let [[msg _ :as res] (a/alts! [stop-ch
                                          from-api]
                                         :priority true)]
       (if (stop? res stop-ch)
-        (handle-stop state-ref)
-        (do (handle-res! state-ref msg stop-ch)
+        (handle-stop store)
+        (do (handle-res! store msg stop-ch)
+            (a/>! to-api :done)
             (recur))))))

@@ -2,26 +2,32 @@
   (:require
    [portal.api :as portal]))
 
-(def tapping (atom (with-meta {} {:portal.viewer/default
-                                  :portal.viewer/tree})))
-(def portal-ref (atom nil))
+(def jobs-by-unit-id (atom (with-meta {} {:portal.viewer/default :portal.viewer/table})))
 
-(defn init []
-  (reset! portal-ref (portal/inspect tapping ;; did vscode not work?
-                                     {:theme :portal.colors/nord
-                                      :portal.viewer/default :portal.viewer/tree})))
+(defn tap-unit-job [unit-id]
+  (doto (with-meta (get @jobs-by-unit-id unit-id [:nil])
+          {:portal.viewer/default :portal.viewer/table})
+    tap>
+    println))
 
-(defn tap-job [job]
-  (swap! tapping assoc-in [:jobs (:unit-id job)] job))
+(defn without-last-frame-executed [job]
+  (dissoc job :frame-last-executed))
 
-(defn tap-jobs [jobs]
-  (let [jobs-by-unit-id (reduce (fn [unit-jobs unit-job]
-                                  (assoc unit-jobs (:unit-id unit-job) unit-job))
-                                {}
-                                jobs)]
-    (swap! tapping assoc :jobs jobs-by-unit-id)))
-
-(defn tap-unit [unit]
-  (swap! tapping assoc-in [:units (:id unit)] unit))
-
-(defn tap-units [units])
+(defn update-jobs [new-jobs]
+  (swap! jobs-by-unit-id
+         (fn [jobs-by-unit-id new-jobs]
+           (reduce
+            (fn [acc curr]
+              (update-in acc [(:unit-id curr)]
+                         (fn [jobs job]
+                           (if (some #(= (without-last-frame-executed %)
+                                         (without-last-frame-executed job))
+                                     jobs)
+                             jobs
+                             (let [x (into (or jobs []) conj (flatten [job]))]
+                               (if (< (count x) 11)
+                                 x
+                                 (subvec x 1))))) curr))
+            jobs-by-unit-id
+            new-jobs))
+         new-jobs))

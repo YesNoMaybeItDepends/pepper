@@ -1,9 +1,11 @@
 (ns pepper.game.unit
   (:refer-clojure :exclude [type type?])
-  (:require [pepper.game.unit-type :as unit-type]
-            [pepper.game.position :as position])
+  (:require
+   [pepper.game.player :as player]
+   [pepper.game.position :as position]
+   [pepper.game.unit-type :as unit-type])
   (:import
-   (bwapi Unit Game Player)))
+   (bwapi Game Player Unit)))
 
 (defn id [unit]
   (:id unit))
@@ -34,6 +36,9 @@
 
 (defn new-unit? [unit]
   (nil? (frame-discovered unit)))
+
+(defn owned-by-player? [unit player]
+  (= (player-id unit) (player/id player)))
 
 (defn update-unit [unit new-unit]
   (merge unit new-unit))

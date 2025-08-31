@@ -21,19 +21,6 @@
 (defn player [our game]
   (get (game/players-by-id game) (player-id our)))
 
-(defn resources-available [our game]
-  (let [us (player our game)]
-    [(player/minerals us) (player/gas us) (player/supply-available us)]))
-
-(defn supply-total [our game]
-  (player/supply-total (player our game)))
-
-(defn supply-used [our game]
-  (player/supply-used (player our game)))
-
-(defn supply [our game]
-  [(supply-used our game) (supply-total our game)])
-
 (defn starting-base [our game]
   (player/starting-base (player our game)))
 

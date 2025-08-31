@@ -22,7 +22,7 @@
                       (get-api-client-config (config/read-config))
                       (get-api-before-start @store)
                       (get-api-after-end @store))
-        pepper (pepper/init api from-api pepper-ref stop-ch)
+        pepper (pepper/init api from-api to-api pepper-ref stop-ch)
         _ (swap! store assoc
                  :pepper pepper
                  :pepper-ref pepper-ref

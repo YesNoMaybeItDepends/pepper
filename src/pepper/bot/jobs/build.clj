@@ -5,6 +5,10 @@
             [pepper.game.unit-type :as unit-type])
   (:import [bwapi Game Unit Player]))
 
+;; problems
+;; sometimes workers get conflicting build locations (probably)
+;; so they never try building ever again, very sad
+
 (defn building [job]
   (:building job))
 
@@ -21,53 +25,53 @@
   (:frame-started-building job))
 
 (declare get-build-tile!)
+(declare go-build!)
 
 (defn is-building?! [api job]
-  (let [worker (Game/.getUnit (api/get-game api) (job/unit-id job))
+  (let [game (api/get-game api)
+        worker (Game/.getUnit game (job/unit-id job))
         started? (frame-started-building job)
         building? (Unit/.isConstructing worker)
         status [started? building?]]
     (cond
-      (job/started-working? status) (assoc job :frame-started-building (Game/.getFrameCount (api/get-game api)))
+      (job/started-working? status) (assoc job :frame-started-building (Game/.getFrameCount game))
       (job/stopped-working? status) (job/set-completed job)
-      :else job)))
+      (job/is-working? status) job
+      :else (job/set-completed job)))) ;; something went wrong
 
 (defn go-build! [api job]
-  (let [worker (Game/.getUnit (api/get-game api) (job/unit-id job))
+  (let [game (api/get-game api)
+        frame (Game/.getFrameCount game)
+        worker (Game/.getUnit game (job/unit-id job))
         building (unit-type/keyword->object (building job))
         tile (position/->bwapi (build-tile job) :tile-position)
-        success? (Unit/.build worker building tile)]
-    (if success?
-      (assoc job
-             :frame-issued-build-command (Game/.getFrameCount (api/get-game api))
-             :action is-building?!)
+        can-build? (Unit/.canBuild worker building tile)]
+    (if can-build?
+      (do (Unit/.build worker building tile)
+          (assoc job
+                 :action #'is-building?!
+                 :frame-issued-build-command frame))
       (assoc job
              :times-retried ((fnil inc 0) (:times-retried job))
-             :action get-build-tile!
+             :action #'get-build-tile!
              :build-tile nil
              :frame-got-build-tile nil))))
 
 (defn get-build-tile! [api job]
-  (let [building (unit-type/keyword->object (building job))
-        worker (Game/.getUnit (api/get-game api) (job/unit-id job))
-        starting-tile (Player/.getStartLocation (Game/.self (api/get-game api)))
-        build-tile (Game/.getBuildLocation (api/get-game api) building starting-tile 20)]
+  (let [game (api/get-game api)
+        building (unit-type/keyword->object (building job))
+        worker (Game/.getUnit game (job/unit-id job))
+        starting-tile (Player/.getStartLocation (Game/.self game))
+        build-tile (Game/.getBuildLocation game building starting-tile 20)]
     (if build-tile
       (assoc job
              :build-tile (position/->data build-tile)
-             :frame-got-build-tile (Game/.getFrameCount (api/get-game api))
-             :action go-build!)
+             :frame-got-build-tile (Game/.getFrameCount game)
+             :action #'go-build!)
       job)))
 
 (defn job [unit-id unit-type]
   {:job :build
    :building unit-type
-   :action get-build-tile!
+   :action #'get-build-tile!
    :unit-id unit-id})
-
-;; problems
-;; sometimes workers get conflicting build locations (probably)
-;; so they never try building ever again, very sad
-;;
-;; sometimes the building command doesnt succeed, why?
-;; could it be because the game was paused or something?

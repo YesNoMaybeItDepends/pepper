@@ -36,10 +36,20 @@
 
 (add-tap #'dev/store-api!)
 
-(user.portal/init)
-
 (defn pepper []
   @(:pepper-ref @dev/store))
+
+(defn pepper-ref []
+  (:pepper-ref @dev/store))
+
+(defn reset-jobs! [pepper-ref]
+  (swap! pepper-ref update-in [:bot :unit-jobs] {}))
+
+(defn tap-unit-id [unit-id]
+  (let [pepper (pepper)]
+    {:unit-job-record (user.portal/tap-unit-job unit-id)
+     :unit (get-in pepper [:game :units-by-id unit-id])
+     :unit-job (get-in pepper [:bot :unit-jobs unit-id])}))
 
 (comment
 
@@ -68,5 +78,10 @@
 
   (dev/resume-game!)
 
+  @user.portal/jobs-by-unit-id
+  (tap> @user.portal/jobs-by-unit-id)
+
+  (user.portal/tap-unit-job 171)
+  (tap-unit-id 171)
 
   #_())
