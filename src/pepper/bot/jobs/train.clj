@@ -16,15 +16,15 @@
        (>= (- frame frame-issued-train-command) 100)))
 
 (defn training-completed?! [api job]
-  (let [trainee (Game/.getUnit (api/get-game api) (:requested-id job))
+  (let [trainee (Game/.getUnit (api/game api) (:requested-id job))
         trainee-completed? (Unit/.isCompleted trainee)]
     (if trainee-completed?
       (job/set-completed job)
       job)))
 
 (defn get-trainee! [api job]
-  (let [trainer (Game/.getUnit (api/get-game api) (:unit-id job))
-        frame (Game/.getFrameCount (api/get-game api))
+  (let [trainer (Game/.getUnit (api/game api) (:unit-id job))
+        frame (Game/.getFrameCount (api/game api))
         is-training? (Unit/.isTraining trainer)
         trainee (Unit/.getBuildUnit trainer)
         frame-issued-train-command (frame-issued-train-command job)]
@@ -38,10 +38,10 @@
         job))))
 
 (defn train! [api job]
-  (let [trainer (Game/.getUnit (api/get-game api) (:unit-id job))
+  (let [trainer (Game/.getUnit (api/game api) (:unit-id job))
         unit-type (unit-type/keyword->object (:requested job))
         is-training? (Unit/.isTraining trainer)
-        frame (Game/.getFrameCount (api/get-game api))]
+        frame (Game/.getFrameCount (api/game api))]
     (if (not is-training?)
       (do (Unit/.train trainer unit-type)
           (assoc job

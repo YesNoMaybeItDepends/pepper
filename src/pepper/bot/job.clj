@@ -58,7 +58,7 @@
 
 (defn with-last-frame-executed! [job api] ;; disgusting
   (set-last-frame-executed job (Game/.getFrameCount
-                                (api/get-game api))))
+                                (api/game api))))
 
 (defn init [job frame]
   ((fnil merge {}) job {:uuid (random-uuid)
@@ -75,7 +75,7 @@
               (with-last-frame-executed! api))))
 
 (defn debug-job! [job api]
-  (let [game (api/get-game api)
+  (let [game (api/game api)
         unit (Game/.getUnit (unit-id job))]
     (merge job {:debug-unit {:exists? (Unit/.exists unit)
                              :completed? (Unit/.isCompleted unit)

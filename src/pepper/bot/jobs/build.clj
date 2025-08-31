@@ -28,7 +28,7 @@
 (declare go-build!)
 
 (defn is-building?! [api job]
-  (let [game (api/get-game api)
+  (let [game (api/game api)
         worker (Game/.getUnit game (job/unit-id job))
         started? (frame-started-building job)
         building? (Unit/.isConstructing worker)
@@ -40,7 +40,7 @@
       :else (job/set-completed job)))) ;; something went wrong
 
 (defn go-build! [api job]
-  (let [game (api/get-game api)
+  (let [game (api/game api)
         frame (Game/.getFrameCount game)
         worker (Game/.getUnit game (job/unit-id job))
         building (unit-type/keyword->object (building job))
@@ -58,7 +58,7 @@
              :frame-got-build-tile nil))))
 
 (defn get-build-tile! [api job]
-  (let [game (api/get-game api)
+  (let [game (api/game api)
         building (unit-type/keyword->object (building job))
         worker (Game/.getUnit game (job/unit-id job))
         starting-tile (Player/.getStartLocation (Game/.self game))

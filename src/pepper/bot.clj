@@ -125,5 +125,5 @@
   #_(api-game/draw-text-screen game 30 30 (edn->str unit-jobs)))
 
 (defn render-bot! [bot api]
-  (let [game (api/get-game api)]
+  (let [game (api/game api)]
     (render-unit-jobs (vals (unit-jobs bot)) game)))

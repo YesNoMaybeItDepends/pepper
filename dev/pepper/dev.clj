@@ -43,7 +43,7 @@
 
 (defn maybe-pause-game! [system]
   (let [api (pepper/api system)
-        game (_api/get-game api)
+        game (_api/game api)
         paused? (Game/.isPaused game)
         frame (Game/.getFrameCount game)
         pause? (fn [paused? frame] (and (not paused?)

@@ -34,7 +34,7 @@
 
 (defn throttling-by-game-frame [state state-fn]
   (let [to-skip 30
-        now (.getFrameCount (api/get-game (api state)))
+        now (.getFrameCount (api/game (api state)))
         last (or (frame-last-run state) 0)
         can-run? (> (- now last) to-skip)]
     (if can-run?
@@ -42,7 +42,7 @@
       state)))
 
 (defn skipping-if-paused [state state-fn]
-  (if-not (.isPaused (api/get-game (api state)))
+  (if-not (.isPaused (api/game (api state)))
     (state-fn state)
     state))
 

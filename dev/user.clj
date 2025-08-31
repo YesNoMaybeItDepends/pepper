@@ -2,10 +2,12 @@
   #_{:clj-kondo/ignore [:unused-namespace]}
   (:require
    [clojure.core.async :as a]
-   [clojure.pprint :as pprint]
+   [clojure.pprint :as pp]
+   [clojure.string :as str]
    [portal.api :as portal]
    [pepper.dev :as dev]
-   [user.portal :as user.portal]))
+   [user.portal :as user.portal]
+   [pepper.api :as api]))
 
 ;; consider these
 ;; pepper.core
@@ -51,6 +53,11 @@
      :unit (get-in pepper [:game :units-by-id unit-id])
      :unit-job (get-in pepper [:bot :unit-jobs unit-id])}))
 
+(defn metrics []
+  (-> (pepper)
+      :api
+      api/metrics))
+
 (comment
 
   (set! *print-namespace-maps* false)
@@ -83,5 +90,7 @@
 
   (user.portal/tap-unit-job 171)
   (tap-unit-id 171)
+
+  (metrics)
 
   #_())

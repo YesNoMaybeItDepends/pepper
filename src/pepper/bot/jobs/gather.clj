@@ -23,7 +23,7 @@
   (:frame-issued-gather-command job))
 
 (defn is-gathering-minerals?! [api job]
-  (let [game (api/get-game api)
+  (let [game (api/game api)
         worker (Game/.getUnit game (job/unit-id job))
         frame (Game/.getFrameCount game)
         already-started? (frame-started-gathering-minerals job)
@@ -36,7 +36,7 @@
       :else (job/set-completed job))))  ;; something went wrong
 
 (defn go-mine! [api job]
-  (let [game (api/get-game api)
+  (let [game (api/game api)
         frame (Game/.getFrameCount game)
         worker (Game/.getUnit game (job/unit-id job))
         mineral-field (Game/.getUnit game (mineral-field-id job))]

@@ -4,7 +4,7 @@
    [pepper.api.bwem :as bwem]
    [pepper.api.client :as client])
   (:import
-   [bwapi BWClient]))
+   [bwapi BWClient PerformanceMetrics PerformanceMetric]))
 
 ;; If these are private, do I want these fns?
 
@@ -29,27 +29,36 @@
 (defn ^:private set-bwem [api bwem]
   (assoc api :api/bwem bwem))
 
+(defn ^:private set-performance-metrics [api performance-metrics]
+  (assoc api :api/performance-metrics performance-metrics))
+
 ;;;;
 
-(defn get-client [api]
+(defn client [api]
   (:api/client api))
 
-(defn get-game [api]
+(defn game [api]
   (:api/game api))
 
-(defn get-bwem [api]
+(defn bwem [api]
   (:api/bwem api))
 
+(defn performance-metrics [api]
+  (:api/performance-metrics api))
+
 (defn update-on-start [api]
-  (let [game (BWClient/.getGame (get-client api))
-        bwem (bwem/init! game)]
+  (let [client (client api)
+        game (BWClient/.getGame client)
+        bwem (bwem/init! game)
+        performance-metrics (BWClient/.getPerformanceMetrics client)]
     (-> api
         (set-game game)
-        (set-bwem bwem))))
+        (set-bwem bwem)
+        (set-performance-metrics performance-metrics))))
 
 (defn start-game! [api]
   (let [before-start (get-before-start api)
-        client (get-client api)
+        client (client api)
         client-config (get-client-config api)
         after-end (get-after-end api)]
 
@@ -73,3 +82,70 @@
    :api/client-config client-config
    :api/before-start before-start
    :api/after-end after-end})
+
+(defn datafy [obj keywords kw->val]
+  (reduce (fn [acc kw]
+            (assoc acc kw ((kw kw->val) obj)))
+          {}
+          keywords))
+
+(def kw->running-total {:last #(.getLast %)
+                        :max #(.getMax %)
+                        :mean #(.getMean %)
+                        :min #(.getMin %)
+                        :samples #(.getSamples %)})
+
+(defn datafy-running-total
+  ([running-total] (datafy-running-total
+                    running-total (keys kw->running-total)))
+
+  ([running-total keywords]
+   (datafy running-total keywords kw->running-total)))
+
+(def kw->performance-metric {:interrupted PerformanceMetric/.getInterrupted
+                             :running-total (fn [pm]
+                                              (-> pm
+                                                  PerformanceMetric/.getRunningTotal
+                                                  datafy-running-total))
+                             :string PerformanceMetric/.toString})
+
+(defn datafy-performance-metric
+  ([performance-metric] (datafy-performance-metric
+                         performance-metric (keys kw->performance-metric)))
+
+  ([performance-metric keywords]
+   (datafy performance-metric keywords kw->performance-metric)))
+
+(def kw->performance-metrics
+  {:bot-idle PerformanceMetrics/.getBotIdle
+   :bot-response PerformanceMetrics/.getBotResponse
+   :client-idle PerformanceMetrics/.getClientIdle
+   :communication-listen-to-receive PerformanceMetrics/.getCommunicationListenToReceive
+   :communication-send-to-receive PerformanceMetrics/.getCommunicationSendToReceive
+   :communication-send-to-sent PerformanceMetrics/.getCommunicationSendToSent
+   :copying-to-buffer PerformanceMetrics/.getCopyingToBuffer
+   :excess-sleep PerformanceMetrics/.getExcessSleep
+   :flush-side-effects PerformanceMetrics/.getFlushSideEffects
+   :frame-buffer-size PerformanceMetrics/.getFrameBufferSize
+   :frame-duration-receive-to-receive PerformanceMetrics/.getFrameDurationReceiveToReceive
+   :frame-duration-receive-to-send PerformanceMetrics/.getFrameDurationReceiveToSend
+   :frame-duration-receive-to-sent PerformanceMetrics/.getFrameDurationReceiveToSent
+   :frames-behind PerformanceMetrics/.getFramesBehind
+   :intentionally-blocking PerformanceMetrics/.getIntentionallyBlocking
+   :number-of-events PerformanceMetrics/.getNumberOfEvents
+   :number-of-events-times-duration-receive-to-sent PerformanceMetrics/.getNumberOfEventsTimesDurationReceiveToSent})
+
+(defn comp-datafy-performance-metric [m]
+  (update-vals m #(comp datafy-performance-metric %)))
+
+(defn datafy-performance-metrics
+  ([performance-metrics]
+   (datafy-performance-metrics
+    performance-metrics (keys kw->performance-metrics)))
+
+  ([performance-metrics keywords]
+   (datafy performance-metrics keywords (comp-datafy-performance-metric kw->performance-metrics))))
+
+(defn metrics [api]
+  (-> performance-metrics
+      datafy-performance-metrics))

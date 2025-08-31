@@ -101,8 +101,8 @@
 ;;;;;;;
 
 (defn parse-on-start [api]
-  (let [game (api/get-game api)
-        bwem (api/get-bwem api)]
+  (let [game (api/game api)
+        bwem (api/bwem api)]
     (-> {}
         (set-frame (Game/.getFrameCount game))
         (set-players-by-id (mapv (player/parse-player! game) (Game/.getPlayers game))) ;; these players are not by id lol, fix this, look at update-on-start
@@ -115,8 +115,8 @@
       (set-map map)))
 
 (defn parse-on-frame [api]
-  (let [client (api/get-client api)
-        game (api/get-game api)]
+  (let [client (api/client api)
+        game (api/game api)]
     (-> {}
         (set-frame (Game/.getFrameCount game))
         (set-frames-behind (BWClient/.framesBehind client))
@@ -158,6 +158,6 @@
 
 (defn render-game! [game api]
   (api-game/draw-text-screen
-   (api/get-game api) 0 0
+   (api/game api) 0 0
    (str "Frame: " (frame game)))
-  (render-units! (units game) (api/get-game api)))
+  (render-units! (units game) (api/game api)))

@@ -16,8 +16,8 @@
   job)
 
 (defn go-there! [api job]
-  (let [frame (Game/.getFrameCount (api/get-game api))
-        worker (Game/.getUnit (api/get-game api) (job/unit-id job))
+  (let [frame (Game/.getFrameCount (api/game api))
+        worker (Game/.getUnit (api/game api) (job/unit-id job))
         base (starting-base-to-scout job)
         tile (position/->bwapi base :tile-position)
         position (TilePosition/.toPosition tile)

@@ -41,7 +41,7 @@
                {})))
 
 (defn parse-on-start [api]
-  (let [game (api/get-game api)]
+  (let [game (api/game api)]
     {:player/id (Player/.getID (Game/.self game))}))
 
 (defn update-on-start [{:as our :or {}} data]
