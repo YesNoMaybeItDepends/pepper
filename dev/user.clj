@@ -6,8 +6,7 @@
    [clojure.string :as str]
    [portal.api :as portal]
    [pepper.dev :as dev]
-   [user.portal :as user.portal]
-   [pepper.api :as api]))
+   [user.portal :as user.portal]))
 
 ;; consider these
 ;; pepper.core
@@ -36,54 +35,52 @@
 (stop-portal! system)
 (init-portal! system)
 
-(add-tap #'dev/store-api!)
-
-(defn pepper []
-  @(:pepper-ref @dev/store))
-
-(defn pepper-ref []
-  (:pepper-ref @dev/store))
-
-(defn reset-jobs! [pepper-ref]
-  (swap! pepper-ref update-in [:bot :unit-jobs] {}))
-
-(defn tap-unit-id [unit-id]
-  (let [pepper (pepper)]
-    {:unit-job-record (user.portal/tap-unit-job unit-id)
-     :unit (get-in pepper [:game :units-by-id unit-id])
-     :unit-job (get-in pepper [:bot :unit-jobs unit-id])}))
-
-(defn metrics []
-  (-> (pepper)
-      :api
-      api/metrics))
-
 (comment
 
   (set! *print-namespace-maps* false)
 
   @dev/store
   (tap> @dev/store)
-  (tap> (pepper))
-  (pepper)
+
+  ;; start / stop
 
   (dev/start-pepper! {:async? true})
   (dev/start-pepper!)
   (dev/stop-pepper!)
 
+  ;; pepper
 
-  (dev/tap-pepper!)
+  (dev/pepper!)
+  (tap> (dev/pepper!))
 
+  ;; api
 
-  (dev/get-client!)
-  (dev/get-game!)
-  (dev/get-bwem!)
+  (dev/api-client!)
+  (dev/api-game!)
+  (dev/api-bwem!)
 
-  (dev/pause-game!)
+  ;; pause / resume
+
   (do (dev/pause-game!)
       (tap> (pepper)))
 
   (dev/resume-game!)
+
+  ;; misc
+
+  (defn reset-jobs! [pepper-ref]
+    (swap! pepper-ref update-in [:bot :unit-jobs] {}))
+
+  ;; (defn tap-unit-id [unit-id]
+  ;;   (let [pepper (pepper)]
+  ;;     {:unit-job-record (user.portal/tap-unit-job unit-id)
+  ;;      :unit (get-in pepper [:game :units-by-id unit-id])
+  ;;      :unit-job (get-in pepper [:bot :unit-jobs unit-id])}))
+
+  ;; (defn metrics []
+  ;;   (-> (pepper)
+  ;;       :api
+  ;;       api/metrics))
 
   @user.portal/jobs-by-unit-id
   (tap> @user.portal/jobs-by-unit-id)
@@ -91,6 +88,6 @@
   (user.portal/tap-unit-job 171)
   (tap-unit-id 171)
 
-  (metrics)
+  ;; (metrics)
 
   #_())

@@ -161,3 +161,23 @@
    (api/game api) 0 0
    (str "Frame: " (frame game)))
   (render-units! (units game) (api/game api)))
+
+(defn update-on-unit-event [game [event-id {unit :unit}] api]
+  (let [frame (Game/.getFrameCount (api/game api))]
+    (update game :units-by-id update-units-by-id
+            [(merge (unit/->map unit frame [:id])
+                    (case event-id
+                      :on-unit-complete {:fame-completed frame}
+                      :on-unit-create {:frame-created frame}
+                      :on-unit-destroy {:frame-destroyed frame
+                                        :visible? false
+                                        :exists? false}
+                      :on-unit-discover {:frame-discovered frame ;; discover / show / hide ?
+                                         :visible? true}
+                      :on-unit-evade {:frame-evaded frame}
+                      :on-unit-hide {:frame-hidden frame
+                                     :visible? false} ;; discover / show / hide ?
+                      :on-unit-morph {:frame-morphed frame}
+                      :on-unit-renegade {:frame-renegade frame}
+                      :on-unit-show {:frame-shown frame ;; discover / show / hide ?
+                                     :visible? true}))])))

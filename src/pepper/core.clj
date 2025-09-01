@@ -3,7 +3,9 @@
    [clojure.core.async :as a]
    [pepper.api :as api]
    [pepper.bot :as bot]
-   [pepper.game :as game]))
+   [pepper.game :as game]
+   [portal.api :as portal]
+   [com.brunobonacci.mulog :as mu]))
 
 (defn api [state]
   (:api state))
@@ -84,23 +86,45 @@
 ;;;; handlers
 
 (defn handle-error [e store]
-  (tap> {:msg :error
-         :state @store
-         :error e}))
+  (let [state (deref store 100 :deref-timeout)
+        error-data (ex-data e)]
+    (mu/log :error :exception e :state state :error-data error-data)
+    (tap> {:msg :error
+           :state state
+           :exception e
+           :error-data (ex-data e)})))
 
 (defn handle-stop [store]
   (println "pepper stopping")
   (tap> {:msg :stopping
          :state @store}))
 
-(defn handle-msg [state [id _ :as _] stop-ch]
+(defn handle-on-unit-event [state event]
+  (update state :game game/update-on-unit-event event (api state)))
+
+(defn handle-msg [state [id _ :as event] stop-ch]
   (case id
-    :on-start (tapping (on-start state))
+    :on-end (do (a/close! stop-ch)
+                (tapping (on-end state)))
     :on-frame (-> state
                   (skipping-if-paused #(throttling-by-game-frame % on-frame))
                   rendering)
-    :on-end (do (a/close! stop-ch)
-                (tapping (on-end state)))
+    :on-nuke-detect state
+    :on-player-dropped state
+    :on-player-left state
+    :on-receive-text state
+    :on-save-game state
+    :on-send-text state
+    :on-start (tapping (on-start state))
+    :on-unit-complete (handle-on-unit-event state event)
+    :on-unit-create (handle-on-unit-event state event)
+    :on-unit-destroy (handle-on-unit-event state event)
+    :on-unit-discover (handle-on-unit-event state event)
+    :on-unit-evade (handle-on-unit-event state event)
+    :on-unit-hide (handle-on-unit-event state event)
+    :on-unit-morph (handle-on-unit-event state event)
+    :on-unit-renegade (handle-on-unit-event state event)
+    :on-unit-show (handle-on-unit-event state event)
     :tap (tapping state)
     state))
 

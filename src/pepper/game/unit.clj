@@ -19,6 +19,9 @@
 (defn exists? [unit]
   (:exists? unit))
 
+(defn set-last-frame-updated [unit frame]
+  (assoc unit :last-frame-updated frame))
+
 (defn last-frame-updated [unit]
   (:last-frame-updated unit))
 
@@ -46,8 +49,33 @@
 (defn update-unit [unit new-unit]
   (merge unit new-unit))
 
+(defn datafy [obj kws kw->val]
+  (reduce (fn [acc kw]
+            (assoc acc kw ((kw kw->val) obj)))
+          {}
+          kws))
+
+(def kw->val {:exists? Unit/.exists
+              :id Unit/.getID
+              :idle? Unit/.isIdle
+              :player-id (comp Player/.getID Unit/.getPlayer)
+              :type (comp unit-type/object->keyword Unit/.getType)
+              :initial-type (comp unit-type/object->keyword Unit/.getInitialType)
+              :position (comp position/->data Unit/.getPosition)
+              :tile (comp position/->data Unit/.getTilePosition)
+              :completed? Unit/.isCompleted
+              :visible? Unit/.isVisible})
+
+(defn ->map
+  ([unit-obj frame] (->map unit-obj frame (keys kw->val)))
+  ([unit-obj frame keywords]
+   (-> (datafy unit-obj keywords kw->val)
+       (set-last-frame-updated frame))))
+
 (defn parse-unit!
-  "Reads a bwapi unit with a bwapi game"
+  "DEPRECATED
+   
+   Reads a bwapi unit with a bwapi game"
   [game]
   (fn [unit]
     (-> {}
