@@ -8,11 +8,11 @@
 (defn get-api-client-config [config]
   (:api config))
 
-(defn get-api-before-start [deref-store]
-  (get-in deref-store [:before-start]))
+(defn get-api-before-start [state]
+  (get-in state [:before-start]))
 
-(defn get-api-after-end [deref-store]
-  (get-in deref-store [:after-end]))
+(defn get-api-after-end [state]
+  (get-in state [:after-end]))
 
 (defn main [store]
   (let [[from-api to-api] [(a/chan) (a/chan)]

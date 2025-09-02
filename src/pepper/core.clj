@@ -86,7 +86,8 @@
 ;;;; handlers
 
 (defn handle-error [e store]
-  (let [state (logging/format-state (deref store 100 :deref-timeout))
+  (let [s @store
+        state (logging/format-state s)
         error-data (ex-data e)]
     (mu/log :error
             :exception e
@@ -98,9 +99,11 @@
            :error-data (ex-data e)})))
 
 (defn handle-stop [store]
-  (println "pepper stopping")
-  (tap> {:msg :stopping
-         :state @store}))
+  (let [s @store
+        state (logging/format-state s)]
+    (mu/log :stopped :state state)
+    (tap> {:msg :stopping
+           :state state})))
 
 (defn handle-on-unit-event [state event]
   (update state :game game/update-on-unit-event event (api state)))
@@ -156,7 +159,8 @@
                                          from-api]
                                         :priority true)]
       (if (stop? res stop-ch)
-        (handle-stop store)
+        (do (handle-stop store)
+            (a/close! to-api))
         (do (handle-res! store msg stop-ch)
             (a/>! to-api :done)
             (recur))))))

@@ -64,6 +64,11 @@
   ;; start / stop
 
   (dev/start-pepper! {:async? true})
+  dev/bot
+  (future-done? dev/bot)
+  (future-cancelled? dev/bot)
+  (future-cancel dev/bot)
+
   (dev/start-pepper!)
   (dev/stop-pepper!)
 
