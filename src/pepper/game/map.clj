@@ -32,8 +32,8 @@
 
 (defn parse-base-on-start! [base]
   {:id (->id base)
-   :area (->id (Area/.getId (Base/.getArea base)))
-   :area-group (Area/.getGroupId (Base/.getArea base)) ;; nani?
+   :area-id (->id (Area/.getId (Base/.getArea base)))
+   :area-group (Area/.getGroupId (Base/.getArea base)) ;; 99% sure can be removed, always seems to be the same
    :mineral-fields (mapv ->id (Base/.getMinerals base))
    :blocking-mineral-fields (mapv ->id (Base/.getBlockingMinerals base))
    :geysers (mapv ->id (Base/.getGeysers base))
@@ -51,8 +51,8 @@
   {:id (->id area)
    :group-id (Area/.getGroupId area)
    :bases (mapv ->id (Area/.getBases area))
-   :choke-points (mapv ->id (Area/.getChokePoints area))
-   :accesible-neighbors (mapv ->id (Area/.getAccessibleNeighbors area))
+   :choke-point-ids (mapv ->id (Area/.getChokePoints area))
+   :accessible-neighbor-ids (mapv ->id (Area/.getAccessibleNeighbors area))
    :top-left-tile (position/->data (Area/.getTop area))
    :bottom-right-tile (position/->data (Area/.getBottomRight area))
    :highest-altitude (Altitude/.intValue (Area/.getHighestAltitude area))
@@ -70,3 +70,38 @@
 
 (defn starting-bases [map]
   (:starting-bases map))
+
+(defn get-base-by-id [map base-id]
+  (get-in map [:bases base-id]))
+
+(defn get-base-area-id [base]
+  (:area-id base))
+
+(defn get-area-by-id [map area-id]
+  (get-in map [:areas area-id]))
+
+(defn get-area-id [area]
+  (:id area))
+
+(defn get-area-choke-point-ids [area]
+  (:choke-point-ids area))
+
+(defn get-choke-point-by-id [map choke-point-id]
+  (get-in map [:choke-points choke-point-id]))
+
+(defn get-choke-point-area-ids [choke-point]
+  (:areas choke-point))
+
+(defn get-area-accessible-neighbor-ids [area]
+  (:accessible-neighbor-ids area))
+
+(defn get-area-accessible-neighbors [area map]
+  (->> (get-area-accessible-neighbor-ids area)
+       (mapv #(get-area-by-id map %))))
+
+(defn get-area-choke-points [area map]
+  (->> (get-area-choke-point-ids area)
+       (mapv #(get-choke-point-by-id map %))))
+
+(defn get-base-area [base map]
+  (get-area-by-id map (get-base-area-id base)))

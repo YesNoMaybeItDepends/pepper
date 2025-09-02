@@ -4,7 +4,9 @@
    [pepper.bot.jobs.find-enemy-starting-base :as find-enemy-starting-base]
    [pepper.bot.macro :as macro]
    [pepper.game.player :as player]
-   [pepper.game.unit :as unit]))
+   [pepper.game.unit :as unit]
+   [pepper.game.map :as game-map]
+   [pepper.game.map.area :as area]))
 
 (defn find-enemy-starting-base-jobs [unit-jobs]
   (filterv #(= (:job %) :find-enemy-starting-base) unit-jobs))
@@ -23,6 +25,24 @@
 (defn empty-starting-bases [military]
   (or (:empty-starting-bases military)
       []))
+
+(defn set-our-main-base-id [military base-id]
+  (assoc military :our-main-base-id base-id))
+
+(defn our-main-base-id [military]
+  (:our-main-base-id military))
+
+(defn set-their-main-base-by-id [military base-id]
+  (assoc military :their-main-base-id base-id))
+
+(defn their-main-base-id [military]
+  (:their-main-base-id military))
+
+(defn set-swarm-rally-point [military position]
+  (assoc military :swarm-rally-position position))
+
+(defn swarm-rally-position [military]
+  (:swarm-rally-position military))
 
 (defn possible-enemy-starting-bases [military our-player all-starting-bases]
   (let [our-starting-base (player/starting-base our-player)
@@ -57,7 +77,7 @@
    (not already-scouting?)
    some-available-worker))
 
-(defn maybe-find-enemy-starting-base [military our-units our-player unit-jobs frame starting-bases]
+(defn maybe-find-enemy-starting-base [[military messages] our-units our-player unit-jobs frame starting-bases]
   (let [know-enemy-starting-base? (know-enemy-starting-base? military)
         barracks-completed? (barracks-completed? our-units)
         already-scouting? (already-scouting? unit-jobs)
@@ -70,6 +90,28 @@
                           (assign-scouting-job military some-available-worker unit-jobs frame our-player starting-bases)
                           [military []])]
     [military jobs]))
+
+(defn get-our-main-base-geography [our-main-base-id game-map]
+  (let [base (game-map/get-base-by-id game-map our-main-base-id)
+        area (game-map/get-base-area base game-map)
+        choke-points (game-map/get-area-choke-points area game-map)]
+    {:base base
+     :area area
+     :choke-points choke-points}))
+
+(defn determine-rally-point [our-main-base-id game-map]
+  (let [{:keys [base area choke-points]} (get-our-main-base-geography our-main-base-id game-map)
+        accessible-neighbors (game-map/get-area-accessible-neighbors area game-map)
+        choke-points-to-accessible-neighbors (area/choke-points-to-accessible-neighbors area accessible-neighbors choke-points)]
+    (mapv :center choke-points-to-accessible-neighbors)))
+
+(defn pair-colls-randomly [coll-to-pair coll-with]
+  (mapv #(vector % (rand-nth coll-with)) coll-to-pair))
+
+;;;;
+
+(defn maybe-rally-marines [[military messages] our-units our-player unit-jobs frame starting-bases]
+  [military []])
 
 ;;;;
 
@@ -92,5 +134,6 @@
 (defn update-on-frame [[military messages] {:keys [units players frame starting-bases unit-jobs]}]
   (let [our-player (player/our-player players)
         our-units (our-units units our-player)
-        [military new-jobs] (maybe-find-enemy-starting-base military our-units our-player unit-jobs frame starting-bases)]
-    [military (into messages conj (or new-jobs []))]))
+        [military new-scouting-jobs] (maybe-find-enemy-starting-base [military messages] our-units our-player unit-jobs frame starting-bases)
+        [military new-rally-jobs] (maybe-rally-marines [military messages] our-units our-player unit-jobs frame starting-bases)]
+    [military (into messages conj (concat (or new-scouting-jobs []) (or new-rally-jobs [])))]))
