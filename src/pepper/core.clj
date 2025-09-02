@@ -4,8 +4,8 @@
    [pepper.api :as api]
    [pepper.bot :as bot]
    [pepper.game :as game]
-   [portal.api :as portal]
-   [com.brunobonacci.mulog :as mu]))
+   [com.brunobonacci.mulog :as mu]
+   [pepper.utils.logging :as logging]))
 
 (defn api [state]
   (:api state))
@@ -86,9 +86,12 @@
 ;;;; handlers
 
 (defn handle-error [e store]
-  (let [state (deref store 100 :deref-timeout)
+  (let [state (logging/format-state (deref store 100 :deref-timeout))
         error-data (ex-data e)]
-    (mu/log :error :exception e :state state :error-data error-data)
+    (mu/log :error
+            :exception e
+            :state state
+            :error-data error-data)
     (tap> {:msg :error
            :state state
            :exception e
