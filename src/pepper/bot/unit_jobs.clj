@@ -26,8 +26,17 @@
 (defn unit-has-job? [jobs unit-id] ;; employed?
   (some? (get-job-by-unit-id jobs unit-id)))
 
+;; (defn job-unit? [job unit]
+;;   (= (job/unit-id job) (unit/id unit)))
+
+;; (defn unit-has-any-job? [unit jobs]
+;;   (some #(job-unit? % unit) jobs))
+
 (defn unit-has-no-job? [jobs unit-id]
   ((complement unit-has-job?) jobs unit-id))
+
+;; ;; (defn units-with-no-jobs [units unit-jobs]
+;; ;;   (filterv #(not (unit-has-any-job? % unit-jobs)) units))
 
 (defn execute-jobs! [unit-jobs api]
   (reduce-kv

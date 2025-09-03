@@ -1,12 +1,14 @@
 (ns pepper.bot.military
   (:require
    [pepper.bot.job :as job]
+   [pepper.bot.jobs.attack-move :as attack-move]
    [pepper.bot.jobs.find-enemy-starting-base :as find-enemy-starting-base]
    [pepper.bot.macro :as macro]
-   [pepper.game.player :as player]
-   [pepper.game.unit :as unit]
+   [pepper.bot.unit-jobs :as unit-jobs]
    [pepper.game.map :as game-map]
-   [pepper.game.map.area :as area]))
+   [pepper.game.map.area :as area]
+   [pepper.game.player :as player]
+   [pepper.game.unit :as unit]))
 
 (defn find-enemy-starting-base-jobs [unit-jobs]
   (filterv #(= (:job %) :find-enemy-starting-base) unit-jobs))
@@ -110,8 +112,13 @@
 
 ;;;;
 
-(defn maybe-rally-marines [[military messages] our-units our-player unit-jobs frame starting-bases]
-  [military []])
+(defn maybe-rally-marines [[military messages] game-map our-player our-units unit-jobs frame]
+  (let [our-main-base-id (player/starting-base our-player)
+        rally-point (first (determine-rally-point our-main-base-id game-map))
+        our-marines (filterv #(unit/type? % :marine) our-units)
+        idle-marines (filterv #(unit-jobs/unit-has-no-job? unit-jobs (unit/id %)) our-marines)
+        new-jobs (mapv #(job/init (attack-move/job (unit/id %) rally-point) frame) idle-marines)]
+    [military new-jobs]))
 
 ;;;;
 
@@ -131,9 +138,10 @@
 (defn update-on-start [our-player starting-bases]
   (init-military our-player starting-bases))
 
-(defn update-on-frame [[military messages] {:keys [units players frame starting-bases unit-jobs]}]
+(defn update-on-frame [[military messages] {:keys [units players frame game-map unit-jobs]}]
   (let [our-player (player/our-player players)
         our-units (our-units units our-player)
+        starting-bases (game-map/starting-bases game-map)
         [military new-scouting-jobs] (maybe-find-enemy-starting-base [military messages] our-units our-player unit-jobs frame starting-bases)
-        [military new-rally-jobs] (maybe-rally-marines [military messages] our-units our-player unit-jobs frame starting-bases)]
+        [military new-rally-jobs] (maybe-rally-marines [military messages] game-map our-player our-units unit-jobs frame)]
     [military (into messages conj (concat (or new-scouting-jobs []) (or new-rally-jobs [])))]))

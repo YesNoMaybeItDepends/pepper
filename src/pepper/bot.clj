@@ -13,7 +13,8 @@
    [pepper.game.position :as position]
    [pepper.game.unit-type :as unit-type]
    [user.portal :as portal]
-   [pepper.game.unit :as unit])
+   [pepper.game.unit :as unit]
+   [pepper.bot.jobs.attack-move :as attack-move])
   (:import
    [bwapi Game UnitType]))
 
@@ -60,7 +61,7 @@
         data {:units (filterv (every-pred :completed? :visible?) (game/units game))
               :players (game/players game)
               :frame (game/frame game)
-              :starting-bases (map/starting-bases (game/get-map game))
+              :game-map (game/get-map game)
               :unit-jobs (vals unit-jobs)}
 
         [our messages] (our/update-on-frame
@@ -120,6 +121,15 @@
       (Game/.drawLineMap game top-left worker-pos bwapi.Color/Yellow)
       (Game/.drawBoxMap game top-left bottom-right bwapi.Color/Yellow))))
 
+(defn render-attack-move-job [job game]
+  (when (and (job/type? job :attack-move)
+             (attack-move/target-position job))
+    (let [unit (.getUnit game (job/unit-id job))
+          unit-position (.getPosition unit)
+          target-position-walk (position/->bwapi (attack-move/target-position job) :walk-position)
+          target-position (.toPosition target-position-walk)]
+      (Game/.drawLineMap game unit-position target-position bwapi.Color/Red))))
+
 (defn filter-jobs-to-render [unit-jobs]
   (->> unit-jobs
        #_(filterv #(#{207 12 321 123} (:unit-id %)))
@@ -133,6 +143,7 @@
       (case (:job job)
         :mining (render-gather-job job game _game)
         :build (render-build-job job game)
+        :attack-move (render-attack-move-job job game)
         :else))))
 
 (defn render-bot! [bot api _game]

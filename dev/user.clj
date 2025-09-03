@@ -12,6 +12,8 @@
    [com.brunobonacci.mulog :as mu]
    [quil.core :as q]
    [quil.middleware :as qm]
+   [quil.applet :as qa]
+   [user.drawing :as drawing]
    [snitch.core :refer [defn* defmethod* *fn *let]]))
 
 ;; consider these
@@ -119,38 +121,15 @@
 
 (comment ;; quill
 
-  (declare quil-example)
+  (def my-sketch (drawing/sketch))
+  (def my-sketch nil)
+  my-sketch
 
-  (defonce state-quil (ref nil))
-
-  (dosync (ref-set state-quil (get-in x [:game :map])))
-
-  (defn setup-quil []
-    (q/frame-rate 1)
-    (q/background 200)
-    (dosync (ref-set state-quil {:game {:map {:choke-points {[300 300] {:center [300 300]
-                                                                        :geometry [[300 290] [300 300] [300 310]]}}}}}))
-    @state-quil)
-
-  (defn update-quil [state]
-    @state-quil)
-
-  (defn draw-quil [state]
-    (q/stroke 0)
-    (q/stroke-weight 1)
-    (doseq [choke-point (vals (:choke-points state))]
-      (let [pos1 (first (:geometry choke-point))
-            pos2 (:center choke-point)
-            pos3 (last (:geometry choke-point))]
-        (q/line pos1 pos2)
-        (q/line pos2 pos3))))
-
-  (q/defsketch quil-example
-    :title "woah"
-    :setup setup-quil
-    :update update-quil
-    :draw draw-quil
-    :size [800 800]
-    :middleware [qm/fun-mode])
+  (use 'user.drawing :reload)
+  (qa/with-applet user/my-sketch (q/start-loop))
+  (qa/with-applet user/my-sketch (q/exit))
+  (qa/with-applet user/my-sketch (q/random 10))
+  (qa/with-applet user/my-sketch (q/no-loop))
+  (qa/with-applet user/my-sketch (q/start-loop))
 
   #_())

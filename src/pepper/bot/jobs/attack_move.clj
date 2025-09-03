@@ -4,3 +4,28 @@
             [pepper.game.position :as position])
   (:import [bwapi Unit Game Position]))
 
+(defn target-position [job]
+  (:target-position job))
+
+(defn yay!
+  [game job]
+  job)
+
+(defn go-there! [api job]
+  (let [frame (Game/.getFrameCount (api/game api))
+        unit (Game/.getUnit (api/game api) (job/unit-id job))
+        target-position (.toPosition (position/->bwapi (target-position job) :walk-position))
+        success? (Unit/.attack unit target-position)]
+    (if success?
+      (assoc job
+             :frame-issued-attack-move-command frame
+             :action yay!)
+      (do
+        (println "Can attack move? "  (Unit/.canAttackMove unit))
+        job))))
+
+(defn job [unit-id target-position]
+  {:job :attack-move
+   :unit-id unit-id
+   :target-position target-position
+   :action go-there!})
