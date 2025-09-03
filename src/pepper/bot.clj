@@ -92,16 +92,16 @@
   (.setScreenPosition game x y))
 
 (defn unit-position [unit-obj]
-  (position/->data (.getPosition unit-obj)))
+  (position/->map (.getPosition unit-obj)))
 
 (defn render-gather-job [job game _game]
   (let [{unit-id :unit-id
          mineral-field-id :mineral-field-id} job
         units-by-id (game/units-by-id _game)
         unit (get units-by-id unit-id)
-        [xfrom yfrom] (unit/position unit)
+        {xfrom :x yfrom :y} (unit/position unit)
         mineral (get units-by-id mineral-field-id)
-        [xto yto] (unit/position mineral)]
+        {xto :x yto :y} (unit/position mineral)]
     (Game/.drawLineMap game xfrom yfrom xto yto bwapi.Color/Blue)))
 
 (defn render-build-job [job game]
@@ -110,25 +110,21 @@
     (let [worker (.getUnit game (job/unit-id job))
           worker-pos (.getPosition worker)
           unit-type (unit-type/keyword->object (build/building job))
-          [left top] (build/build-tile job)
-          top-left (.toPosition (position/->bwapi
-                                 [left top]
-                                 :tile-position))
-          bottom-right (.toPosition (position/->bwapi
-                                     [(+ left (UnitType/.tileWidth unit-type))
-                                      (+ top (UnitType/.tileHeight unit-type))]
-                                     :tile-position))]
-      (Game/.drawLineMap game top-left worker-pos bwapi.Color/Yellow)
-      (Game/.drawBoxMap game top-left bottom-right bwapi.Color/Yellow))))
+          top-left (build/build-tile job)
+          bottom-right (position/+ top-left {:x (UnitType/.tileWidth unit-type)
+                                             :y (UnitType/.tileHeight unit-type)})
+          pos1 (position/->position top-left)
+          pos2 (position/->position bottom-right)]
+      (Game/.drawLineMap game pos1 worker-pos bwapi.Color/Yellow)
+      (Game/.drawBoxMap game pos1 pos2 bwapi.Color/Yellow))))
 
 (defn render-attack-move-job [job game]
   (when (and (job/type? job :attack-move)
              (attack-move/target-position job))
     (let [unit (.getUnit game (job/unit-id job))
           unit-position (.getPosition unit)
-          target-position-walk (position/->bwapi (attack-move/target-position job) :walk-position)
-          target-position (.toPosition target-position-walk)]
-      (Game/.drawLineMap game unit-position target-position bwapi.Color/Red))))
+          target-pos (position/->position (attack-move/target-position job))]
+      (Game/.drawLineMap game unit-position target-pos bwapi.Color/Red))))
 
 (defn filter-jobs-to-render [unit-jobs]
   (->> unit-jobs

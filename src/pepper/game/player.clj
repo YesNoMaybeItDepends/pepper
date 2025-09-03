@@ -72,7 +72,7 @@
           (assoc :gas (Player/.gas player-obj))
           (assoc :supply-total (Player/.supplyTotal player-obj))
           (assoc :supply-used (Player/.supplyUsed player-obj))
-          (assoc :starting-base (position/->data (Player/.getStartLocation player-obj)))
+          (assoc :starting-base (position/->map (Player/.getStartLocation player-obj)))
           (assoc :neutral? (Player/.isNeutral player-obj))
           (assoc :self? (= id self-id))
           (assoc :enemy? (= id enemy-id))))))

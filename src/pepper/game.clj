@@ -145,12 +145,12 @@
       (update :units-by-id update-units-by-id units-by-id)))
 
 (defn unit-position [unit-obj]
-  (position/->data (.getPosition unit-obj)))
+  (position/->map (.getPosition unit-obj)))
 
 (defn render-units! [units game]
   (doseq [unit-id (filterv some? (mapv unit/id units))]
     (let [u (.getUnit game unit-id)
-          [x y] (unit-position u)]
+          {:keys [x y]} (unit-position u)]
       (when (and x y)
         (if (.isCompleted u)
           (api-game/draw-text-map game x y (str unit-id))

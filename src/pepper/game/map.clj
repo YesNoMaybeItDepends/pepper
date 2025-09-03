@@ -12,9 +12,9 @@
     bwem.Base (->id (Base/.getLocation x))
     bwem.ChokePoint (->id (ChokePoint/.getCenter x))
     bwapi.Unit (Unit/.getID x)
-    bwapi.WalkPosition (position/->data x)
-    bwapi.Position (position/->data x)
-    bwapi.TilePosition (position/->data x)
+    bwapi.WalkPosition (position/->map x)
+    bwapi.Position (position/->map x)
+    bwapi.TilePosition (position/->map x)
     clojure.lang.PersistentArrayMap (:id x)
     clojure.lang.PersistentHashMap (:id x)
     clojure.lang.PersistentVector x
@@ -37,15 +37,15 @@
    :mineral-fields (mapv ->id (Base/.getMinerals base))
    :blocking-mineral-fields (mapv ->id (Base/.getBlockingMinerals base))
    :geysers (mapv ->id (Base/.getGeysers base))
-   :resource-depot-tile (position/->data (Base/.getLocation base))
-   :center (position/->data (Base/.getCenter base))})
+   :resource-depot-tile (position/->map (Base/.getLocation base))
+   :center (position/->map (Base/.getCenter base))})
 
 (defn parse-choke-point-on-start! [choke-point]
   {:id (->id choke-point) ;; (random-uuid)
    :areas (mapv ->id (pair->tuple (ChokePoint/.getAreas choke-point)))
    :blocking-neutral (->id (ChokePoint/.getBlockingNeutral choke-point))
-   :center (position/->data (ChokePoint/.getCenter choke-point))
-   :geometry (mapv position/->data (ChokePoint/.getGeometry choke-point))})
+   :center (position/->map (ChokePoint/.getCenter choke-point))
+   :geometry (mapv position/->map (ChokePoint/.getGeometry choke-point))})
 
 (defn parse-area-on-start! [area]
   {:id (->id area)
@@ -53,8 +53,8 @@
    :bases (mapv ->id (Area/.getBases area))
    :choke-point-ids (mapv ->id (Area/.getChokePoints area))
    :accessible-neighbor-ids (mapv ->id (Area/.getAccessibleNeighbors area))
-   :top-left-tile (position/->data (Area/.getTop area))
-   :bottom-right-tile (position/->data (Area/.getBottomRight area))
+   :top-left-tile (position/->map (Area/.getTop area))
+   :bottom-right-tile (position/->map (Area/.getBottomRight area))
    :highest-altitude (Altitude/.intValue (Area/.getHighestAltitude area))
    :lowest-altitude (Altitude/.intValue (Area/.getHighestAltitude area))})
 

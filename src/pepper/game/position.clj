@@ -1,13 +1,59 @@
 (ns pepper.game.position
-  (:import [bwapi Point Position TilePosition WalkPosition]))
+  (:refer-clojure :exclude [+ *])
+  (:require
+   [clojure.math :as math])
+  (:import
+   [bwapi
+    Point
+    Position
+    TilePosition
+    WalkPosition]))
 
-(defn ->bwapi
-  [[x y :as position] to]
-  (case to
-    :position (Position. x y)
-    :tile-position (TilePosition. x y)
-    :walk-position (WalkPosition. x y)))
+(defn x [pos]
+  (:x pos))
 
-(defn ->data [position]
-  [(Point/.getX position)
-   (Point/.getY position)])
+(defn y [pos]
+  (:y pos))
+
+(defn scale [pos]
+  (:scale pos))
+
+(def scale->n {:position      1
+               :walk-position 8
+               :tile-position 32})
+
+(defn class->scale [obj]
+  (get {Position     :position
+        WalkPosition :walk-position
+        TilePosition :tile-position} (class obj)))
+
+(defn convert [from to]
+  (fn [x]
+    (math/floor-div (clojure.core/* x (scale->n from)) (scale->n to))))
+
+(defn ->map
+  ([position]
+   (->map
+    (Point/.getX position)
+    (Point/.getY position)
+    (class->scale position)))
+
+  ([x y scale]
+   {:x x
+    :y y
+    :scale scale}))
+
+(defn ->position [{:keys [x y scale]}]
+  (apply Position/new (mapv (convert scale :position) [x y])))
+
+(defn ->walk-position [{:keys [x y scale]}]
+  (apply WalkPosition/new (mapv (convert scale :walk-position) [x y])))
+
+(defn ->tile-position [{:keys [x y scale]}]
+  (apply TilePosition/new (mapv (convert scale :tile-position) [x y])))
+
+(defn + [{x1 :x y1 :y :as pos1}
+         {x2 :x y2 :y :as pos2}]
+  (assoc pos1
+         :x (clojure.core/+ x1 x2)
+         :y (clojure.core/+ y1 y2)))

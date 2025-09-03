@@ -14,7 +14,7 @@
 (defn go-there! [api job]
   (let [frame (Game/.getFrameCount (api/game api))
         unit (Game/.getUnit (api/game api) (job/unit-id job))
-        target-position (.toPosition (position/->bwapi (target-position job) :walk-position))
+        target-position (position/->position (target-position job))
         success? (Unit/.attack unit target-position)]
     (if success?
       (assoc job

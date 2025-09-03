@@ -44,7 +44,7 @@
         frame (Game/.getFrameCount game)
         worker (Game/.getUnit game (job/unit-id job))
         building (unit-type/keyword->object (building job))
-        tile (position/->bwapi (build-tile job) :tile-position)
+        tile (position/->tile-position (build-tile job))
         can-build? (Unit/.canBuild worker building tile)]
     (if can-build?
       (do (Unit/.build worker building tile)
@@ -65,7 +65,7 @@
         build-tile (Game/.getBuildLocation game building starting-tile 20)]
     (if build-tile
       (assoc job
-             :build-tile (position/->data build-tile)
+             :build-tile (position/->map build-tile)
              :frame-got-build-tile (Game/.getFrameCount game)
              :action #'go-build!)
       job)))

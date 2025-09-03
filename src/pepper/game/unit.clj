@@ -61,8 +61,8 @@
               :player-id (comp Player/.getID Unit/.getPlayer)
               :type (comp unit-type/object->keyword Unit/.getType)
               :initial-type (comp unit-type/object->keyword Unit/.getInitialType)
-              :position (comp position/->data Unit/.getPosition)
-              :tile (comp position/->data Unit/.getTilePosition)
+              :position (comp position/->map Unit/.getPosition)
+              :tile (comp position/->map Unit/.getTilePosition)
               :completed? Unit/.isCompleted
               :visible? Unit/.isVisible})
 
@@ -85,8 +85,8 @@
         (assoc :player-id (Player/.getID (Unit/.getPlayer unit)))
         (assoc :type (unit-type/object->keyword (Unit/.getType unit)))
         (assoc :idle? (Unit/.isIdle unit))
-        (assoc :position (position/->data (Unit/.getPosition unit)))
-        (assoc :tile (position/->data (Unit/.getTilePosition unit)))
+        (assoc :position (position/->map (Unit/.getPosition unit)))
+        (assoc :tile (position/->map (Unit/.getTilePosition unit)))
         (assoc :completed? (Unit/.isCompleted unit)))))
 
 (defn group-unit-by-keywords

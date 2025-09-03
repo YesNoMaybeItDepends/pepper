@@ -18,14 +18,12 @@
 (defn go-there! [api job]
   (let [frame (Game/.getFrameCount (api/game api))
         worker (Game/.getUnit (api/game api) (job/unit-id job))
-        base (starting-base-to-scout job)
-        tile (position/->bwapi base :tile-position)
-        position (TilePosition/.toPosition tile)
-        ack (Unit/.move worker position)]
+        pos (position/->position (starting-base-to-scout job))
+        ack (Unit/.move worker pos)]
     (if ack
       (assoc job
              :frame-issued-move-command frame
-             :target-position position
+             :target-position pos
              :action yay!)
       job)))
 
