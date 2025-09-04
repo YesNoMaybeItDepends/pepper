@@ -105,3 +105,6 @@
 
 (defn get-base-area [base map]
   (get-area-by-id map (get-base-area-id base)))
+
+(defn get-area-base-ids [area]
+  (:bases area))

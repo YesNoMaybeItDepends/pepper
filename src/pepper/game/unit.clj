@@ -40,6 +40,9 @@
 (defn position [unit]
   (:position unit))
 
+(defn tile [unit]
+  (:tile unit))
+
 (defn new-unit? [unit]
   (nil? (frame-discovered unit)))
 
@@ -48,6 +51,12 @@
 
 (defn update-unit [unit new-unit]
   (merge unit new-unit))
+
+(defn visible? [unit]
+  (:visible unit))
+
+(defn dead? [unit]
+  (:frame-destroyed unit))
 
 (defn datafy [obj kws kw->val]
   (reduce (fn [acc kw]

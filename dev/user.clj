@@ -14,7 +14,8 @@
    [quil.middleware :as qm]
    [quil.applet :as qa]
    [user.drawing :as drawing]
-   [snitch.core :refer [defn* defmethod* *fn *let]]))
+   [snitch.core :refer [defn* defmethod* *fn *let]]
+   [babashka.fs :as fs]))
 
 ;; consider these
 ;; pepper.core
@@ -96,6 +97,9 @@
 
   (mu/log :tap :state (logging/format-state (dev/pepper!)))
   (tap> (logging/format-state (dev/pepper!)))
+
+  (def x (load-edn (fs/file (last (fs/list-dir ".logs")))))
+  (tap> (last x))
 
   (def x (:state (load-edn ".logs/1756728273095.log")))
   (tap> x)

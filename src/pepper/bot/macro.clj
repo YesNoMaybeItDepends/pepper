@@ -50,6 +50,9 @@
 (defn mining-jobs [unit-jobs]
   (filterv #(job/type? % :mining) unit-jobs))
 
+(defn building-jobs [unit-jobs]
+  (filterv #(job/type? % :build) unit-jobs))
+
 (defn mining-workers [workers unit-jobs]
   (filterv #(unit-has-any-job? % (mining-jobs unit-jobs)) workers))
 
@@ -73,7 +76,11 @@
 (defn maybe-build-supply [[macro messages] workers our-player unit-jobs frame]
   (if (and (auto-supply/need-supply? our-player)
            (resources/can-afford? (player/resources-available our-player) (unit-type/cost :supply-depot))
-           (not (already-building? :supply-depot unit-jobs)))
+           ;;  #_(not (already-building? :supply-depot unit-jobs))
+           (< (count (->> (building-jobs unit-jobs)
+                          (mapv build/building)
+                          (filterv #(= % :supply-depot))))
+              1))
     (let [worker (get-idle-or-mining-worker workers unit-jobs)
           new-job (job/init (build/job (unit/id worker) :supply-depot) frame)]
       (->result macro new-job))

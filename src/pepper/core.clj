@@ -87,6 +87,9 @@
 
 (defn handle-error [e store]
   (let [s @store
+        _ (doto (api/game (api s))
+            (.setLocalSpeed 167)
+            (.pauseGame))
         state (logging/format-state s)
         error-data (ex-data e)]
     (mu/log :error

@@ -8,7 +8,9 @@
    [pepper.game.map :as game-map]
    [pepper.game.map.area :as area]
    [pepper.game.player :as player]
-   [pepper.game.unit :as unit]))
+   [pepper.game.unit :as unit]
+   [pepper.game.unit-type :as unit-type]
+   [pepper.game.position :as position]))
 
 (defn find-enemy-starting-base-jobs [unit-jobs]
   (filterv #(= (:job %) :find-enemy-starting-base) unit-jobs))
@@ -20,6 +22,9 @@
   (not-empty (->> our-units
                   (filterv #(unit/type? % :barracks))
                   (filterv :completed?))))
+
+(defn set-enemy-starting-base [military base-id]
+  (assoc military :enemy-starting-base base-id))
 
 (defn enemy-starting-base [military]
   (:enemy-starting-base military))
@@ -46,6 +51,9 @@
 (defn swarm-rally-position [military]
   (:swarm-rally-position military))
 
+(defn our-units [units player] ;; where do i put this its everywhere
+  (filterv #(unit/owned-by-player? % player) units))
+
 (defn possible-enemy-starting-bases [military our-player all-starting-bases]
   (let [our-starting-base (player/starting-base our-player)
         empty-starting-bases (empty-starting-bases military)
@@ -69,61 +77,100 @@
         military (set-unit-finding-enemy-starting-base military worker)] ;; TODO: if some base to scout then add job and stuff, otherwise skip adding it bro
     [military [job]]))
 
-(defn assign-scouting-job? [know-enemy-starting-base?
-                            barracks-completed?
-                            already-scouting?
-                            some-available-worker]
-  (and
-   (not know-enemy-starting-base?)
-   barracks-completed?
-   (not already-scouting?)
-   some-available-worker))
+(defn see-enemy-main? [units possible-enemy-starting-bases]
+  (first (->> units
+              (filterv #(unit/type? % unit-type/town-hall))
+              (filterv (fn [u] (some #(= % (:tile u)) possible-enemy-starting-bases)))
+              (mapv :tile))))
 
-(defn maybe-find-enemy-starting-base [[military messages] our-units our-player unit-jobs frame starting-bases]
-  (let [know-enemy-starting-base? (know-enemy-starting-base? military)
+(defn maybe-try-find-enemy-starting-base [[military messages] units our-player unit-jobs frame starting-bases]
+  (let [our-units (our-units units our-player)
         barracks-completed? (barracks-completed? our-units)
         already-scouting? (already-scouting? unit-jobs)
         some-available-worker (macro/get-idle-or-mining-worker (macro/workers our-units) unit-jobs)
-        assign-job? (assign-scouting-job? know-enemy-starting-base?
-                                          barracks-completed?
-                                          already-scouting?
-                                          some-available-worker)
+        assign-job? (and barracks-completed?
+                         (not already-scouting?)
+                         some-available-worker)
         [military jobs] (if assign-job?
                           (assign-scouting-job military some-available-worker unit-jobs frame our-player starting-bases)
                           [military []])]
     [military jobs]))
 
-(defn get-our-main-base-geography [our-main-base-id game-map]
-  (let [base (game-map/get-base-by-id game-map our-main-base-id)
+(defn maybe-find-enemy-starting-base [[military messages] units our-player unit-jobs frame starting-bases]
+  (let [know-enemy-starting-base? (know-enemy-starting-base? military)
+        see-enemy-main? (see-enemy-main? units (:possible-enemy-starting-bases military))]
+    (cond
+      know-enemy-starting-base?
+      [military []]
+
+      (and (not know-enemy-starting-base?) see-enemy-main?)
+      [(set-enemy-starting-base military see-enemy-main?) []]
+
+      (and (not know-enemy-starting-base?) (not see-enemy-main?))
+      (maybe-try-find-enemy-starting-base
+       [military messages] units our-player unit-jobs frame starting-bases)
+
+      :else
+      [military []])))
+
+(defn get-main-geography [base-id game-map]
+  (let [base (game-map/get-base-by-id game-map base-id)
         area (game-map/get-base-area base game-map)
         choke-points (game-map/get-area-choke-points area game-map)]
     {:base base
      :area area
      :choke-points choke-points}))
 
-(defn determine-rally-point [our-main-base-id game-map]
-  (let [{:keys [base area choke-points]} (get-our-main-base-geography our-main-base-id game-map)
+(defn get-main-ramp
+  "TODO: There could be more than 1 ramp, but right now I'm always getting the first one"
+  [base-id game-map]
+  (let [{:keys [base area choke-points]} (get-main-geography base-id game-map)
         accessible-neighbors (game-map/get-area-accessible-neighbors area game-map)
         choke-points-to-accessible-neighbors (area/choke-points-to-accessible-neighbors area accessible-neighbors choke-points)]
-    (mapv :center choke-points-to-accessible-neighbors)))
+    (first (mapv :center choke-points-to-accessible-neighbors))))
+
+(defn get-main-natural
+  "TODO: There could be more than 1 natural, but right now I'm always getting the first one"
+  [base-id game-map]
+  (let [{:keys [base area choke-points]} (get-main-geography base-id game-map)
+        accessible-neighbors (game-map/get-area-accessible-neighbors area game-map)
+        base-ids (mapv game-map/get-area-base-ids accessible-neighbors)
+        bases (mapv #(game-map/get-base-by-id game-map %) base-ids)]
+    (first bases)))
+
+(defn enough-units-to-move-out? [units]
+  (< 50 (count units)))
+
+(defn units-that-can-attack [our-units]
+  (->> our-units
+       (filterv (comp #(unit/type? % :marine)
+                      #_(complement unit/dead?)))))
+
+(defn ready-to-move-out? [our-units]
+  (-> our-units
+      units-that-can-attack
+      enough-units-to-move-out?))
 
 (defn pair-colls-randomly [coll-to-pair coll-with]
   (mapv #(vector % (rand-nth coll-with)) coll-to-pair))
 
 ;;;;
 
-(defn maybe-rally-marines [[military messages] game-map our-player our-units unit-jobs frame]
-  (let [our-main-base-id (player/starting-base our-player)
-        rally-point (first (determine-rally-point our-main-base-id game-map))
-        our-marines (filterv #(unit/type? % :marine) our-units)
-        idle-marines (filterv #(unit-jobs/unit-has-no-job? unit-jobs (unit/id %)) our-marines)
-        new-jobs (mapv #(job/init (attack-move/job (unit/id %) rally-point) frame) idle-marines)]
+(defn maybe-rally-marines [[military messages] game-map players our-units unit-jobs frame]
+  (let [units-that-can-attack (units-that-can-attack our-units)
+        their-main (enemy-starting-base military)
+        their-ramp (get-main-ramp their-main game-map)
+        our-main   (player/starting-base (player/our-player players))
+        our-ramp (get-main-ramp our-main game-map)
+        rally-point (if (or (enough-units-to-move-out? units-that-can-attack)
+                            (not-empty (->> unit-jobs
+                                            (mapv :target-position)
+                                            (filterv #(or (= % their-ramp)
+                                                          (= % their-main))))))
+                      their-main
+                      our-ramp)
+        new-jobs (mapv #(job/init (attack-move/job (unit/id %) rally-point) frame) units-that-can-attack)]
     [military new-jobs]))
-
-;;;;
-
-(defn our-units [units player] ;; where do i put this its everywhere
-  (filterv #(unit/owned-by-player? % player) units))
 
 ;;;; 
 
@@ -142,6 +189,6 @@
   (let [our-player (player/our-player players)
         our-units (our-units units our-player)
         starting-bases (game-map/starting-bases game-map)
-        [military new-scouting-jobs] (maybe-find-enemy-starting-base [military messages] our-units our-player unit-jobs frame starting-bases)
-        [military new-rally-jobs] (maybe-rally-marines [military messages] game-map our-player our-units unit-jobs frame)]
+        [military new-scouting-jobs] (maybe-find-enemy-starting-base [military messages] units our-player unit-jobs frame starting-bases)
+        [military new-rally-jobs] (maybe-rally-marines [military messages] game-map players our-units unit-jobs frame)]
     [military (into messages conj (concat (or new-scouting-jobs []) (or new-rally-jobs [])))]))
