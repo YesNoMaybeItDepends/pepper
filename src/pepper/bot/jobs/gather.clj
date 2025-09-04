@@ -22,6 +22,9 @@
 (defn frame-issued-gather-command [job]
   (:frame-issued-gather-command job))
 
+(defn mining-job? [job]
+  ((job/type? :mining) job))
+
 (defn is-gathering-minerals?! [api job]
   (let [game (api/game api)
         worker (Game/.getUnit game (job/unit-id job))

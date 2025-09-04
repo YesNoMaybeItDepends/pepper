@@ -20,7 +20,7 @@
 
 (defn barracks-completed? [our-units]
   (not-empty (->> our-units
-                  (filterv #(unit/type? % :barracks))
+                  (filterv (unit/type? :barracks))
                   (filterv :completed?))))
 
 (defn set-enemy-starting-base [military base-id]
@@ -79,7 +79,7 @@
 
 (defn see-enemy-main? [units possible-enemy-starting-bases]
   (first (->> units
-              (filterv #(unit/type? % unit-type/town-hall))
+              (filterv (unit/type? unit-type/town-hall))
               (filterv (fn [u] (some #(= % (:tile u)) possible-enemy-starting-bases)))
               (mapv :tile))))
 
@@ -142,9 +142,12 @@
   (< 50 (count units)))
 
 (defn units-that-can-attack [our-units]
-  (->> our-units
-       (filterv (comp #(unit/type? % :marine)
-                      #_(complement unit/dead?)))))
+  (transduce
+   (comp
+    (filter (complement unit/dead?))
+    (filter (unit/type? :marine)))
+   conj []
+   our-units))
 
 (defn ready-to-move-out? [our-units]
   (-> our-units
@@ -163,13 +166,19 @@
         our-main   (player/starting-base (player/our-player players))
         our-ramp (get-main-ramp our-main game-map)
         rally-point (if (or (enough-units-to-move-out? units-that-can-attack)
-                            (not-empty (->> unit-jobs
-                                            (mapv :target-position)
-                                            (filterv #(or (= % their-ramp)
-                                                          (= % their-main))))))
+                            (not-empty (transduce
+                                        (comp
+                                         (filter (job/type? :attack-move))
+                                         (filter (comp #{their-ramp their-main}
+                                                       attack-move/target-position)))
+                                        conj []
+                                        unit-jobs)))
                       their-main
                       our-ramp)
-        new-jobs (mapv #(job/init (attack-move/job (unit/id %) rally-point) frame) units-that-can-attack)]
+        units-to-rally-xf (comp (filter (complement :attack-frame?))
+                                (filter (complement :starting-attack?)))
+        units-to-rally (transduce units-to-rally-xf conj [] units-that-can-attack)
+        new-jobs (mapv #(job/init (attack-move/job (unit/id %) rally-point) frame) units-to-rally)]
     [military new-jobs]))
 
 ;;;; 

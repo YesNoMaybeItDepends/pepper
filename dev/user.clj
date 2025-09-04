@@ -57,6 +57,9 @@
     (catch RuntimeException e
       (printf "Error parsing edn file '%s': %s\n" source (.getMessage e)))))
 
+(defn selected! []
+  (first (portal/selected)))
+
 (comment
 
   (set! *print-namespace-maps* false)

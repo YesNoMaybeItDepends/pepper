@@ -57,12 +57,30 @@
              :build-tile nil
              :frame-got-build-tile nil))))
 
+(defn valid-location? [location]
+  ((complement #{bwapi.TilePosition/Invalid
+                 bwapi.TilePosition/Unknown
+                 bwapi.TilePosition/None})
+   location))
+
+(defn get-build-location
+  "TODO: other than moving this somewhere else, maybe start looking from max and recur inwards to avoid funny building locations"
+  [game building where min max]
+  (loop [n min]
+    (let [location (Game/.getBuildLocation game building where n)
+          valid? (valid-location? location)]
+      (if (or (and location
+                   valid?)
+              (<= max n))
+        location
+        (recur (inc n))))))
+
 (defn get-build-tile! [api job]
   (let [game (api/game api)
         building (unit-type/keyword->object (building job))
         worker (Game/.getUnit game (job/unit-id job))
         starting-tile (Player/.getStartLocation (Game/.self game))
-        build-tile (Game/.getBuildLocation game building starting-tile 20)]
+        build-tile (get-build-location game building starting-tile 18 20)]
     (if build-tile
       (assoc job
              :build-tile (position/->map build-tile)

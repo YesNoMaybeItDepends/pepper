@@ -47,8 +47,11 @@
 (defn type [job]
   (:job job))
 
-(defn type? [job job-type]
-  (= job-type (type job)))
+(defn type? [job-types]
+  (let [types (if (set? job-types) job-types
+                  (into #{} (flatten [job-types])))]
+    (fn [job]
+      (types (type job)))))
 
 (defn unit-id [job]
   (:unit-id job))

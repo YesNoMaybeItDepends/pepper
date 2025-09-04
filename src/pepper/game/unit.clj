@@ -28,11 +28,17 @@
 (defn type [unit]
   (:type unit))
 
-(defn type?
-  [unit unit-type]
-  (contains? (if (set? unit-type) unit-type
-                 (into #{} (flatten [unit-type])))
-             (type unit)))
+(defn type? [unit-types]
+  (let [types (if (set? unit-types) unit-types
+                  (into #{} (flatten [unit-types])))]
+    (fn [unit]
+      (types (type unit)))))
+
+(defn resources [unit]
+  (:resources unit))
+
+(defn initial-resources [unit]
+  (:initial-resources unit))
 
 (defn frame-discovered [unit]
   (:frame-discovered unit))
@@ -73,7 +79,13 @@
               :position (comp position/->map Unit/.getPosition)
               :tile (comp position/->map Unit/.getTilePosition)
               :completed? Unit/.isCompleted
-              :visible? Unit/.isVisible})
+              :visible? Unit/.isVisible
+              :attack-frame? Unit/.isAttackFrame
+              :attacking? Unit/.isAttacking
+              :starting-attack? Unit/.isStartingAttack
+              :under-attack? Unit/.isUnderAttack
+              :resources Unit/.getResources
+              :initial-resources Unit/.getInitialResources})
 
 (defn ->map
   ([unit-obj frame] (->map unit-obj frame (keys kw->val)))
@@ -87,16 +99,7 @@
    Reads a bwapi unit with a bwapi game"
   [game]
   (fn [unit]
-    (-> {}
-        (assoc :id (Unit/.getID unit))
-        (assoc :exists? (Unit/.exists unit))
-        (assoc :last-frame-updated (Game/.getFrameCount game))
-        (assoc :player-id (Player/.getID (Unit/.getPlayer unit)))
-        (assoc :type (unit-type/object->keyword (Unit/.getType unit)))
-        (assoc :idle? (Unit/.isIdle unit))
-        (assoc :position (position/->map (Unit/.getPosition unit)))
-        (assoc :tile (position/->map (Unit/.getTilePosition unit)))
-        (assoc :completed? (Unit/.isCompleted unit)))))
+    (->map unit (Game/.getFrameCount game))))
 
 (defn group-unit-by-keywords
   ([unit keywords] (group-unit-by-keywords {} unit keywords))

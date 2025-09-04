@@ -105,7 +105,7 @@
     (Game/.drawLineMap game xfrom yfrom xto yto bwapi.Color/Blue)))
 
 (defn render-build-job [job game]
-  (when (and (job/type? job :build)
+  (when (and ((job/type? :build) job)
              (build/build-tile job))
     (let [worker (.getUnit game (job/unit-id job))
           worker-pos (.getPosition worker)
@@ -119,7 +119,7 @@
       (Game/.drawBoxMap game pos1 pos2 bwapi.Color/Yellow))))
 
 (defn render-attack-move-job [job game]
-  (when (and (job/type? job :attack-move)
+  (when (and ((job/type? :attack-move) job)
              (attack-move/target-position job))
     (let [unit (.getUnit game (job/unit-id job))
           unit-position (.getPosition unit)
