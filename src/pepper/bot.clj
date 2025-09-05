@@ -124,7 +124,7 @@
     (let [unit (.getUnit game (job/unit-id job))
           unit-position (.getPosition unit)
           target-pos (position/->position (attack-move/target-position job))]
-      (Game/.drawLineMap game unit-position target-pos bwapi.Color/Red))))
+      #_(Game/.drawLineMap game unit-position target-pos bwapi.Color/Red))))
 
 (defn filter-jobs-to-render [unit-jobs]
   (->> unit-jobs

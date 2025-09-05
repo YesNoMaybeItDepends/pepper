@@ -5,7 +5,8 @@
    [pepper.game.map :as map]
    [pepper.game.player :as player]
    [pepper.game.position :as position]
-   [pepper.game.unit :as unit])
+   [pepper.game.unit :as unit]
+   [clojure.string :as str])
   (:import
    [bwapi BWClient Game]))
 
@@ -23,6 +24,12 @@
 
 (defn set-latency-time [game latency-time]
   (assoc game :latency-time latency-time))
+
+(defn set-elapsed-time [game elapsed-time]
+  (assoc game :elapsed-time elapsed-time))
+
+(defn elapsed-time [game]
+  (:elapsed-time game))
 
 (defn set-latency-remaining-frames [game latency-remaining-frames]
   (assoc game :latency-remaining-frames latency-remaining-frames))
@@ -105,12 +112,14 @@
         bwem (api/bwem api)]
     (-> {}
         (set-frame (Game/.getFrameCount game))
+        (set-elapsed-time (or (Game/.elapsedTime game) 0))
         (set-players-by-id (mapv (player/parse-player! game) (Game/.getPlayers game))) ;; these players are not by id lol, fix this, look at update-on-start
         (set-map (map/parse-map-on-start! bwem)))))
 
-(defn update-on-start [{:as game :or {}} {:keys [frame players-by-id map]}]
+(defn update-on-start [{:as game :or {}} {:keys [frame players-by-id map elapsed-time]}]
   (-> game
       (set-frame frame)
+      (set-elapsed-time elapsed-time)
       (update :players-by-id update-players-by-id players-by-id)
       (set-map map)))
 
@@ -124,6 +133,7 @@
         (set-latency-time (Game/.getLatencyTime game))
         (set-latency-remaining-frames (Game/.getRemainingLatencyFrames game))
         (set-latency-remaining-time (Game/.getRemainingLatencyTime game))
+        (set-elapsed-time (Game/.elapsedTime game))
         (set-players-by-id (map (player/parse-player! game) (Game/.getPlayers game)))
         (set-units (map (unit/parse-unit! game) (Game/.getAllUnits game))))))
 
@@ -133,6 +143,7 @@
                                     latency-time
                                     latency-remaining-frames
                                     latency-remaining-time
+                                    elapsed-time
                                     players-by-id units-by-id]}]
   (-> game
       (set-frame frame)
@@ -141,6 +152,7 @@
       (set-latency-time latency-time)
       (set-latency-remaining-frames latency-remaining-frames)
       (set-latency-remaining-time latency-remaining-time)
+      (set-elapsed-time elapsed-time)
       (update :players-by-id update-players-by-id players-by-id)
       (update :units-by-id update-units-by-id units-by-id)))
 
@@ -160,6 +172,9 @@
   (api-game/draw-text-screen
    (api/game api) 0 0
    (str "Frame: " (frame game)))
+  (api-game/draw-text-screen
+   (api/game api) 0 10
+   (str "Elapsed time: " (elapsed-time game)))
   (render-units! (units game) (api/game api)))
 
 (defn update-on-unit-event [game [event-id {unit :unit}] api]

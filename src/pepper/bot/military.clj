@@ -169,7 +169,7 @@
                             (not-empty (transduce
                                         (comp
                                          (filter (job/type? :attack-move))
-                                         (filter (comp #{their-ramp their-main}
+                                         (filter (comp (conj #{} their-ramp their-main)
                                                        attack-move/target-position)))
                                         conj []
                                         unit-jobs)))
