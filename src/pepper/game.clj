@@ -168,14 +168,26 @@
           (api-game/draw-text-map game x y (str unit-id))
           (api-game/draw-text-map game x (+ y 10) (str "-> " unit-id)))))))
 
+(defn clock [seconds]
+  (let [seconds (or seconds 0)
+        minutes (quot seconds 60)
+        seconds (mod seconds 60)
+        format (fn [n] (format "%02d" n))]
+    (->> [minutes seconds]
+         (map format)
+         (str/join ":"))))
+
+(defn render-top-left! [api strings]
+  (api-game/draw-text-screen
+   (api/game api) 0 0 (str/join "\n" strings)))
+
 (defn render-game! [game api]
-  (api-game/draw-text-screen
-   (api/game api) 0 0
-   (str "Frame: " (frame game)))
-  (api-game/draw-text-screen
-   (api/game api) 0 10
-   (str "Elapsed time: " (elapsed-time game)))
-  (render-units! (units game) (api/game api)))
+  (let [format-fn (fn [[k v]] [(str k " " v)])
+        display {:frame (frame game)
+                 :clock (clock (elapsed-time game))}]
+    (render-top-left!
+     api (mapcat format-fn display))
+    (render-units! (units game) (api/game api))))
 
 (defn update-on-unit-event [game [event-id {unit :unit}] api]
   (let [frame (Game/.getFrameCount (api/game api))]
