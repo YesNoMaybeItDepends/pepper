@@ -3,7 +3,8 @@
   (:require
    [clojure.set :as sql]
    [clojure.string :as str]
-   [pepper.game.resources :as resources])
+   [pepper.game.resources :as resources]
+   [pepper.game.position :as position])
   (:import
    [bwapi UnitType]))
 
@@ -50,3 +51,30 @@
     (resources/quantity (UnitType/.mineralPrice object)
                         (UnitType/.gasPrice object)
                         (UnitType/.supplyRequired object))))
+
+(defn height [unit-type]
+  (-> (keyword->object unit-type)
+      UnitType/.height))
+
+(defn tile-height [unit-type]
+  (-> (keyword->object unit-type)
+      UnitType/.tileHeight))
+
+(defn width [unit-type]
+  (-> (keyword->object unit-type)
+      UnitType/.width))
+
+(defn tile-width [unit-type]
+  (-> (keyword->object unit-type)
+      UnitType/.tileWidth))
+
+(defn tile-size [unit-type]
+  (let [unit-obj (keyword->object unit-type)]
+    (-> (keyword->object unit-type)
+        UnitType/.tileSize
+        position/->map)))
+
+;; TODO: unit size to kw '(:large :small etc)
+;; (defn unit-size [unit-type] 
+;;   (-> (keyword->object unit-type)
+;;       UnitType/.size))
