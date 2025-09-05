@@ -71,9 +71,16 @@
         some-worker (get-idle-or-mining-worker workers unit-jobs)
         barracks (filterv (unit/type? :barracks) our-units)
         got-enough? (<= 6 (count barracks))
-        already-building? (already-building? :barracks unit-jobs)]
+        current-barracks-jobs (transduce
+                               (comp
+                                (filter (comp #{:build} :job))
+                                (filter (comp #{:barracks} build/building)))
+                               conj
+                               []
+                               unit-jobs)]
     (if (and (not got-enough?)
-             (not already-building?)
+             (< (count current-barracks-jobs)
+                2)
              some-worker
              can-afford?)
       (->result macro (job/init (build/job (unit/id some-worker) :barracks) frame))
@@ -93,10 +100,9 @@
     (if (or (and need-supply?
                  can-afford?
                  (< (count current-supply-jobs) 1))
-            (and need-supply?
-                 can-afford?
-                 (< (count current-supply-jobs) 2)
-                 (<= 4 (count barracks))))
+            (and can-afford?
+                 (< (count current-supply-jobs) 1)
+                 (<= 1 (count barracks))))
       (let [worker (get-idle-or-mining-worker workers unit-jobs)
             new-job (job/init (build/job (unit/id worker) :supply-depot) frame)]
         (->result macro new-job))
