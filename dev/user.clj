@@ -44,19 +44,6 @@
 (stop-portal! system)
 (init-portal! system)
 
-(defn load-edn
-  "Load edn from an io/reader source (filename or io/resource)."
-  [source]
-  (try
-    (with-open [r (clojure.java.io/reader source)]
-      (edn/read {:readers {'mulog/flake com.brunobonacci.mulog.flakes/read-method}
-                 :default (fn [t v] :no....)} (java.io.PushbackReader. r)))
-
-    (catch java.io.IOException e
-      (printf "Couldn't open '%s': %s\n" source (.getMessage e)))
-    (catch RuntimeException e
-      (printf "Error parsing edn file '%s': %s\n" source (.getMessage e)))))
-
 (defn selected! []
   (first (portal/selected)))
 
@@ -93,36 +80,12 @@
 
   (do (dev/pause-game!)
       (tap> (dev/pepper!)))
-
   (dev/resume-game!)
 
-  ;; logs
-
-  (mu/log :tap :state (logging/format-state (dev/pepper!)))
-  (tap> (logging/format-state (dev/pepper!)))
-
-  (def x (load-edn (fs/file (last (fs/list-dir ".logs")))))
-  (tap> (last x))
-
-  (def x (:state (load-edn ".logs/1756728273095.log")))
-  (tap> x)
-
-  ;; misc 2
+  ;; 
 
   (defn reset-jobs! [pepper-ref]
     (swap! pepper-ref update-in [:bot :unit-jobs] {}))
-
-  ;; (defn tap-unit-id [unit-id]
-  ;;   (let [pepper (pepper)]
-  ;;     {:unit-job-record (user.portal/tap-unit-job unit-id)
-  ;;      :unit (get-in pepper [:game :units-by-id unit-id])
-  ;;      :unit-job (get-in pepper [:bot :unit-jobs unit-id])}))
-
-  @user.portal/jobs-by-unit-id
-  (tap> @user.portal/jobs-by-unit-id)
-
-  (user.portal/tap-unit-job 171)
-  ;; (tap-unit-id 171)
 
   #_())
 
