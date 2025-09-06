@@ -29,10 +29,11 @@
         trainee (Unit/.getBuildUnit trainer)
         frame-issued-train-command (frame-issued-train-command job)]
     (if (some? trainee)
-      (assoc job
-             :requested-id (Unit/.getID trainee)
-             :frame-got-trainee-id frame
-             :action training-completed?!)
+      (-> job
+          (assoc :requested-id (Unit/.getID trainee))
+          (assoc :frame-got-trainee-id frame)
+          (assoc :action training-completed?!)
+          (job/set-cost-paid frame))
       (if (train-command-dropped? trainee frame frame-issued-train-command)
         (job/set-completed job)
         job))))
@@ -53,6 +54,7 @@
 (defn job [unit-id unit-type]
   {:job :train
    :requested unit-type
+   :cost (unit-type/cost unit-type)
    :action train!
    :unit-id unit-id})
 

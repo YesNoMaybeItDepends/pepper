@@ -61,6 +61,9 @@
 (defn visible? [unit]
   (:visible unit))
 
+(defn set-dead [unit frame]
+  (assoc unit :frame-destroyed frame))
+
 (defn dead? [unit]
   (:frame-destroyed unit))
 

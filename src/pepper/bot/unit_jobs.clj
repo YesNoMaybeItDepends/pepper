@@ -1,6 +1,7 @@
 (ns pepper.bot.unit-jobs
   (:require
    [pepper.bot.job :as job]
+   [pepper.game.resources :as resources]
    [pepper.game.unit :as unit]))
 
 (defn get-job-by-unit-id [unit-jobs unit-id]
@@ -28,6 +29,16 @@
 
 (defn unit-has-no-job? [jobs unit-id]
   ((complement unit-has-job?) jobs unit-id))
+
+(defn total-cost [jobs]
+  (->> jobs
+       (transduce
+        (comp
+         (filter job/cost)
+         (filter (complement job/cost-paid?))
+         (map job/cost))
+        (completing resources/sum-quantities)
+        [0 0 0])))
 
 (defn execute-jobs! [unit-jobs api]
   (reduce-kv

@@ -21,7 +21,7 @@
              :frame-issued-attack-move-command frame
              :action yay!)
       (do
-        (println "Can attack move? "  (Unit/.canAttackMove unit))
+        (println "Can attack move? "  (job/unit-id job) (Unit/.canAttackMove unit))
         job))))
 
 (defn job [unit-id target-position]

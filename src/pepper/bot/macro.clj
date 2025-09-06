@@ -5,6 +5,7 @@
    [pepper.bot.jobs.train :as train]
    [pepper.bot.macro.auto-supply :as auto-supply]
    [pepper.bot.macro.mining :as mining]
+   [pepper.bot.unit-jobs :as unit-jobs]
    [pepper.game.player :as player]
    [pepper.game.resources :as resources]
    [pepper.game.unit :as unit]
@@ -63,9 +64,15 @@
 (defn already-building? [building unit-jobs]
   (some #(#{building} (build/building %)) unit-jobs))
 
+(defn budget [our-player unit-jobs]
+  (resources/combine-quantities
+   -
+   (player/resources-available our-player)
+   (unit-jobs/total-cost unit-jobs)))
+
 (defn maybe-build-barracks [[macro messages] our-units our-player unit-jobs frame]
   (let [workers (workers our-units)
-        budget (player/resources-available our-player)
+        budget (budget our-player unit-jobs)
         cost (unit-type/cost :barracks)
         can-afford? (resources/can-afford? budget cost)
         some-worker (get-idle-or-mining-worker workers unit-jobs)
@@ -118,7 +125,7 @@
         trainer-types (set (keys trains))
         trainers (idle-units (filterv (unit/type? trainer-types) our-units)
                              unit-jobs)
-        budget (player/resources-available our-player)
+        budget (budget our-player unit-jobs)
         [remaining-budget new-training-jobs] (reduce
                                               (fn [[budget jobs] trainer]
                                                 (let [to-train ((unit/type trainer) trains)
@@ -148,7 +155,13 @@
   (let [our-player (player/our-player players)
         our-units (our-units units our-player)
         workers (workers our-units)
-        mineral-fields (mineral-fields units)
+        mineral-fields (transduce
+                        (comp
+                         (filter (every-pred :completed? :visible?
+                                             (unit/type? unit-type/mineral-field))))
+                        conj
+                        []
+                        units)
         [macro new-mining-jobs] (handle-idle-workers [macro messages] workers mineral-fields unit-jobs frame)
         [macro new-training-jobs] (maybe-train-units [macro messages] our-units our-player unit-jobs frame)
         [macro new-building-jobs] (maybe-build-supply [macro messages] our-units our-player unit-jobs frame)

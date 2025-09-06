@@ -24,20 +24,44 @@
 (defn frame-started-building [job]
   (:frame-started-building job))
 
+(defn building-id [job]
+  (:building-id job))
+
+(defn valid-location? [location]
+  ((complement #{bwapi.TilePosition/Invalid
+                 bwapi.TilePosition/Unknown
+                 bwapi.TilePosition/None})
+   location))
+
 (declare get-build-tile!)
 (declare go-build!)
 
-(defn is-building?! [api job]
+(defn building-completed?! [api job]
   (let [game (api/game api)
+        frame (Game/.getFrameCount game)
         worker (Game/.getUnit game (job/unit-id job))
-        started? (frame-started-building job)
-        building? (Unit/.isConstructing worker)
-        status [started? building?]]
+        worker-constructing? (Unit/.isConstructing worker)
+        building (Game/.getUnit game (building-id job))
+        building-completed? (Unit/.isCompleted building)]
     (cond
-      (job/started-working? status) (assoc job :frame-started-building (Game/.getFrameCount game))
-      (job/stopped-working? status) (job/set-completed job)
-      (job/is-working? status) job
-      :else (job/set-completed job)))) ;; something went wrong
+      (or building-completed?
+          (not worker-constructing?)) (job/set-completed job)
+      :else job)))
+
+(defn get-building-id! [api job]
+  (let [game (api/game api)
+        frame (Game/.getFrameCount game)
+        worker (Game/.getUnit game (job/unit-id job))
+        building? (Unit/.isConstructing worker)
+        building (Unit/.getBuildUnit worker)]
+    (cond
+      (not building?) (job/set-completed job)
+      (some? building) (-> job
+                           (job/set-cost-paid frame)
+                           (assoc :frame-started-building frame)
+                           (assoc :building-id (Unit/.getID building))
+                           (assoc :action #'building-completed?!))
+      :else job)))
 
 (defn go-build! [api job]
   (let [game (api/game api)
@@ -49,19 +73,13 @@
     (if can-build?
       (do (Unit/.build worker building tile)
           (assoc job
-                 :action #'is-building?!
+                 :action #'get-building-id!
                  :frame-issued-build-command frame))
       (assoc job
              :times-retried ((fnil inc 0) (:times-retried job))
              :action #'get-build-tile!
              :build-tile nil
              :frame-got-build-tile nil))))
-
-(defn valid-location? [location]
-  ((complement #{bwapi.TilePosition/Invalid
-                 bwapi.TilePosition/Unknown
-                 bwapi.TilePosition/None})
-   location))
 
 (defn get-build-location
   "TODO: other than moving this somewhere else, maybe start looking from max and recur inwards to avoid funny building locations"
@@ -91,5 +109,6 @@
 (defn job [unit-id unit-type]
   {:job :build
    :building unit-type
+   :cost (unit-type/cost unit-type)
    :action #'get-build-tile!
    :unit-id unit-id})

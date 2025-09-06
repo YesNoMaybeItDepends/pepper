@@ -52,6 +52,10 @@
                         (UnitType/.gasPrice object)
                         (UnitType/.supplyRequired object))))
 
+(defn building? [unit-type]
+  (-> (keyword->object unit-type)
+      UnitType/.isBuilding))
+
 (defn height [unit-type]
   (-> (keyword->object unit-type)
       UnitType/.height))

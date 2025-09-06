@@ -4,13 +4,11 @@
    [pepper.bot.jobs.attack-move :as attack-move]
    [pepper.bot.jobs.find-enemy-starting-base :as find-enemy-starting-base]
    [pepper.bot.macro :as macro]
-   [pepper.bot.unit-jobs :as unit-jobs]
    [pepper.game.map :as game-map]
    [pepper.game.map.area :as area]
    [pepper.game.player :as player]
    [pepper.game.unit :as unit]
-   [pepper.game.unit-type :as unit-type]
-   [pepper.game.position :as position]))
+   [pepper.game.unit-type :as unit-type]))
 
 (defn find-enemy-starting-base-jobs [unit-jobs]
   (filterv #(= (:job %) :find-enemy-starting-base) unit-jobs))
@@ -51,7 +49,7 @@
 (defn swarm-rally-position [military]
   (:swarm-rally-position military))
 
-(defn our-units [units player] ;; where do i put this its everywhere
+(defn player-units [units player] ;; where do i put this its everywhere
   (filterv #(unit/owned-by-player? % player) units))
 
 (defn possible-enemy-starting-bases [military our-player all-starting-bases]
@@ -81,10 +79,11 @@
   (first (->> units
               (filterv (unit/type? unit-type/town-hall))
               (filterv (fn [u] (some #(= % (:tile u)) possible-enemy-starting-bases)))
+              (filterv (comp not unit/dead?))
               (mapv :tile))))
 
 (defn maybe-try-find-enemy-starting-base [[military messages] units our-player unit-jobs frame starting-bases]
-  (let [our-units (our-units units our-player)
+  (let [our-units (player-units units our-player)
         barracks-completed? (barracks-completed? our-units)
         already-scouting? (already-scouting? unit-jobs)
         some-available-worker (macro/get-idle-or-mining-worker (macro/workers our-units) unit-jobs)
@@ -159,8 +158,12 @@
 
 ;;;;
 
-(defn maybe-rally-marines [[military messages] game-map players our-units unit-jobs frame]
-  (let [units-that-can-attack (units-that-can-attack our-units)
+(defn maybe-rally-marines [[military messages] game-map players units unit-jobs frame]
+  (let [our-units (filterv :completed? (player-units units (player/our-player players)))
+        their-units (player-units units (player/enemy-player players))
+        units-to-kill (filterv #(not (unit/dead? %)) their-units)
+        buildings-to-kill (filterv #(unit-type/building? (unit/type %)) units-to-kill)
+        units-that-can-attack (units-that-can-attack our-units)
         their-main (enemy-starting-base military)
         their-ramp (get-main-ramp their-main game-map)
         our-main   (player/starting-base (player/our-player players))
@@ -173,7 +176,9 @@
                                                        attack-move/target-position)))
                                         conj []
                                         unit-jobs)))
-                      their-main
+                      (if (some #(#{their-main} (unit/tile %)) buildings-to-kill)
+                        their-main
+                        (:tile (first buildings-to-kill)))
                       our-ramp)
         units-to-rally-xf (comp (filter (complement :attack-frame?))
                                 (filter (complement :starting-attack?)))
@@ -196,8 +201,7 @@
 
 (defn update-on-frame [[military messages] {:keys [units players frame game-map unit-jobs]}]
   (let [our-player (player/our-player players)
-        our-units (our-units units our-player)
         starting-bases (game-map/starting-bases game-map)
         [military new-scouting-jobs] (maybe-find-enemy-starting-base [military messages] units our-player unit-jobs frame starting-bases)
-        [military new-rally-jobs] (maybe-rally-marines [military messages] game-map players our-units unit-jobs frame)]
+        [military new-rally-jobs] (maybe-rally-marines [military messages] game-map players units unit-jobs frame)]
     [military (into messages conj (concat (or new-scouting-jobs []) (or new-rally-jobs [])))]))

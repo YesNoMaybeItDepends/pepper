@@ -58,7 +58,7 @@
                 macro
                 military
                 unit-jobs]} bot
-        data {:units (filterv (every-pred :completed? :visible?) (game/units game))
+        data {:units (game/units game)
               :players (game/players game)
               :frame (game/frame game)
               :game-map (game/get-map game)

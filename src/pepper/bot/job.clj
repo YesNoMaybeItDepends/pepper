@@ -35,6 +35,18 @@
 (defn not-run? [job]
   ((complement run?) job))
 
+(defn set-cost [job cost]
+  (assoc job :cost cost))
+
+(defn cost [job]
+  (:cost job))
+
+(defn set-cost-paid [job frame]
+  (assoc job :frame-cost-paid frame))
+
+(defn cost-paid? [job]
+  (:frame-cost-paid job))
+
 (defn validate-job [job]
   (assert (:action job) "job requires an action")
   job)

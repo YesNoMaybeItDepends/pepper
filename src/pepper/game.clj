@@ -179,7 +179,7 @@
 
 (defn render-top-left! [api strings]
   (api-game/draw-text-screen
-   (api/game api) 0 0 (str/join "\n" strings)))
+   (api/game api) 2 0 (str/join "\n" strings)))
 
 (defn render-game! [game api]
   (let [format-fn (fn [[k v]] [(str k " " v)])
