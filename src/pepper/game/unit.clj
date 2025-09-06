@@ -58,6 +58,9 @@
 (defn update-unit [unit new-unit]
   (merge unit new-unit))
 
+(defn completed? [unit]
+  (:completed? unit))
+
 (defn visible? [unit]
   (:visible unit))
 

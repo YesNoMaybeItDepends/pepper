@@ -159,7 +159,7 @@
 ;;;;
 
 (defn maybe-rally-marines [[military messages] game-map players units unit-jobs frame]
-  (let [our-units (filterv :completed? (player-units units (player/our-player players)))
+  (let [our-units (filterv unit/completed? (player-units units (player/our-player players)))
         their-units (player-units units (player/enemy-player players))
         units-to-kill (filterv #(not (unit/dead? %)) their-units)
         buildings-to-kill (filterv #(unit-type/building? (unit/type %)) units-to-kill)

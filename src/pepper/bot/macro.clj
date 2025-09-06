@@ -87,7 +87,7 @@
                                unit-jobs)]
     (if (and (not got-enough?)
              (< (count current-barracks-jobs)
-                2)
+                1)
              some-worker
              can-afford?)
       (->result macro (job/init (build/job (unit/id some-worker) :barracks) frame))
@@ -109,7 +109,7 @@
                  (< (count current-supply-jobs) 1))
             (and can-afford?
                  (< (count current-supply-jobs) 1)
-                 (<= 1 (count barracks))))
+                 (<= 2 (count barracks))))
       (let [worker (get-idle-or-mining-worker workers unit-jobs)
             new-job (job/init (build/job (unit/id worker) :supply-depot) frame)]
         (->result macro new-job))
