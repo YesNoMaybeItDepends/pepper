@@ -190,21 +190,26 @@
     (render-units! (units game) (api/game api))))
 
 (defn update-on-unit-event [game [event-id {unit :unit}] api]
-  (let [frame (Game/.getFrameCount (api/game api))]
-    (update game :units-by-id update-units-by-id
-            [(merge (unit/->map unit frame)
-                    (case event-id
-                      :on-unit-complete {:fame-completed frame}
-                      :on-unit-create {:frame-created frame}
-                      :on-unit-destroy {:frame-destroyed frame
-                                        :visible? false
-                                        :exists? false}
-                      :on-unit-discover {:frame-discovered frame ;; discover / show / hide ?
-                                         :visible? true}
-                      :on-unit-evade {:frame-evaded frame}
-                      :on-unit-hide {:frame-hidden frame
-                                     :visible? false} ;; discover / show / hide ?
-                      :on-unit-morph {:frame-morphed frame}
-                      :on-unit-renegade {:frame-renegade frame}
-                      :on-unit-show {:frame-shown frame ;; discover / show / hide ?
-                                     :visible? true}))])))
+  (let [frame (Game/.getFrameCount (api/game api))
+        with-some-data (fn [u]
+                         (merge
+                          u (if (:visible? u)
+                              (unit/->map unit frame [:id :type :player-id :position :tile])
+                              (unit/->map unit frame [:id :initial-type :initial-position :initial-resources]))))
+        u (-> (merge {} (case event-id
+                          :on-unit-complete {:fame-completed frame}
+                          :on-unit-create {:frame-created frame}
+                          :on-unit-destroy {:frame-destroyed frame
+                                            :visible? false
+                                            :exists? false}
+                          :on-unit-discover {:frame-discovered frame ;; discover / show / hide ?
+                                             :visible? true}
+                          :on-unit-evade {:frame-evaded frame}
+                          :on-unit-hide {:frame-hidden frame
+                                         :visible? false} ;; discover / show / hide ?
+                          :on-unit-morph {:frame-morphed frame}
+                          :on-unit-renegade {:frame-renegade frame}
+                          :on-unit-show {:frame-shown frame ;; discover / show / hide ?
+                                         :visible? true}))
+              with-some-data)]
+    (update game :units-by-id update-units-by-id [u])))

@@ -41,6 +41,7 @@
   [state]
   (-> state
       (dissoc :api)
+      (assoc-in [:game :map :mini-tiles] :pls)
       (update-in [:bot :unit-jobs]
                  (fn [unit-jobs] (update-vals unit-jobs
                                               (fn [unit-job] (update unit-job :action str)))))))
