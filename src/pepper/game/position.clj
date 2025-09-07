@@ -52,6 +52,22 @@
 (defn ->tile-position [{:keys [x y scale]}]
   (apply TilePosition/new (mapv (convert scale :tile-position) [x y])))
 
+(defn _->position [{:keys [x y scale] :as pos}]
+  (merge pos (zipmap [:x :y] (mapv (convert scale :position) [x y]))))
+
+(defn _->walk-position [{:keys [x y scale] :as pos}]
+  (merge pos (zipmap [:x :y] (mapv (convert scale :walk-position) [x y]))))
+
+(defn _->tile-position [{:keys [x y scale] :as pos}]
+  (merge pos (zipmap [:x :y] (mapv (convert scale :tile-position) [x y]))))
+
+(defn ->obj [{:keys [x y scale]}]
+  (->> [x y]
+       (apply (case scale
+                :position Position/new
+                :tile-position TilePosition/new
+                :walk-position WalkPosition/new))))
+
 (defn + [{x1 :x y1 :y :as pos1}
          {x2 :x y2 :y :as pos2}]
   (assoc pos1

@@ -28,11 +28,20 @@
 (defn type [unit]
   (:type unit))
 
+(defn initial-type [unit]
+  (:initial-type unit))
+
 (defn type? [unit-types]
   (let [types (if (set? unit-types) unit-types
                   (into #{} (flatten [unit-types])))]
     (fn [unit]
       (types (type unit)))))
+
+(defn initial-type? [unit-types]
+  (let [types (if (set? unit-types) unit-types
+                  (into #{} (flatten [unit-types])))]
+    (fn [unit]
+      (types (initial-type unit)))))
 
 (defn resources [unit]
   (:resources unit))
@@ -91,6 +100,7 @@
               :starting-attack? Unit/.isStartingAttack
               :under-attack? Unit/.isUnderAttack
               :resources Unit/.getResources
+              :initial-position (comp position/->map Unit/.getInitialPosition)
               :initial-resources Unit/.getInitialResources})
 
 (defn ->map

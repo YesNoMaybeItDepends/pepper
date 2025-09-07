@@ -60,13 +60,10 @@
 (defn start-pepper!
   "Runs both Starcraft (through Chaoslauncher) and the bot
    TODO: maybe I shouldn't call this directly, and dev should only expose dev.main? "
-  ([] (start-pepper! {}))
-  ([opts]
-   (main (merge (api-config) opts))
-   ;;  (try
+  ([] (main (merge (api-config) {}))))
 
-   ;;    (catch Exception e (println e)))
-   ))
+(defn start-pepper-async! []
+  (main (merge (api-config) {:async? true})))
 
 (defn stop-pepper! []
   (try

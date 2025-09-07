@@ -53,7 +53,7 @@
    :bases (mapv ->id (Area/.getBases area))
    :choke-point-ids (mapv ->id (Area/.getChokePoints area))
    :accessible-neighbor-ids (mapv ->id (Area/.getAccessibleNeighbors area))
-   :top-left-tile (position/->map (Area/.getTop area))
+   :top-left-tile (position/->map (Area/.getTopLeft area))
    :bottom-right-tile (position/->map (Area/.getBottomRight area))
    :highest-altitude (Altitude/.intValue (Area/.getHighestAltitude area))
    :lowest-altitude (Altitude/.intValue (Area/.getHighestAltitude area))})
@@ -61,12 +61,52 @@
 (defn parse-starting-bases-on-start! [map]
   (mapv ->id (BWMap/.getStartingLocations map)))
 
+(defn parse-map-data! [map-data]
+  {:pixel-size (position/->map (.getPixelSize map-data))
+   :tile-size (position/->map (.getTileSize map-data))
+   :walk-size (position/->map (.getWalkSize map-data))
+   :center-position (position/->map (.getCenter map-data))})
+
+(defn parse-mini-tile! [mini-tile]
+  {:lake (.isLake mini-tile)
+   :sea (.isSea mini-tile)
+   :terrain (.isTerrain mini-tile)
+   :walkable (.isWalkable mini-tile)
+   :area-id (.intValue (.getAreaId mini-tile))
+   :altitude (.intValue (.getAltitude mini-tile))})
+
+(defn get-mini-tile! [terrain-data x y]
+  (.getMiniTile terrain-data (bwapi.WalkPosition. x y)))
+
+(defn set-mini-tile!
+  [terrain-data]
+  (fn [m [x y]]
+    (assoc m [x y] (-> (get-mini-tile! terrain-data x y)
+                       parse-mini-tile!))))
+
+(defn set-mini-tile-columns! [y terrain-data]
+  (fn [m x]
+    (let [[xs ys] (if (< x y)
+                    [(repeat x) (range y)]
+                    [(range x) (repeat y)])]
+      (reduce (set-mini-tile! terrain-data) m (mapv vector xs ys)))))
+
+(defn parse-mini-tiles! [x y terrain-data]
+  (reduce (set-mini-tile-columns! y terrain-data) {} (range x)))
+
+(defn parse-terrain-data! [terrain-data]
+  (let [map-data (parse-map-data! (.getMapData terrain-data))
+        {:keys [x y]} (:walk-size map-data)]
+    {:map-data map-data
+     :mini-tiles (parse-mini-tiles! x y terrain-data)}))
+
 (defn parse-map-on-start! [bwem]
   (let [map (BWEM/.getMap bwem)]
-    {:areas (reduce-by-id (mapv parse-area-on-start! (BWMap/.getAreas map)))
-     :choke-points (reduce-by-id (mapv parse-choke-point-on-start! (BWMap/.getChokePoints map)))
-     :bases (reduce-by-id (mapv parse-base-on-start! (BWMap/.getBases map)))
-     :starting-bases (parse-starting-bases-on-start! map)}))
+    (-> {:areas (reduce-by-id (mapv parse-area-on-start! (BWMap/.getAreas map)))
+         :choke-points (reduce-by-id (mapv parse-choke-point-on-start! (BWMap/.getChokePoints map)))
+         :bases (reduce-by-id (mapv parse-base-on-start! (BWMap/.getBases map)))
+         :starting-bases (parse-starting-bases-on-start! map)}
+        (merge (parse-terrain-data! (BWMap/.getData map))))))
 
 (defn starting-bases [map]
   (:starting-bases map))

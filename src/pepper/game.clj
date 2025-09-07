@@ -192,7 +192,7 @@
 (defn update-on-unit-event [game [event-id {unit :unit}] api]
   (let [frame (Game/.getFrameCount (api/game api))]
     (update game :units-by-id update-units-by-id
-            [(merge (unit/->map unit frame [:id])
+            [(merge (unit/->map unit frame)
                     (case event-id
                       :on-unit-complete {:fame-completed frame}
                       :on-unit-create {:frame-created frame}

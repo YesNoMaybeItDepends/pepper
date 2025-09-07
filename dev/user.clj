@@ -6,7 +6,7 @@
    [clojure.string :as str]
    [portal.api :as portal]
    [pepper.dev :as dev]
-   [pepper.utils.logging :as logging]
+   [pepper.utils.logging :as logs]
    [user.portal :as user.portal]
    [clojure.edn :as edn]
    [com.brunobonacci.mulog :as mu]
@@ -56,13 +56,14 @@
 
   ;; start / stop
 
-  (dev/start-pepper! {:async? true})
+  (dev/start-pepper-async!)
   dev/bot
   (future-done? dev/bot)
   (future-cancelled? dev/bot)
   (future-cancel dev/bot)
 
   (dev/start-pepper!)
+  (dev/start-pepper-async!)
   (dev/stop-pepper!)
 
   ;; pepper
@@ -91,15 +92,17 @@
 
 (comment ;; quill
 
-  (def my-sketch (drawing/sketch))
-  (def my-sketch nil)
-  my-sketch
+  (def last-state (logs/state-from-last-log-file!))
+  (def sketch (drawing/sketch last-state))
+  (def sketch nil)
+
+  sketch
 
   (use 'user.drawing :reload)
-  (qa/with-applet user/my-sketch (q/start-loop))
-  (qa/with-applet user/my-sketch (q/exit))
-  (qa/with-applet user/my-sketch (q/random 10))
-  (qa/with-applet user/my-sketch (q/no-loop))
-  (qa/with-applet user/my-sketch (q/start-loop))
+  (qa/with-applet user/sketch (q/start-loop))
+  (qa/with-applet user/sketch (q/exit))
+  (qa/with-applet user/sketch (q/random 10))
+  (qa/with-applet user/sketch (q/no-loop))
+  (qa/with-applet user/sketch (q/start-loop))
 
   #_())
