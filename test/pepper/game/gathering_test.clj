@@ -40,7 +40,7 @@
 
 ;;     (testing "We can assign a unit a new mining job"
 ;;       (is (= (jobs/assign-unit-job {} (gather/mining-job [1 2]))
-;;              {:unit-jobs {1 {:job :mining
+;;              {:unit-jobs {1 {:job :gather
 ;;                              :action gather/go-mine!
 ;;                              :unit-id 1
 ;;                              :mineral-field-id 2}}})))
@@ -74,7 +74,7 @@
 ;;                                    2 {:id 2
 ;;                                       :type :mineral-field
 ;;                                       :idle? true}}
-;;                      :unit-jobs {1 {:job :mining
+;;                      :unit-jobs {1 {:job :gather
 ;;                                     :action gather/go-mine!
 ;;                                     :unit-id 1
 ;;                                     :mineral-field-id 2}}}]

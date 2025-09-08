@@ -34,7 +34,7 @@
 ;;   ([] (mining-job {}))
 ;;   ([opts]
 ;;    (gen/hash-map
-;;     :job (gen/return :mining)
+;;     :job (gen/return :gather)
 ;;     :unit-id gen/nat
 ;;     :mineral-field-id gen/nat
 ;;     :frame-started-gathering-minerals gen/nat
