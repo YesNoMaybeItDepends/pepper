@@ -10,6 +10,7 @@
    [pepper.game.map :as game-map]
    [pepper.game.player :as player]
    [pepper.game.resources :as resources]
+   [pepper.game.ability :as tech]
    [pepper.game.unit :as unit]
    [pepper.game.unit-type :as unit-type]))
 
@@ -167,7 +168,9 @@
 
 (defn maybe-research [[macro messages] units our-player unit-jobs frame]
   (let [our-units (filterv unit/exists? (our-units units our-player))
-        academy? (some? (first (filterv (unit/type? :academy) our-units)))]
+        academy? (some? (first (filterv (unit/type? :academy) our-units)))
+        want {:stim-packs :money}
+        researches (into [] conj (tech/researches academy?))]
     (->result macro)))
 
 (defn maybe-train-units [[macro messages] units our-player unit-jobs frame]

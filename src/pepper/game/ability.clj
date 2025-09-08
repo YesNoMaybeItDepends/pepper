@@ -1,4 +1,4 @@
-(ns pepper.game.tech
+(ns pepper.game.ability
   (:require
    [clojure.set :as sql]
    [clojure.string :as str]
@@ -54,7 +54,7 @@
 
 (defn energy-cost [kw]
   (-> kw kw->obj TechType/.energyCost))
-
+(keys by-keyword)
 ;; getWeapon
 ;; getRace
 ;; researchTime
