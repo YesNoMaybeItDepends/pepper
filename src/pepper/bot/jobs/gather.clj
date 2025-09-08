@@ -5,16 +5,16 @@
   (:import
    [bwapi Game Unit]))
 
-(declare go-mine!)
+(declare go-gather!)
 
-(defn mineral-field-id [job]
-  (:mineral-field-id job))
+(defn target-id [job]
+  (:target-id job))
 
-(defn set-frame-started-gathering-minerals [job frame]
-  (assoc job :frame-started-gathering-minerals frame))
+(defn set-frame-started-gathering [job frame]
+  (assoc job :frame-started-gathering frame))
 
-(defn frame-started-gathering-minerals [job]
-  (:frame-started-gathering-minerals job))
+(defn frame-started-gathering [job]
+  (:frame-started-gathering job))
 
 (defn set-frame-issued-gather-command [job frame]
   (assoc job :frame-issued-gather-command frame))
@@ -22,36 +22,35 @@
 (defn frame-issued-gather-command [job]
   (:frame-issued-gather-command job))
 
-(defn mining-job? [job]
-  ((job/type? :mining) job))
+(defn gather-job? [job]
+  ((job/type? :gather) job))
 
-(defn is-gathering-minerals?! [api job]
+(defn is-gathering?! [api job]
   (let [game (api/game api)
         worker (Game/.getUnit game (job/unit-id job))
         frame (Game/.getFrameCount game)
-        already-started? (frame-started-gathering-minerals job)
-        gathering? (Unit/.isGatheringMinerals worker)
+        already-started? (frame-started-gathering job)
+        gathering? (or (Unit/.isGatheringMinerals worker)
+                       (Unit/.isGatheringGas worker))
         job-status [already-started? gathering?]]
     (cond
-      (job/started-working? job-status) (set-frame-started-gathering-minerals job frame)
+      (job/started-working? job-status) (set-frame-started-gathering job frame)
       (job/stopped-working? job-status) (job/set-completed job)
       (job/is-working? job-status)      job
       :else                             (job/set-cancelled job))))  ;; something went wrong
 
-(defn go-mine! [api job] ;; check if the command was issued succesfully, otherwise we know something went wrong
+(defn go-gather! [api job]
   (let [game (api/game api)
         frame (Game/.getFrameCount game)
         worker (Game/.getUnit game (job/unit-id job))
-        mineral-field (Game/.getUnit game (mineral-field-id job))]
-    (Unit/.gather worker mineral-field)
+        target (Game/.getUnit game (target-id job))]
+    (Unit/.gather worker target)
     (-> job
-        (assoc :action #'is-gathering-minerals?!)
+        (assoc :action #'is-gathering?!)
         (set-frame-issued-gather-command frame))))
 
-(defn mining-job [[worker-id mineral-field-id]]
-  {:job :mining
-   ;;  :steps {:go-mine :mining
-   ;;          :mining :done}
-   :action #'go-mine!
+(defn gather-job [[worker-id target-id]]
+  {:job :gather
+   :action #'go-gather!
    :unit-id worker-id
-   :mineral-field-id mineral-field-id})
+   :target-id target-id})

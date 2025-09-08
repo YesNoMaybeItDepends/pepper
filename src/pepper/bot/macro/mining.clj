@@ -13,7 +13,7 @@
            (not-empty mineral-field-ids))
     (let [new-mining-jobs (->> (mapv (assign-random-mineral mineral-field-ids)
                                      idle-worker-ids)
-                               (mapv gather/mining-job)
+                               (mapv gather/gather-job)
                                (mapv #(job/init % frame)))]
       new-mining-jobs)
     []))

@@ -2,10 +2,12 @@
   (:require
    [pepper.bot.job :as job]
    [pepper.bot.jobs.build :as build]
+   [pepper.bot.jobs.gather :as gather]
    [pepper.bot.jobs.train :as train]
    [pepper.bot.macro.auto-supply :as auto-supply]
    [pepper.bot.macro.mining :as mining]
    [pepper.bot.unit-jobs :as unit-jobs]
+   [pepper.game.map :as game-map]
    [pepper.game.player :as player]
    [pepper.game.resources :as resources]
    [pepper.game.unit :as unit]
@@ -49,7 +51,7 @@
   (filterv #(not (unit-has-any-job? % unit-jobs)) units))
 
 (defn mining-jobs [unit-jobs]
-  (filterv (job/type? :mining) unit-jobs))
+  (filterv gather/gather-job? unit-jobs))
 
 (defn building-jobs [unit-jobs]
   (filterv (job/type? :build) unit-jobs))
@@ -70,14 +72,17 @@
    (player/resources-available our-player)
    (unit-jobs/total-cost unit-jobs)))
 
-(defn maybe-build-barracks [[macro messages] our-units our-player unit-jobs frame]
-  (let [workers (workers our-units)
+(defn maybe-build-barracks [[macro messages] units our-player unit-jobs frame game-map]
+  (let [our-units (filterv unit/exists? (our-units units our-player))
+        workers (workers our-units)
         budget (budget our-player unit-jobs)
         cost (unit-type/cost :barracks)
         can-afford? (resources/can-afford? budget cost)
         some-worker (get-idle-or-mining-worker workers unit-jobs)
         barracks (filterv (unit/type? :barracks) our-units)
         got-enough? (<= 6 (count barracks))
+        our-base (game-map/get-base-by-id game-map (player/starting-base our-player))
+        near-tile (:center our-base)
         current-barracks-jobs (transduce
                                (comp
                                 (filter (comp #{:build} :job))
@@ -90,11 +95,12 @@
                 1)
              some-worker
              can-afford?)
-      (->result macro (job/init (build/job (unit/id some-worker) :barracks) frame))
+      (->result macro (job/init (build/job (unit/id some-worker) :barracks {:near-tile near-tile}) frame))
       (->result macro))))
 
-(defn maybe-build-supply [[macro messages] our-units our-player unit-jobs frame]
-  (let [workers (workers our-units)
+(defn maybe-build-supply [[macro messages] units our-player unit-jobs frame]
+  (let [our-units (filterv unit/exists? (our-units units our-player))
+        workers (workers our-units)
         barracks (->> our-units
                       (filterv (unit/type? :barracks)))
         need-supply? (auto-supply/need-supply? our-player)
@@ -109,14 +115,64 @@
                  (< (count current-supply-jobs) 1))
             (and can-afford?
                  (< (count current-supply-jobs) 1)
-                 (<= 2 (count barracks))))
+                 (<= 3 (count barracks))))
       (let [worker (get-idle-or-mining-worker workers unit-jobs)
             new-job (job/init (build/job (unit/id worker) :supply-depot) frame)]
         (->result macro new-job))
       (->result macro))))
 
-(defn maybe-train-units [[macro messages] our-units our-player unit-jobs frame]
-  (let [max-to-train {:scv 25}
+(defn maybe-build-refinery [[macro messages] units our-player unit-jobs frame game-map]
+  (let [our-main (game-map/get-base-by-id game-map (player/starting-base our-player))
+        geysers (set (:geysers our-main))
+        geysers (filterv (every-pred (comp geysers unit/id)
+                                     (unit/type? :vespene-geyser)) units)
+        can-afford? (resources/can-afford?
+                     (budget our-player unit-jobs)
+                     (unit-type/cost :refinery))
+        refinery-jobs (->> (building-jobs unit-jobs)
+                           (filterv #(= (build/building %)
+                                        :refinery)))
+        our-units (filterv unit/exists? (our-units units our-player))
+        counts (group-by :type our-units)
+        count-depots (count (:supply-depot counts))
+        count-barracks (count (:barracks counts))
+        worker (get-idle-or-mining-worker (filterv (unit/type? :scv) our-units) unit-jobs)]
+    (if (and (not-empty geysers)
+             can-afford?
+             (empty? refinery-jobs)
+             (<= 1 count-depots)
+             (<= 1 count-barracks)
+             (some? worker))
+      (->result macro (job/init (build/job (unit/id worker) :refinery {:geyser-id (unit/id (first geysers))}) frame))
+      (->result macro))))
+
+(defn maybe-build-academy [[macro messages] units our-player unit-jobs frame]
+  (let [our-units (filterv unit/exists? (our-units units our-player))
+        no-academy? (nil? (first (filterv (unit/type? :academy) our-units)))
+        already-building? (->> (building-jobs unit-jobs)
+                               (filterv #(= (build/building %)
+                                            :academy))
+                               not-empty)
+        can-afford? (resources/can-afford?
+                     (budget our-player unit-jobs)
+                     (unit-type/cost :academy))
+        refinery? (first (filterv (unit/type? :refinery) our-units))
+        worker (get-idle-or-mining-worker (filterv (unit/type? :scv) our-units) unit-jobs)]
+    (if (and no-academy?
+             refinery?
+             (not already-building?)
+             can-afford?)
+      (->result macro (job/init (build/job (unit/id worker) :academy) frame))
+      (->result macro))))
+
+(defn maybe-research [[macro messages] units our-player unit-jobs frame]
+  (let [our-units (filterv unit/exists? (our-units units our-player))
+        academy? (some? (first (filterv (unit/type? :academy) our-units)))]
+    (->result macro)))
+
+(defn maybe-train-units [[macro messages] units our-player unit-jobs frame]
+  (let [our-units (filterv unit/exists? (our-units units our-player))
+        max-to-train {:scv 25}
         unit-counts (frequencies (mapv unit/type our-units))
         trains (merge {:barracks :marine}
                       (when (< (:scv unit-counts)
@@ -139,32 +195,55 @@
                                               trainers)]
     [macro new-training-jobs]))
 
-(defn handle-idle-workers [[macro messages] workers mineral-fields unit-jobs frame]
-  (let [idle-workers (idle-units workers unit-jobs)
-        idle-worker-ids (mapv unit/id idle-workers)
-        mineral-field-ids (transduce
+(defn handle-idle-workers [[macro messages] units our-player unit-jobs frame game-map]
+  (let [mineral-field-ids (transduce
                            (comp
-                            (filter #((every-pred some? pos?) (unit/resources %)))
+                            (filter (every-pred :completed? :visible?
+                                                (unit/type? unit-type/mineral-field)))
+                            (filter (comp (every-pred some? pos?) unit/resources))
                             (map unit/id))
-                           conj []
-                           mineral-fields)
-        new-mining-jobs (mining/new-mining-jobs idle-worker-ids mineral-field-ids frame)]
-    (->result macro new-mining-jobs)))
+                           conj
+                           []
+                           units)
+        our-units (filterv unit/exists? (our-units units our-player))
+        idle-worker-ids (mapv unit/id (idle-units (workers our-units) unit-jobs))
+        refinery-ids (transduce
+                      (comp
+                       (filter (every-pred :completed? (unit/type? :refinery)))
+                       (map unit/id))
+                      conj
+                      []
+                      our-units)
+        workers-per-refinery (transduce
+                              (comp
+                               (filter gather/gather-job?)
+                               (filter (comp (set refinery-ids) gather/target-id)))
+                              conj
+                              []
+                              unit-jobs)
+        [to-gas to-minerals] (if (pos? (count refinery-ids))
+                               (split-at (- 2 (count workers-per-refinery)) idle-worker-ids)
+                               [[] idle-worker-ids])
+        new-gas-jobs (mining/new-mining-jobs to-gas refinery-ids frame)
+        new-mineral-jobs (mining/new-mining-jobs to-minerals mineral-field-ids frame)]
+    (->result macro (concat new-gas-jobs new-mineral-jobs))))
 
-(defn update-on-frame [[macro messages] {:keys [units players frame unit-jobs]}]
+(defn update-on-frame [[macro messages] {:keys [units players frame unit-jobs game-map]}]
   (let [our-player (player/our-player players)
-        our-units (our-units units our-player)
-        workers (workers our-units)
-        mineral-fields (transduce
-                        (comp
-                         (filter (every-pred :completed? :visible?
-                                             (unit/type? unit-type/mineral-field))))
-                        conj
-                        []
-                        units)
-        [macro new-mining-jobs] (handle-idle-workers [macro messages] workers mineral-fields unit-jobs frame)
-        [macro new-training-jobs] (maybe-train-units [macro messages] our-units our-player unit-jobs frame)
-        [macro new-building-jobs] (maybe-build-supply [macro messages] our-units our-player unit-jobs frame)
-        [macro new-build-rax-jobs] (maybe-build-barracks [macro messages] our-units our-player unit-jobs frame)
-        messages (into (or messages []) (concat new-mining-jobs new-training-jobs new-building-jobs new-build-rax-jobs))]
+        [macro new-mining-jobs] (handle-idle-workers [macro messages] units our-player unit-jobs frame game-map)
+        [macro new-refinery-jobs] (maybe-build-refinery [macro messages] units our-player unit-jobs frame game-map)
+        [macro new-academy-jobs] (maybe-build-academy [macro messages] units our-player unit-jobs frame)
+        [macro new-training-jobs] (maybe-train-units [macro messages] units our-player unit-jobs frame)
+        [macro new-building-jobs] (maybe-build-supply [macro messages] units our-player unit-jobs frame)
+        [macro new-build-rax-jobs] (maybe-build-barracks [macro messages] units our-player unit-jobs frame game-map)
+        [macro new-research-jobs] (maybe-research [macro messages] units our-player unit-jobs frame)
+        messages (->> (into (or messages [])
+                            (concat new-academy-jobs
+                                    new-mining-jobs
+                                    new-refinery-jobs
+                                    new-training-jobs
+                                    new-building-jobs
+                                    new-build-rax-jobs
+                                    new-research-jobs))
+                      (filterv (comp some? :unit-id)))]
     [macro messages]))

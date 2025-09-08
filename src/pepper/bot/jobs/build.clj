@@ -69,17 +69,19 @@
         worker (Game/.getUnit game (job/unit-id job))
         building (unit-type/keyword->object (building job))
         tile (position/->tile-position (build-tile job))
-        can-build? (Unit/.canBuild worker building tile)]
-    (if can-build?
-      (do (Unit/.build worker building tile)
-          (assoc job
-                 :action #'get-building-id!
-                 :frame-issued-build-command frame))
-      (assoc job
-             :times-retried ((fnil inc 0) (:times-retried job))
-             :action #'get-build-tile!
-             :build-tile nil
-             :frame-got-build-tile nil))))
+        can-build? (Unit/.canBuild worker building tile)
+        tile-visible? (Game/.isVisible game tile)]
+    (if tile-visible?
+      (if can-build?
+        (do (Unit/.build worker building tile)
+            (assoc job
+                   :action #'get-building-id!
+                   :frame-issued-build-command frame))
+        (job/set-completed job))
+      (if (not (Unit/.isMoving worker))
+        (do (Unit/.move worker (bwapi.TilePosition/.toPosition tile))
+            job)
+        job))))
 
 (defn get-build-location
   "TODO: other than moving this somewhere else, maybe start looking from max and recur inwards to avoid funny building locations"
@@ -96,9 +98,12 @@
 (defn get-build-tile! [api job]
   (let [game (api/game api)
         building (unit-type/keyword->object (building job))
-        worker (Game/.getUnit game (job/unit-id job))
-        starting-tile (Player/.getStartLocation (Game/.self game))
-        build-tile (get-build-location game building starting-tile 18 20)]
+        near-tile (if (:near-tile job)
+                    (position/->tile-position (:near-tile job))
+                    (Player/.getStartLocation (Game/.self game)))
+        build-tile (if (= (:building job) :refinery)
+                     (.getTilePosition (Game/.getUnit game (:geyser-id job)))
+                     (get-build-location game building near-tile 18 25))]
     (if build-tile
       (assoc job
              :build-tile (position/->map build-tile)
@@ -106,9 +111,16 @@
              :action #'go-build!)
       job)))
 
-(defn job [unit-id unit-type]
-  {:job :build
-   :building unit-type
-   :cost (unit-type/cost unit-type)
-   :action #'get-build-tile!
-   :unit-id unit-id})
+(defn job
+  ([unit-id unit-type] (job unit-id unit-type {}))
+  ([unit-id unit-type {:keys [geyser-id near-tile] :as opts}]
+   (merge
+    {:job :build
+     :building unit-type
+     :cost (unit-type/cost unit-type)
+     :action #'get-build-tile!
+     :unit-id unit-id}
+    (when geyser-id
+      {:geyser-id geyser-id})
+    (when near-tile
+      {:near-tile near-tile}))))

@@ -47,6 +47,9 @@
 (defn selected! []
   (first (portal/selected)))
 
+(defn reset-jobs! [pepper-ref]
+  (swap! pepper-ref update-in [:bot :unit-jobs] {}))
+
 (comment
 
   (set! *print-namespace-maps* false)
@@ -85,8 +88,7 @@
 
   ;; 
 
-  (defn reset-jobs! [pepper-ref]
-    (swap! pepper-ref update-in [:bot :unit-jobs] {}))
+  (reset-jobs! (dev/pepper-ref!))
 
   #_())
 

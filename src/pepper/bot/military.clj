@@ -8,7 +8,8 @@
    [pepper.game.map.area :as area]
    [pepper.game.player :as player]
    [pepper.game.unit :as unit]
-   [pepper.game.unit-type :as unit-type]))
+   [pepper.game.unit-type :as unit-type]
+   [pepper.game.position :as position]))
 
 (defn find-enemy-starting-base-jobs [unit-jobs]
   (filterv #(= (:job %) :find-enemy-starting-base) unit-jobs))
@@ -126,7 +127,7 @@
   (let [{:keys [base area choke-points]} (get-main-geography base-id game-map)
         accessible-neighbors (game-map/get-area-accessible-neighbors area game-map)
         choke-points-to-accessible-neighbors (area/choke-points-to-accessible-neighbors area accessible-neighbors choke-points)]
-    (first (mapv :center choke-points-to-accessible-neighbors))))
+    (filterv (comp nil? :blocking-neutral) choke-points-to-accessible-neighbors)))
 
 (defn get-main-natural
   "TODO: There could be more than 1 natural, but right now I'm always getting the first one"
@@ -138,13 +139,14 @@
     (first bases)))
 
 (defn enough-units-to-move-out? [units]
-  (< 50 (count units)))
+  (< 50 (count (filterv (unit/type? :marine) units)
+               #_units)))
 
 (defn units-that-can-attack [our-units]
   (transduce
    (comp
     (filter (complement unit/dead?))
-    (filter (unit/type? :marine)))
+    (filter (unit/type? #{:marine :scv})))
    conj []
    our-units))
 
@@ -158,6 +160,17 @@
 
 ;;;;
 
+(defn slightly-behind-our-ramp [ramp main]
+  (let [main (position/_->walk-position main)
+        [x1 y1] [(:x main) (:y main)]
+        [x2 y2] [(:x ramp) (:y ramp)]
+        [w h] [(- x2 x1) (- y2 y1)] #_(if (< (+ x1 y1) (+ x2 y2)) ;; do I need this?
+                                        [(- x2 x1) (- y2 y1)]
+                                        [(- x1 x2) (- y1 y2)])]
+    (position/->map (+ x1 (quot w 1.25) #_(quot w 2))
+                    (+ y1 (quot h 1.25) #_(quot h 2))
+                    :walk-position)))
+
 (defn maybe-rally-marines [[military messages] game-map players units unit-jobs frame]
   (let [our-units (filterv unit/completed? (player-units units (player/our-player players)))
         their-units (player-units units (player/enemy-player players))
@@ -165,9 +178,11 @@
         buildings-to-kill (filterv #(unit-type/building? (unit/type %)) units-to-kill)
         units-that-can-attack (units-that-can-attack our-units)
         their-main (enemy-starting-base military)
-        their-ramp (get-main-ramp their-main game-map)
+        their-ramp (:center (first (get-main-ramp their-main game-map)))
         our-main   (player/starting-base (player/our-player players))
-        our-ramp (get-main-ramp our-main game-map)
+        our-ramp (:center (first (get-main-ramp our-main game-map)))
+        slightly-behind-our-ramp (slightly-behind-our-ramp our-ramp our-main)
+        our-ramp slightly-behind-our-ramp
         rally-point (if (or (enough-units-to-move-out? units-that-can-attack)
                             (not-empty (transduce
                                         (comp
@@ -181,7 +196,11 @@
                         (:tile (first buildings-to-kill)))
                       our-ramp)
         units-to-rally-xf (comp (filter (complement :attack-frame?))
-                                (filter (complement :starting-attack?)))
+                                (filter (complement :starting-attack?))
+                                (filter (complement :under-attack?))
+                                (if (= rally-point our-ramp)
+                                  (filter (complement (unit/type? :scv)))
+                                  (filter any?)))
         units-to-rally (transduce units-to-rally-xf conj [] units-that-can-attack)
         new-jobs (mapv #(job/init (attack-move/job (unit/id %) rally-point) frame) units-to-rally)]
     [military new-jobs]))

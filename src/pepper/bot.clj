@@ -96,7 +96,7 @@
 
 (defn render-gather-job [job game _game]
   (let [{unit-id :unit-id
-         mineral-field-id :mineral-field-id} job
+         mineral-field-id :target-id} job
         units-by-id (game/units-by-id _game)
         unit (get units-by-id unit-id)
         {xfrom :x yfrom :y} (unit/position unit)
@@ -137,7 +137,7 @@
     (portal/update-jobs jobs-to-render)
     (doseq [job jobs-to-render]
       (case (:job job)
-        :mining (render-gather-job job game _game)
+        :gather (render-gather-job job game _game)
         :build (render-build-job job game)
         :attack-move (render-attack-move-job job game)
         :else))))
