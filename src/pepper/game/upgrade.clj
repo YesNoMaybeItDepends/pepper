@@ -14,10 +14,10 @@
       (str/replace #"_" "-")
       keyword))
 
-(def ^:private by-keyword (zipmap (map keywordize (.getEnumConstants UpgradeType))
-                                  (map identity (.getEnumConstants UpgradeType))))
+(def by-keyword (zipmap (map keywordize (.getEnumConstants UpgradeType))
+                        (map identity (.getEnumConstants UpgradeType))))
 
-(def ^:private by-object (sql/map-invert by-keyword))
+(def by-object (sql/map-invert by-keyword))
 
 (defn obj->kw [obj]
   (by-object obj))
@@ -39,7 +39,7 @@
   (->> (UpgradeType/.whatUses (kw->obj kw))
        (mapv unit-type/object->keyword)))
 
-(defn upgrades [kw]
+(defn researches [kw]
   (->> (UpgradeType/.whatUpgrades (kw->obj kw))
        (mapv unit-type/object->keyword)))
 

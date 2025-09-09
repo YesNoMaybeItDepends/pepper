@@ -3,16 +3,18 @@
    [pepper.bot.job :as job]
    [pepper.bot.jobs.build :as build]
    [pepper.bot.jobs.gather :as gather]
+   [pepper.bot.jobs.research :as research]
    [pepper.bot.jobs.train :as train]
    [pepper.bot.macro.auto-supply :as auto-supply]
    [pepper.bot.macro.mining :as mining]
    [pepper.bot.unit-jobs :as unit-jobs]
+   [pepper.game :as game]
    [pepper.game.map :as game-map]
    [pepper.game.player :as player]
    [pepper.game.resources :as resources]
-   [pepper.game.ability :as tech]
    [pepper.game.unit :as unit]
-   [pepper.game.unit-type :as unit-type]))
+   [pepper.game.unit-type :as unit-type]
+   [pepper.game.upgrade :as upgrade]))
 
 ;;;; utils
 
@@ -166,18 +168,46 @@
       (->result macro (job/init (build/job (unit/id worker) :academy) frame))
       (->result macro))))
 
-(defn maybe-research [[macro messages] units our-player unit-jobs frame]
-  (let [our-units (filterv unit/exists? (our-units units our-player))
-        academy? (some? (first (filterv (unit/type? :academy) our-units)))
-        want {:stim-packs :money}
-        researches (into [] conj (tech/researches academy?))]
-    (->result macro)))
+(defn maybe-research [[macro messages] game unit-jobs]
+  (let [our-units (filterv (every-pred unit/exists? unit/completed?) (game/our-units game))
+        academy (first (filterv (unit/type? :academy) our-units))
+        frame (game/frame game)
+        can-afford? (resources/can-afford?
+                     (budget (game/our-player game) unit-jobs)
+                     (upgrade/cost :u-238-shells))]
+    (if (and academy
+             can-afford?
+             (empty? (filterv (job/type? :research) unit-jobs)))
+      (->result macro (job/init (research/job (unit/id academy) :u-238-shells) frame))
+      (->result macro))))
+
+(defn train-medics? [marines medics academies]
+  (and (pos? (or academies 0))
+       (or (nil? medics)
+           (zero? medics)
+           (and (every? pos? [marines medics])
+                (< 12 (/ marines medics))))))
+
+(defn train-firebats? [marines firebats academies]
+  (and (pos? (or academies 0))
+       (or (nil? firebats)
+           (zero? firebats)
+           (and (every? pos? [marines firebats])
+                (< 12 (/ marines firebats))))))
 
 (defn maybe-train-units [[macro messages] units our-player unit-jobs frame]
   (let [our-units (filterv unit/exists? (our-units units our-player))
         max-to-train {:scv 25}
         unit-counts (frequencies (mapv unit/type our-units))
-        trains (merge {:barracks :marine}
+        trains (merge {:barracks (filterv some? [:marine
+                                                 (when (train-medics? (:marine unit-counts)
+                                                                      (:medic unit-counts)
+                                                                      (:academy unit-counts))
+                                                   :medic)
+                                                 (when (train-firebats? (:marine unit-counts)
+                                                                        (:firebat unit-counts)
+                                                                        (:academy unit-counts))
+                                                   :firebat)])}
                       (when (< (:scv unit-counts)
                                (:scv max-to-train))
                         {:command-center :scv}))
@@ -187,7 +217,7 @@
         budget (budget our-player unit-jobs)
         [remaining-budget new-training-jobs] (reduce
                                               (fn [[budget jobs] trainer]
-                                                (let [to-train ((unit/type trainer) trains)
+                                                (let [to-train (rand-nth (flatten [((unit/type trainer) trains)]))
                                                       to-pay (unit-type/cost to-train)]
                                                   (if (resources/can-afford? budget to-pay)
                                                     [(resources/combine-quantities - budget to-pay)
@@ -225,24 +255,27 @@
                               []
                               unit-jobs)
         [to-gas to-minerals] (if (pos? (count refinery-ids))
-                               (split-at (- 2 (count workers-per-refinery)) idle-worker-ids)
-                               [[] idle-worker-ids])
-        new-gas-jobs (mining/new-mining-jobs to-gas refinery-ids frame)
+                               (split-at (- 1 (count workers-per-refinery)) idle-worker-ids)
+                               [[] (or idle-worker-ids [])])
+        new-gas-jobs     (mining/new-mining-jobs to-gas      refinery-ids frame)
         new-mineral-jobs (mining/new-mining-jobs to-minerals mineral-field-ids frame)]
     (->result macro (concat new-gas-jobs new-mineral-jobs))))
 
-(defn update-on-frame [[macro messages] {:keys [units players frame unit-jobs game-map]}]
-  (let [our-player (player/our-player players)
+(defn update-on-frame [[macro messages] game unit-jobs]
+  (let [our-player (player/our-player (game/players game))
+        units (game/units game)
+        frame (game/frame game)
+        game-map (game/get-map game)
         [macro new-mining-jobs] (handle-idle-workers [macro messages] units our-player unit-jobs frame game-map)
         [macro new-refinery-jobs] (maybe-build-refinery [macro messages] units our-player unit-jobs frame game-map)
         [macro new-academy-jobs] (maybe-build-academy [macro messages] units our-player unit-jobs frame)
         [macro new-training-jobs] (maybe-train-units [macro messages] units our-player unit-jobs frame)
         [macro new-building-jobs] (maybe-build-supply [macro messages] units our-player unit-jobs frame)
         [macro new-build-rax-jobs] (maybe-build-barracks [macro messages] units our-player unit-jobs frame game-map)
-        [macro new-research-jobs] (maybe-research [macro messages] units our-player unit-jobs frame)
+        [macro new-research-jobs] (maybe-research [macro messages] game unit-jobs)
         messages (->> (into (or messages [])
-                            (concat new-academy-jobs
-                                    new-mining-jobs
+                            (concat new-mining-jobs
+                                    new-academy-jobs
                                     new-refinery-jobs
                                     new-training-jobs
                                     new-building-jobs

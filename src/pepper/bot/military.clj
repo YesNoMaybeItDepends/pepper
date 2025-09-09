@@ -139,14 +139,13 @@
     (first bases)))
 
 (defn enough-units-to-move-out? [units]
-  (< 50 (count (filterv (unit/type? :marine) units)
-               #_units)))
+  (< 50 (count (filterv (unit/type? #{:marine :firebat :medic}) units))))
 
 (defn units-that-can-attack [our-units]
   (transduce
    (comp
     (filter (complement unit/dead?))
-    (filter (unit/type? #{:marine :scv})))
+    (filter (unit/type? #{:marine :medic :firebat})))
    conj []
    our-units))
 

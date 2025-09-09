@@ -1,12 +1,14 @@
 (ns pepper.game
   (:require
+   [clojure.string :as str]
    [pepper.api :as api]
    [pepper.api.game :as api-game]
+   [pepper.game.ability :as ability]
+   [pepper.game.upgrade :as upgrade]
    [pepper.game.map :as map]
    [pepper.game.player :as player]
    [pepper.game.position :as position]
-   [pepper.game.unit :as unit]
-   [clojure.string :as str])
+   [pepper.game.unit :as unit])
   (:import
    [bwapi BWClient Game]))
 
@@ -135,16 +137,34 @@
         (set-latency-remaining-time (Game/.getRemainingLatencyTime game))
         (set-elapsed-time (Game/.elapsedTime game))
         (set-players-by-id (map (player/parse-player! game) (Game/.getPlayers game)))
-        (set-units (map (unit/parse-unit! game) (Game/.getAllUnits game))))))
+        (set-units (map (unit/parse-unit! game) (Game/.getAllUnits game)))
+        (merge
+         {:can-upgrade (transduce
+                        (comp
+                         (filter (comp #(Game/.canUpgrade game %) second))
+                         (map first))
+                        conj
+                        upgrade/by-keyword)}
+         {:can-research (transduce
+                         (comp
+                          (filter (comp #(Game/.canResearch game %) second))
+                          (map first))
+                         conj
+                         ability/by-keyword)}))))
 
-(defn update-on-frame [game {:keys [frame
-                                    frames-behind
-                                    latency-frames
-                                    latency-time
-                                    latency-remaining-frames
-                                    latency-remaining-time
-                                    elapsed-time
-                                    players-by-id units-by-id]}]
+(defn update-on-frame
+  "TODO: just merge this"
+  [game {:keys [frame
+                frames-behind
+                latency-frames
+                latency-time
+                latency-remaining-frames
+                latency-remaining-time
+                elapsed-time
+                players-by-id
+                units-by-id
+                can-upgrade
+                can-research]}]
   (-> game
       (set-frame frame)
       (set-frames-behind frames-behind)
@@ -154,7 +174,9 @@
       (set-latency-remaining-time latency-remaining-time)
       (set-elapsed-time elapsed-time)
       (update :players-by-id update-players-by-id players-by-id)
-      (update :units-by-id update-units-by-id units-by-id)))
+      (update :units-by-id update-units-by-id units-by-id)
+      (assoc :can-upgrade can-upgrade)
+      (assoc :can-research can-research)))
 
 (defn unit-position [unit-obj]
   (position/->map (.getPosition unit-obj)))

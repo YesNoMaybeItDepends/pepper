@@ -1,9 +1,17 @@
 (ns pepper.bot.job
   (:refer-clojure :exclude [type new])
   (:require
-   [pepper.api :as api])
+   [pepper.api :as api]
+   [pepper.bot.job :as job])
   (:import
    [bwapi Game Unit]))
+
+(def xforms (atom {}))
+
+(defn register-xform! [xform-id xform]
+  (swap! xforms assoc xform-id xform))
+
+;;;;
 
 (defn started-working? [[started? working?]]
   (and (not started?) working?))
@@ -26,15 +34,6 @@
 (defn cancelled? [job]
   (:job/cancelled? job))
 
-(defn set-run [job]
-  (assoc job :run? true))
-
-(defn run? [job]
-  (:run? job))
-
-(defn not-run? [job]
-  ((complement run?) job))
-
 (defn set-cost [job cost]
   (assoc job :cost cost))
 
@@ -51,10 +50,11 @@
   (assert (:action job) "job requires an action")
   job)
 
-(defn job? [job]
-  (and (contains? job :job)
-       (contains? job :action)
-       (contains? job :unit-id)))
+(defn job [job]
+  (:job job))
+
+(defn job? [m]
+  (some? (job m)))
 
 (defn type [job]
   (:job job))
@@ -74,8 +74,20 @@
 (defn action [job]
   (:action job))
 
+(defn step [job]
+  (:step job))
+
+(defn set-step [job step]
+  (assoc job :step step))
+
 (defn set-last-frame-executed [job frame]
   (assoc job :frame-last-executed frame))
+
+(defn tick [job]
+  (:tick job))
+
+(defn with-tick-inc [job]
+  (update job :tick (fnil inc 0)))
 
 (defn with-last-frame-executed! [job api] ;; disgusting
   (set-last-frame-executed job (Game/.getFrameCount
@@ -85,7 +97,22 @@
   ((fnil merge {}) job {:uuid (random-uuid)
                         :frame-created-job frame}))
 
-(defn execute-action! [job api]
+(defn xform-id [job]
+  (:xform-id job))
+
+(defn xform!
+  "executes job on xform"
+  [job api]
+  (if-some [xform ((xform-id job) @xforms)]
+    (xform [job api])
+    job))
+
+(defn xform? [job]
+  (some? (xform-id job)))
+
+(defn execute-action!
+  "executes job on action"
+  [job api]
   ((action job) api job))
 
 (defn process-job! [job api]
@@ -93,8 +120,11 @@
     (nil? job) nil
     (completed? job) nil
     (cancelled? job) nil
-    :else (-> (execute-action! job api)
-              (with-last-frame-executed! api))))
+    :else (-> (if (xform? job)
+                (xform! job api)
+                (execute-action! job api))
+              (with-last-frame-executed! api)
+              (with-tick-inc))))
 
 (defn debug-job! [job api]
   (let [game (api/game api)
@@ -110,8 +140,3 @@
                              :last-command (Unit/.getLastCommand unit)
                              :can-command (Unit/.canCommand unit)
                              :can-gather (Unit/.canGather unit)}})))
-
-(comment "idea"
-         {:im-a-job :blablaba
-          :step :whatever-step
-          :dispatcher-fn (fn dispatcher-fn [job game])})

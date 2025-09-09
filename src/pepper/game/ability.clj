@@ -15,10 +15,10 @@
       (str/replace #"_" "-")
       keyword))
 
-(def ^:private by-keyword (zipmap (map keywordize (.getEnumConstants TechType))
-                                  (map identity (.getEnumConstants TechType))))
+(def by-keyword (zipmap (map keywordize (.getEnumConstants TechType))
+                        (map identity (.getEnumConstants TechType))))
 
-(def ^:private by-object (sql/map-invert by-keyword))
+(def by-object (sql/map-invert by-keyword))
 
 (defn obj->kw [obj]
   (by-object obj))
