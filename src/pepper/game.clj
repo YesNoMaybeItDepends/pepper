@@ -187,7 +187,7 @@
           {:keys [x y]} (unit-position u)]
       (when (and x y)
         (if (.isCompleted u)
-          (api-game/draw-text-map game x y (str unit-id))
+          (api-game/draw-text-map game x y (str unit-id (when (.isStimmed u) "!")))
           (api-game/draw-text-map game x (+ y 10) (str "-> " unit-id)))))))
 
 (defn clock [seconds]

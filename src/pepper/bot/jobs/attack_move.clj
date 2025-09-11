@@ -7,20 +7,41 @@
 (defn target-position [job]
   (:target-position job))
 
+(declare go-there!)
+
 (defn yay!
   [game job]
   job)
 
+(defn maybe-stim! [api job]
+  (let [frame (Game/.getFrameCount (api/game api))
+        unit (Game/.getUnit (api/game api) (job/unit-id job))
+        can-stim? (Unit/.canUseTech unit bwapi.TechType/Stim_Packs)
+        stimmed? (Unit/.isStimmed unit)
+        starting-attack? (Unit/.isStartingAttack unit)
+        attack-frame? (Unit/.isAttackFrame unit)
+        healthy? (< 15 (Unit/.getHitPoints unit))
+        under-attack? (Unit/.isUnderAttack unit)]
+    (if (and unit
+             can-stim?
+             (not stimmed?)
+             healthy?
+             (or starting-attack? attack-frame? under-attack?))
+      (do (Unit/.useTech unit bwapi.TechType/Stim_Packs)
+          (assoc job :action go-there!))
+      job)))
+
 (defn go-there! [api job]
   (let [frame (Game/.getFrameCount (api/game api))
         unit (Game/.getUnit (api/game api) (job/unit-id job))
-        target-position (position/->position (target-position job))
-        success? (Unit/.attack unit target-position)]
+        target-position (when (target-position job) (position/->position (target-position job)))
+        success? (when target-position (Unit/.attack unit target-position))]
     (if success?
       (assoc job
              :frame-issued-attack-move-command frame
-             :action yay!)
-      job)))
+             :action maybe-stim!)
+      (do (println "attack-move job target-position is nil, what happened?")
+          job))))
 
 (defn job [unit-id target-position]
   {:job :attack-move

@@ -58,3 +58,10 @@
    (-> (kw->obj kw)
        (UpgradeType/.whatsRequired n)
        unit-type/object->keyword)))
+
+(defn max-level [kw]
+  (-> (kw->obj kw)
+      UpgradeType/.maxRepeats))
+
+(defn max-level? [kw n]
+  (>= n (max-level kw)))

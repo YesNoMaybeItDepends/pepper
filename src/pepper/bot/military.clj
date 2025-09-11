@@ -139,7 +139,7 @@
     (first bases)))
 
 (defn enough-units-to-move-out? [units]
-  (< 50 (count (filterv (unit/type? #{:marine :firebat :medic}) units))))
+  (< 40 (count (filterv (unit/type? #{:marine :firebat :medic}) units))))
 
 (defn units-that-can-attack [our-units]
   (transduce

@@ -101,7 +101,9 @@
               :under-attack? Unit/.isUnderAttack
               :resources Unit/.getResources
               :initial-position (comp position/->map Unit/.getInitialPosition)
-              :initial-resources Unit/.getInitialResources})
+              :initial-resources Unit/.getInitialResources
+              :stimmed? Unit/.isStimmed
+              :stim-timer Unit/.getStimTimer})
 
 (defn ->map
   ([unit-obj frame] (->map unit-obj frame (keys kw->val)))

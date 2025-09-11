@@ -1,11 +1,15 @@
 (ns pepper.bot.jobs.research
   (:require
    [pepper.api :as api]
-   [pepper.game.upgrade :as upgrade]
+   [pepper.bot.job :as job]
    [pepper.game.ability :as ability]
-   [pepper.bot.job :as job])
+   [pepper.game.upgrade :as upgrade])
   (:import
-   [bwapi Game Unit]))
+   [bwapi
+    Game
+    Player
+    Unit
+    UpgradeType]))
 
 (defn to-research [job]
   (:to-research job))
@@ -30,11 +34,15 @@
   (let [game (api/game api)
         frame (Game/.getFrameCount game)
         unit (Game/.getUnit game (job/unit-id job))
+        our-player (Game/.self game)
         started-research? (frame-started-research job)
         to-upgrade (when (not started-research?) (upgrade/kw->obj (to-research job)))
         can-upgrade? (when to-upgrade (Unit/.canUpgrade unit to-upgrade))
         to-research (when (not started-research?) (ability/kw->obj (to-research job)))
-        can-research? (when to-research (Unit/.canResearch unit to-research))]
+        can-research? (when to-research (Unit/.canResearch unit to-research))
+        already-researched? (when to-research (Player/.hasResearched our-player to-research))
+        already-upgraded? (when to-upgrade (= (UpgradeType/.maxRepeats to-upgrade)
+                                              (Player/.getUpgradeLevel our-player to-upgrade)))]
     (if (or can-upgrade? can-research?)
       (do (cond
             can-upgrade? (Unit/.upgrade unit to-upgrade)
@@ -43,7 +51,10 @@
               (set-frame-started-research frame)
               (job/set-cost-paid frame)
               (job/set-step :done-researching?!)))
-      job)))
+      (if (or already-researched? already-upgraded?)
+        (do (println "bro something went wrong...")
+            (job/set-completed job))
+        job))))
 
 (defn xform
   [[job api]]
@@ -59,7 +70,9 @@
        :step :start-research!
        :to-research to-research
        :unit-id unit-id}
-      (job/set-cost (upgrade/cost to-research))))
+      (job/set-cost (cond
+                      (to-research upgrade/by-keyword) (upgrade/cost to-research)
+                      (to-research ability/by-keyword) (ability/cost to-research)))))
 
 (def job-def
   {:job :research

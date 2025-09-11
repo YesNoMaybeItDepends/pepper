@@ -1,5 +1,6 @@
 (ns pepper.bot.macro
   (:require
+   [clojure.set :as sql]
    [pepper.bot.job :as job]
    [pepper.bot.jobs.build :as build]
    [pepper.bot.jobs.gather :as gather]
@@ -9,6 +10,7 @@
    [pepper.bot.macro.mining :as mining]
    [pepper.bot.unit-jobs :as unit-jobs]
    [pepper.game :as game]
+   [pepper.game.ability :as ability]
    [pepper.game.map :as game-map]
    [pepper.game.player :as player]
    [pepper.game.resources :as resources]
@@ -169,16 +171,30 @@
       (->result macro))))
 
 (defn maybe-research [[macro messages] game unit-jobs]
-  (let [our-units (filterv (every-pred unit/exists? unit/completed?) (game/our-units game))
-        academy (first (filterv (unit/type? :academy) our-units))
-        frame (game/frame game)
-        can-afford? (resources/can-afford?
-                     (budget (game/our-player game) unit-jobs)
-                     (upgrade/cost :u-238-shells))]
+  (let [frame (game/frame game)
+        our-player (game/our-player game)
+        budget (budget our-player unit-jobs)
+        academy (first
+                 (filterv
+                  (every-pred unit/exists? unit/completed? (unit/type? :academy))
+                  (game/our-units game)))
+        abilities-want [:stim-packs]
+        upgrades-want [:u-238-shells]
+        abilities-have (filterv #(player/has-researched? our-player %) abilities-want)
+        upgrades-have (filterv #(player/has-upgraded? our-player %) upgrades-want)
+        abilities-need (sql/difference (set abilities-want) (set abilities-have))
+        upgrades-need (sql/difference (set upgrades-want) (set upgrades-have))
+        abilities-need-can-afford (filterv (comp #(resources/can-afford? budget %) ability/cost) abilities-need)
+        ;; not taking into account upgrade levels, but this will be refactored anyways
+        upgrades-need-can-afford (filterv (comp #(resources/can-afford? budget %) upgrade/cost) upgrades-need)
+        researching? (not-empty (filterv (job/type? :research) unit-jobs))
+        target (cond (not-empty abilities-need-can-afford) (first abilities-need-can-afford)
+                     (not-empty upgrades-need-can-afford) (first upgrades-need-can-afford)
+                     :else nil)]
     (if (and academy
-             can-afford?
-             (empty? (filterv (job/type? :research) unit-jobs)))
-      (->result macro (job/init (research/job (unit/id academy) :u-238-shells) frame))
+             (not researching?)
+             target)
+      (->result macro (job/init (research/job (unit/id academy) target) frame))
       (->result macro))))
 
 (defn train-medics? [marines medics academies]
@@ -188,8 +204,8 @@
            (and (every? pos? [marines medics])
                 (< 12 (/ marines medics))))))
 
-(defn train-firebats? [marines firebats academies]
-  (and (pos? (or academies 0))
+(defn train-firebats? [marines firebats techs]
+  (and (every? #(some #{%} techs) [:stim-packs :u-238-shells])
        (or (nil? firebats)
            (zero? firebats)
            (and (every? pos? [marines firebats])
@@ -199,6 +215,8 @@
   (let [our-units (filterv unit/exists? (our-units units our-player))
         max-to-train {:scv 25}
         unit-counts (frequencies (mapv unit/type our-units))
+        techs (into [] conj (flatten [(player/has-researched our-player)
+                                      (player/has-upgraded-max our-player)]))
         trains (merge {:barracks (filterv some? [:marine
                                                  (when (train-medics? (:marine unit-counts)
                                                                       (:medic unit-counts)
@@ -206,7 +224,7 @@
                                                    :medic)
                                                  (when (train-firebats? (:marine unit-counts)
                                                                         (:firebat unit-counts)
-                                                                        (:academy unit-counts))
+                                                                        techs)
                                                    :firebat)])}
                       (when (< (:scv unit-counts)
                                (:scv max-to-train))
