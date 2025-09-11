@@ -3,6 +3,7 @@
    [clojure.set :as sql]
    [clojure.string :as str]
    [pepper.game.order :as order]
+   [pepper.game.race :as race]
    [pepper.game.unit-type :as unit-type])
   (:import
    [bwapi TechType]))
@@ -25,6 +26,11 @@
 
 (defn kw->obj [unit-type]
   (by-keyword unit-type))
+
+(defn race [kw]
+  (-> kw kw->obj TechType/.getRace race/object->keyword))
+
+(def by-race (group-by race (keys by-keyword)))
 
 (defn cost [kw]
   (let [obj (kw->obj kw)]
@@ -54,7 +60,6 @@
 
 (defn energy-cost [kw]
   (-> kw kw->obj TechType/.energyCost))
-(keys by-keyword)
+
 ;; getWeapon
-;; getRace
 ;; researchTime

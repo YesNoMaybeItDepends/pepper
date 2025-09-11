@@ -114,13 +114,14 @@
 (defn handle-msg [state [id _ :as event] stop-ch]
   (case id
     :on-end (do (a/close! stop-ch)
+                (tap> "game over man")
                 (tapping (on-end state)))
     :on-frame (-> state
                   (skipping-if-paused #(throttling-by-game-frame % on-frame))
                   rendering)
     :on-nuke-detect state
-    :on-player-dropped state
-    :on-player-left state
+    :on-player-dropped (do (tap> "player dropped man") state)
+    :on-player-left (do (tap> "player left man") state)
     :on-receive-text state
     :on-save-game state
     :on-send-text state

@@ -4,12 +4,12 @@
             [clojure.string :as str])
   (:import [bwapi Race]))
 
-(def ^:private by-keyword (zipmap (->> (map str (.getEnumConstants Race))
-                                       (map str/lower-case)
-                                       (map keyword))
-                                  (map identity (.getEnumConstants Race))))
+(def by-keyword (zipmap (->> (map str (.getEnumConstants Race))
+                             (map str/lower-case)
+                             (map keyword))
+                        (map identity (.getEnumConstants Race))))
 
-(def ^:private by-object (sql/map-invert by-keyword))
+(def by-object (sql/map-invert by-keyword))
 
 (defn keyword->object [race]
   (by-keyword race))
