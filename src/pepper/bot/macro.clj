@@ -199,6 +199,7 @@
 
 (defn train-medics? [marines medics academies]
   (and (pos? (or academies 0))
+       (some? marines)
        (or (nil? medics)
            (zero? medics)
            (and (every? pos? [marines medics])
@@ -206,6 +207,7 @@
 
 (defn train-firebats? [marines firebats techs]
   (and (every? #(some #{%} techs) [:stim-packs :u-238-shells])
+       (some? marines)
        (or (nil? firebats)
            (zero? firebats)
            (and (every? pos? [marines firebats])

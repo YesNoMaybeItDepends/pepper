@@ -10,9 +10,14 @@
   [game x y text]
   (Game/.drawTextScreen game x y text (into-array Text [])))
 
+(defn format-text [text text-color]
+  (bwapi.Text/formatText text text-color))
+
 (defn draw-text-map
-  [game x y text]
-  (Game/.drawTextMap game x y text (into-array Text [])))
+  ([game x y text]
+   (Game/.drawTextMap game x y text (into-array Text [])))
+  ([game x y text text-color]
+   (Game/.drawTextMap game x y (format-text text text-color) (into-array Text [text-color]))))
 
 (defn set-local-speed
   [game speed]

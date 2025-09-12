@@ -4,13 +4,13 @@
    [pepper.api :as api]
    [pepper.api.game :as api-game]
    [pepper.game.ability :as ability]
-   [pepper.game.upgrade :as upgrade]
    [pepper.game.map :as map]
    [pepper.game.player :as player]
    [pepper.game.position :as position]
-   [pepper.game.unit :as unit])
+   [pepper.game.unit :as unit]
+   [pepper.game.upgrade :as upgrade])
   (:import
-   [bwapi BWClient Game]))
+   [bwapi BWClient Game Text]))
 
 (defn set-frame [game frame]
   (assoc game :frame frame))
@@ -181,14 +181,19 @@
 (defn unit-position [unit-obj]
   (position/->map (.getPosition unit-obj)))
 
-(defn render-units! [units game]
-  (doseq [unit-id (filterv some? (mapv unit/id units))]
-    (let [u (.getUnit game unit-id)
-          {:keys [x y]} (unit-position u)]
+(defn render-units! [_game api-game]
+  (doseq [unit (filterv some? (units _game))]
+    (let [unit-id (unit/id unit)
+          unit-obj (.getUnit api-game unit-id)
+          color (cond
+                  (player-owns-unit? (our-player _game) unit)   Text/Teal
+                  (player-owns-unit? (enemy-player _game) unit) Text/Red
+                  :else                                         Text/Turquoise)
+          {:keys [x y]} (unit-position unit-obj)]
       (when (and x y)
-        (if (.isCompleted u)
-          (api-game/draw-text-map game x y (str unit-id (when (.isStimmed u) "!")))
-          (api-game/draw-text-map game x (+ y 10) (str "-> " unit-id)))))))
+        (if (.isCompleted unit-obj)
+          (api-game/draw-text-map api-game x y (str unit-id (when (.isStimmed unit-obj) "!")) color)
+          (api-game/draw-text-map api-game x (+ y 10) (str "-> " unit-id) color))))))
 
 (defn clock [seconds]
   (let [seconds (or seconds 0)
@@ -209,7 +214,7 @@
                  :clock (clock (elapsed-time game))}]
     (render-top-left!
      api (mapcat format-fn display))
-    (render-units! (units game) (api/game api))))
+    (render-units! game (api/game api))))
 
 (defn update-on-unit-event [game [event-id {unit :unit}] api]
   (let [frame (Game/.getFrameCount (api/game api))

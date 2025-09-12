@@ -10,10 +10,10 @@
 (declare go-there!)
 
 (defn yay!
-  [game job]
+  [job api]
   job)
 
-(defn maybe-stim! [api job]
+(defn maybe-stim! [job api]
   (let [frame (Game/.getFrameCount (api/game api))
         unit (Game/.getUnit (api/game api) (job/unit-id job))
         can-stim? (Unit/.canUseTech unit bwapi.TechType/Stim_Packs)
@@ -28,10 +28,10 @@
              healthy?
              (or starting-attack? attack-frame? under-attack?))
       (do (Unit/.useTech unit bwapi.TechType/Stim_Packs)
-          (assoc job :action go-there!))
+          (assoc job :step :go-there!))
       job)))
 
-(defn go-there! [api job]
+(defn go-there! [job api]
   (let [frame (Game/.getFrameCount (api/game api))
         unit (Game/.getUnit (api/game api) (job/unit-id job))
         target-position (when (target-position job) (position/->position (target-position job)))
@@ -39,12 +39,21 @@
     (if success?
       (assoc job
              :frame-issued-attack-move-command frame
-             :action maybe-stim!)
-      (do (println "attack-move job target-position is nil, what happened?")
-          job))))
+             :step :maybe-stim!)
+      (if (not (Unit/.exists unit))
+        (job/set-completed job)
+        (println "what?!")))))
+
+(defn xform [[job api]]
+  (case (:step job)
+    :go-there! (#'go-there! job api)
+    :maybe-stim! (#'maybe-stim! job api)
+    :yay! (#'yay! job api)))
 
 (defn job [unit-id target-position]
+  (job/register-xform! :attack-move #'xform)
   {:job :attack-move
+   :xform-id :attack-move
+   :step :go-there!
    :unit-id unit-id
-   :target-position target-position
-   :action go-there!})
+   :target-position target-position})

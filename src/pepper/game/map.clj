@@ -4,6 +4,8 @@
   (:import [bwapi Unit Pair]
            [bwem BWEM Neutral Base Area AreaId BWMap ChokePoint Altitude]))
 
+#_(def mini-tiles (atom))
+
 (defn ->id [x]
   (condp instance? x
     bwem.Neutral (->id (Neutral/.getUnit x))
@@ -98,7 +100,7 @@
   (let [map-data (parse-map-data! (.getMapData terrain-data))
         {:keys [x y]} (:walk-size map-data)]
     {:map-data map-data
-     :mini-tiles (parse-mini-tiles! x y terrain-data)}))
+     #_:mini-tiles #_(parse-mini-tiles! x y terrain-data)})) ;; temp disabled
 
 (defn parse-map-on-start! [bwem]
   (let [map (BWEM/.getMap bwem)]

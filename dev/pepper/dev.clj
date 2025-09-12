@@ -79,3 +79,18 @@
   (let [game (api-game!)]
     (bwapi.Game/.setLocalSpeed game 42)
     (bwapi.Game/.resumeGame game)))
+
+(defn set-game-speed!
+  ([]
+   (doto
+    {:fastest 42
+     :faster 48
+     :fast 56
+     :normal 67
+     :slow 83
+     :slower 111
+     :slowest 167}
+     println))
+
+  ([speed]
+   (Game/.setLocalSpeed (api-game!) speed)))

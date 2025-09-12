@@ -86,7 +86,13 @@
       (tap> (dev/pepper!)))
   (dev/resume-game!)
 
-  ;; 
+  ;; speed
+
+  (dev/set-game-speed!)
+  (dev/set-game-speed! 4)
+  (dev/set-game-speed! 56)
+
+  ;;
 
   (reset-jobs! (dev/pepper-ref!))
 
