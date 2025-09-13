@@ -111,10 +111,12 @@
 (defn handle-on-unit-event [state event]
   (update state :game game/update-on-unit-event event (api state)))
 
-(defn handle-msg [state [id _ :as event] stop-ch]
+(defn handle-msg [state [id data :as event] stop-ch]
   (case id
     :on-end (do (a/close! stop-ch)
                 (tap> "game over man")
+                (tap> data)
+                (mu/log :on-end :winner? data)
                 (tapping (on-end state)))
     :on-frame (-> state
                   (skipping-if-paused #(throttling-by-game-frame % on-frame))

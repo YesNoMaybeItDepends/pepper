@@ -139,7 +139,7 @@
     (first bases)))
 
 (defn enough-units-to-move-out? [units]
-  (< 40 (count (filterv (unit/type? #{:marine :firebat :medic}) units))))
+  (< 35 (count (filterv (unit/type? #{:marine :firebat :medic}) units))))
 
 (defn units-that-can-attack [our-units]
   (transduce
@@ -174,6 +174,7 @@
   (let [our-units (filterv unit/completed? (player-units units (player/our-player players)))
         their-units (player-units units (player/enemy-player players))
         units-to-kill (filterv #(not (unit/dead? %)) their-units)
+        lurkers-to-kill (filterv (every-pred :visible? (complement :burrowed?) (unit/type? :lurker)) units-to-kill)
         buildings-to-kill (filterv #(unit-type/building? (unit/type %)) units-to-kill)
         units-that-can-attack (units-that-can-attack our-units)
         their-main (enemy-starting-base military)
@@ -201,7 +202,7 @@
                                   (filter (complement (unit/type? :scv)))
                                   (filter any?)))
         units-to-rally (transduce units-to-rally-xf conj [] units-that-can-attack)
-        new-jobs (mapv #(job/init (attack-move/job (unit/id %) rally-point) frame) units-to-rally)]
+        new-jobs (mapv #(job/init (attack-move/job (unit/id %) rally-point {:target-unit-id (unit/id (first lurkers-to-kill))}) frame) units-to-rally)]
     [military new-jobs]))
 
 ;;;; 

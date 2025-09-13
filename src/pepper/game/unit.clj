@@ -103,7 +103,8 @@
               :initial-position (comp position/->map Unit/.getInitialPosition)
               :initial-resources Unit/.getInitialResources
               :stimmed? Unit/.isStimmed
-              :stim-timer Unit/.getStimTimer})
+              :stim-timer Unit/.getStimTimer
+              :burrowed? Unit/.isBurrowed})
 
 (defn ->map
   ([unit-obj frame] (->map unit-obj frame (keys kw->val)))
