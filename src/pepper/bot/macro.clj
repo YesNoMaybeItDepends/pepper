@@ -79,7 +79,7 @@
 
 (defn maybe-build-barracks [[macro messages] units our-player unit-jobs frame game-map]
   (let [our-units (filterv unit/exists? (our-units units our-player))
-        workers (workers our-units)
+        workers (filterv unit/completed? (workers our-units))
         budget (budget our-player unit-jobs)
         cost (unit-type/cost :barracks)
         can-afford? (resources/can-afford? budget cost)
@@ -105,7 +105,7 @@
 
 (defn maybe-build-supply [[macro messages] units our-player unit-jobs frame]
   (let [our-units (filterv unit/exists? (our-units units our-player))
-        workers (workers our-units)
+        workers (filterv unit/completed? (workers our-units))
         barracks (->> our-units
                       (filterv (unit/type? :barracks)))
         need-supply? (auto-supply/need-supply? our-player)
@@ -141,7 +141,7 @@
         counts (group-by :type our-units)
         count-depots (count (:supply-depot counts))
         count-barracks (count (:barracks counts))
-        worker (get-idle-or-mining-worker (filterv (unit/type? :scv) our-units) unit-jobs)]
+        worker (get-idle-or-mining-worker (filterv (every-pred unit/completed? unit/exists? (unit/type? :scv)) our-units) unit-jobs)]
     (if (and (not-empty geysers)
              can-afford?
              (empty? refinery-jobs)
@@ -162,7 +162,7 @@
                      (budget our-player unit-jobs)
                      (unit-type/cost :academy))
         refinery? (first (filterv (unit/type? :refinery) our-units))
-        worker (get-idle-or-mining-worker (filterv (unit/type? :scv) our-units) unit-jobs)]
+        worker (get-idle-or-mining-worker (filterv (every-pred unit/completed? unit/exists? (unit/type? :scv)) our-units) unit-jobs)]
     (if (and no-academy?
              refinery?
              (not already-building?)
@@ -258,11 +258,11 @@
                            conj
                            []
                            units)
-        our-units (filterv unit/exists? (our-units units our-player))
+        our-units (filterv (every-pred unit/completed? unit/exists?) (our-units units our-player))
         idle-worker-ids (mapv unit/id (idle-units (workers our-units) unit-jobs))
         refinery-ids (transduce
                       (comp
-                       (filter (every-pred :completed? (unit/type? :refinery)))
+                       (filter (every-pred unit/completed? (unit/type? :refinery)))
                        (map unit/id))
                       conj
                       []
