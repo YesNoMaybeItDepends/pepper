@@ -72,11 +72,12 @@
   (-> (keyword->object unit-type)
       UnitType/.tileWidth))
 
-(defn tile-size [unit-type]
-  (let [unit-obj (keyword->object unit-type)]
-    (-> (keyword->object unit-type)
-        UnitType/.tileSize
-        position/->map)))
+(defn tile-size
+  "Returns a tile-position with the width (x) and height (y) of the unit type"
+  [unit-type]
+  (-> (keyword->object unit-type)
+      UnitType/.tileSize
+      position/->map))
 
 ;; TODO: unit size to kw '(:large :small etc)
 ;; (defn unit-size [unit-type] 

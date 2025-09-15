@@ -1,8 +1,11 @@
 (ns pepper.bot.jobs.attack-move
-  (:require [pepper.bot.job :as job]
-            [pepper.api :as api]
-            [pepper.game.position :as position])
-  (:import [bwapi Unit Game Position]))
+  (:require
+   [pepper.api :as api]
+   [pepper.bot.job :as job]
+   [pepper.game.position :as position]
+   [pepper.game.unit-type :as unit-type])
+  (:import
+   [bwapi Game Player Unit]))
 
 (defn target-position [job]
   (:target-position job))
@@ -10,11 +13,27 @@
 (defn target-unit-id [job]
   (:target-unit-id job))
 
-(declare go-there!)
-
 (defn yay!
   [job api]
   job)
+
+(defn maybe-heal! [job api]
+  (let [game (api/game api)
+        frame (Game/.getFrameCount game)
+        unit (Game/.getUnit game (job/unit-id job))
+        wounded-marines (filterv (every-pred #(Unit/.exists %)
+                                             #(= (Unit/.getType %)
+                                                 bwapi.UnitType/Terran_Marine)
+                                             #(< (Unit/.getHitPoints %)
+                                                 (Unit/.getInitialHitPoints %)))
+                                 (Player/.getUnits (Game/.self game)))
+        ready? (<= (or (:wait-until-frame job) frame) frame)]
+    (if (and (not-empty wounded-marines) ready?)
+      (do (Unit/.attack unit (Unit/.getPosition (rand-nth wounded-marines)))
+          (assoc job :wait-until-frame (+ frame 120)))
+      (if ready?
+        (assoc job :step :go-there!)
+        job))))
 
 (defn maybe-stim! [job api]
   (let [frame (Game/.getFrameCount (api/game api))
@@ -38,18 +57,25 @@
   (let [game (api/game api)
         frame (Game/.getFrameCount game)
         unit (Game/.getUnit game (job/unit-id job))
+        unit-type (Unit/.getType unit)
         target-unit (when (target-unit-id job) (Game/.getUnit game (target-unit-id job)))
         target-position (when (target-position job) (position/->position (target-position job)))
         success? (cond
                    (and target-unit
                         (Unit/.exists target-unit)
+                        (Unit/.isInWeaponRange unit target-unit)
+                        (Unit/.isInWeaponRange target-unit unit)
                         (Unit/.canAttackUnit unit target-unit)) (Unit/.attack unit target-unit)
                    target-position (Unit/.attack unit target-position)
                    :else nil)]
     (if success?
       (assoc job
              :frame-issued-attack-move-command frame
-             :step :maybe-stim!)
+             :step (if (not= :medic (unit-type/object->keyword unit-type))
+                     :maybe-stim!
+                     (if (= :medic (unit-type/object->keyword unit-type))
+                       :maybe-heal!
+                       :go-there!)))
       (if (or (not (Unit/.exists unit)) (not target-position))
         (job/set-completed job)
         (println "what?!")))))
@@ -58,6 +84,7 @@
   (case (:step job)
     :go-there! (#'go-there! job api)
     :maybe-stim! (#'maybe-stim! job api)
+    :maybe-heal! (#'maybe-heal! job api)
     :yay! (#'yay! job api)))
 
 (defn job [unit-id target-position opts]

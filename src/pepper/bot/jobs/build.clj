@@ -63,15 +63,27 @@
                            (assoc :action #'building-completed?!))
       :else job)))
 
+(defn building-tiles [target-tile unit-type]
+  (let [{x :x y :y} target-tile
+        {w :x h :y} (unit-type/tile-size unit-type)]
+    (if (every? (every-pred (some-fn zero? pos?) int? some?) [x y w h])
+      (vec (for [w (range w)
+                 h (range h)]
+             (position/_->tile-position {:x (+ x w)
+                                         :y (+ y h)
+                                         :scale :tile-position})))
+      [])))
+
 (defn go-build! [api job]
   (let [game (api/game api)
         frame (Game/.getFrameCount game)
         worker (Game/.getUnit game (job/unit-id job))
+        tiles (mapv position/->tile-position (building-tiles (build-tile job) (building job)))
         building (unit-type/keyword->object (building job))
         tile (position/->tile-position (build-tile job))
         can-build? (Unit/.canBuild worker building tile)
-        tile-visible? (Game/.isVisible game tile)]
-    (if tile-visible?
+        tiles-visible? (every? #(Game/.isVisible  game %) tiles)]
+    (if tiles-visible?
       (if can-build?
         (do (Unit/.build worker building tile)
             (assoc job
@@ -103,7 +115,7 @@
                     (Player/.getStartLocation (Game/.self game)))
         build-tile (if (= (:building job) :refinery)
                      (.getTilePosition (Game/.getUnit game (:geyser-id job)))
-                     (get-build-location game building near-tile 18 25))]
+                     (get-build-location game building near-tile 18 30))]
     (if build-tile
       (assoc job
              :build-tile (position/->map build-tile)

@@ -150,3 +150,6 @@
 
 (defn get-area-base-ids [area]
   (:bases area))
+
+(defn bases [map]
+  (:bases map))

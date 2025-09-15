@@ -71,11 +71,17 @@
 (defn already-building? [building unit-jobs]
   (some #(#{building} (build/building %)) unit-jobs))
 
-(defn budget [our-player unit-jobs]
-  (resources/combine-quantities
-   -
-   (player/resources-available our-player)
-   (unit-jobs/total-cost unit-jobs)))
+(defn budget
+  "ugly, think about this"
+  [our-player unit-jobs]
+  (mapv
+   #(if (neg? %)
+      0
+      %)
+   (resources/combine-quantities
+    -
+    (player/resources-available our-player)
+    (unit-jobs/total-cost unit-jobs))))
 
 (defn maybe-build-barracks [[macro messages] units our-player unit-jobs frame game-map]
   (let [our-units (filterv unit/exists? (our-units units our-player))
@@ -85,7 +91,7 @@
         can-afford? (resources/can-afford? budget cost)
         some-worker (get-idle-or-mining-worker workers unit-jobs)
         barracks (filterv (unit/type? :barracks) our-units)
-        got-enough? (<= 6 (count barracks))
+        got-enough? (<= 5 (count barracks))
         our-base (game-map/get-base-by-id game-map (player/starting-base our-player))
         near-tile (:center our-base)
         current-barracks-jobs (transduce
@@ -119,7 +125,7 @@
                  can-afford?
                  (< (count current-supply-jobs) 1))
             (and can-afford?
-                 (< (count current-supply-jobs) 1)
+                 (< (count current-supply-jobs) 1) ;; fix this
                  (<= 3 (count barracks))))
       (let [worker (get-idle-or-mining-worker workers unit-jobs)
             new-job (job/init (build/job (unit/id worker) :supply-depot) frame)]
@@ -170,32 +176,118 @@
       (->result macro (job/init (build/job (unit/id worker) :academy) frame))
       (->result macro))))
 
-(defn maybe-research [[macro messages] game unit-jobs]
+(defn have-min-units? "clean up" [want unit-count-by-type]
+  (every?
+   (fn [[unit min]] (<= min (or (unit unit-count-by-type) 0)))
+   (get-in want [:when :have :units])))
+
+(defn got-enough? "clean up" [want unit-count-by-type]
+  (<= (:max want)
+      (or ((:building want) unit-count-by-type) 0)))
+
+(defn maybe-build [[macro messages] game unit-jobs]
+  (let [our-player (game/our-player game)
+        budget (budget our-player unit-jobs)
+        our-units (filterv unit/exists? (game/our-units game))
+        by-type (group-by unit/type our-units)
+        counts (reduce-kv
+                (fn [m k v]
+                  (assoc m k (count v)))
+                {}
+                by-type)
+        wants [{:building :engineering-bay
+                :max 1
+                :when {:have {:units {:barracks 1
+                                      :refinery 1}}}}
+               ;;  {:building :academy
+               ;;   :max 1
+               ;;   :when {:have {:units {:barracks 1
+               ;;                         :refinery 1}}}}
+               ;;  {:building :barracks
+               ;;   :max 4
+               ;;   :when {:have {:units {:supply-depot 1}}}}
+               ]
+        wants-to-build (filterv
+                        (fn [want]
+                          (and (not (got-enough? want counts))
+                               (have-min-units? want counts)
+                               (not (already-building? (:building want) unit-jobs))
+                               (resources/can-afford? budget (unit-type/cost (:building want)))))
+                        wants)
+        to-build (:building (first wants-to-build))
+        builder (get-idle-or-mining-worker (filterv (every-pred unit/completed?) (:scv by-type)) unit-jobs)]
+    (if (and (some? to-build)
+             (some? builder))
+      (->result macro (job/init (build/job (unit/id builder) to-build)
+                                (game/frame game)))
+      (->result macro))))
+
+(defn maybe-research "refactor" [[macro messages] game unit-jobs]
   (let [frame (game/frame game)
         our-player (game/our-player game)
         budget (budget our-player unit-jobs)
-        academy (first
-                 (filterv
-                  (every-pred unit/exists? unit/completed? (unit/type? :academy))
-                  (game/our-units game)))
-        abilities-want [:stim-packs]
-        upgrades-want [:u-238-shells]
-        abilities-have (filterv #(player/has-researched? our-player %) abilities-want)
-        upgrades-have (filterv #(player/has-upgraded? our-player %) upgrades-want)
-        abilities-need (sql/difference (set abilities-want) (set abilities-have))
-        upgrades-need (sql/difference (set upgrades-want) (set upgrades-have))
-        abilities-need-can-afford (filterv (comp #(resources/can-afford? budget %) ability/cost) abilities-need)
-        ;; not taking into account upgrade levels, but this will be refactored anyways
-        upgrades-need-can-afford (filterv (comp #(resources/can-afford? budget %) upgrade/cost) upgrades-need)
-        researching? (not-empty (filterv (job/type? :research) unit-jobs))
-        target (cond (not-empty abilities-need-can-afford) (first abilities-need-can-afford)
-                     (not-empty upgrades-need-can-afford) (first upgrades-need-can-afford)
-                     :else nil)]
-    (if (and academy
-             (not researching?)
-             target)
-      (->result macro (job/init (research/job (unit/id academy) target) frame))
+        research-unit-jobs (filterv (job/type? :research) unit-jobs)
+        jobs-by-research (group-by research/to-research research-unit-jobs)
+        idle-units-by-type (group-by
+                            unit/type
+                            (filterv
+                             (every-pred #(nil? (some
+                                                 (comp #{(unit/id %)} job/unit-id)
+                                                 unit-jobs))
+                                         unit/completed?
+                                         unit/exists?)
+                             (game/our-units game)))
+        abilities-want [:stim-packs #_:optical-flare] ;; TODO: only reseasrch flare after u-238-shells
+        upgrades-want [[:u-238-shells 1] [:terran-infantry-weapons 1] [:terran-infantry-armor 1] #_[:caduceus-reactor 1]]
+        mapped-abilities (mapv
+                          #(hash-map
+                            :ability %
+                            :researches (ability/researches %)
+                            :some-idle-researcher? (not-empty ((ability/researches %) idle-units-by-type))
+                            :have? (player/has-researched? our-player %)
+                            :affordable? (resources/can-afford? budget (ability/cost %))
+                            :researching? (not-empty (jobs-by-research %)))
+                          abilities-want)
+        mapped-upgrades (mapv
+                         (fn [[x lvl]]
+                           (hash-map
+                            :upgrade [x lvl]
+                            :researches (upgrade/researches x)
+                            ;; :can-upgrade? (game/can-upgrade? game x) ;; ?
+                            :some-idle-researcher? (not-empty ((upgrade/researches x) idle-units-by-type))
+                            #_:have? #_(player/has-upgraded? our-player x)
+                            :have? (player/has-upgraded-level? our-player [x lvl])
+                            :affordable? (resources/can-afford? budget (upgrade/cost x lvl))
+                            :researching? (not-empty (jobs-by-research x))))
+                         upgrades-want)
+        researchable-abilities (filterv
+                                (every-pred
+                                 (complement :have?)
+                                 (complement :researching?)
+                                 :some-idle-researcher?
+                                 #_:affordable?)
+                                mapped-abilities)
+        researchable-upgrades (filterv
+                               (every-pred
+                                (complement :have?)
+                                (complement :researching?)
+                                :some-idle-researcher?
+                                #_:affordable?
+                                #_:can-upgrade?)
+                               mapped-upgrades)
+        target (cond (not-empty researchable-abilities) (first researchable-abilities)
+                     (not-empty researchable-upgrades) (first researchable-upgrades)
+                     :else nil)
+        researcher (when target (first ((:researches target) idle-units-by-type)))]
+    (if (and (some? target)
+             (some? researcher))
+      (->result macro (job/init (research/job (unit/id researcher) (if (:ability target)
+                                                                     {:target (:ability target)}
+                                                                     {:target (first (:upgrade target))
+                                                                      :level (second (:upgrade target))})) frame))
       (->result macro))))
+
+;; make generic fn checking if we have techs and units
 
 (defn train-medics? [marines medics academies]
   (and (pos? (or academies 0))
@@ -205,29 +297,33 @@
            (and (every? pos? [marines medics])
                 (< 12 (/ marines medics))))))
 
-(defn train-firebats? [marines firebats techs]
-  (and (every? #(some #{%} techs) [:stim-packs :u-238-shells])
-       (some? marines)
-       (or (nil? firebats)
-           (zero? firebats)
-           (and (every? pos? [marines firebats])
-                (< 12 (/ marines firebats))))))
+(defn train-firebats? [marines firebats academies techs jobs]
+  (let [techs (into [] conj (flatten [techs (mapv research/to-research jobs)]))]
+    (and (pos? (or academies 0))
+         #_(every? #(some #{%} techs) [:stim-packs :u-238-shells])
+         (some? marines)
+         (or (nil? firebats)
+             (zero? firebats)
+             (and (every? pos? [marines firebats])
+                  (< 12 (/ marines firebats)))))))
 
-(defn maybe-train-units [[macro messages] units our-player unit-jobs frame]
-  (let [our-units (filterv unit/exists? (our-units units our-player))
-        max-to-train {:scv 25}
+(defn maybe-train-units "refactor" [[macro messages] units our-player unit-jobs frame]
+  (let [our-units (filterv (every-pred unit/completed? unit/exists?) (our-units units our-player))
+        max-to-train {:scv 30}
         unit-counts (frequencies (mapv unit/type our-units))
         techs (into [] conj (flatten [(player/has-researched our-player)
                                       (player/has-upgraded-max our-player)]))
-        trains (merge {:barracks (filterv some? [:marine
-                                                 (when (train-medics? (:marine unit-counts)
+        trains (merge {:barracks (filterv some? [(when (train-medics? (:marine unit-counts)
                                                                       (:medic unit-counts)
                                                                       (:academy unit-counts))
                                                    :medic)
-                                                 (when (train-firebats? (:marine unit-counts)
-                                                                        (:firebat unit-counts)
-                                                                        techs)
-                                                   :firebat)])}
+                                                 #_(when (train-firebats? (:marine unit-counts)
+                                                                          (:firebat unit-counts)
+                                                                          (:academy unit-counts)
+                                                                          techs
+                                                                          unit-jobs)
+                                                     :firebat)
+                                                 :marine])}
                       (when (< (:scv unit-counts)
                                (:scv max-to-train))
                         {:command-center :scv}))
@@ -237,9 +333,14 @@
         budget (budget our-player unit-jobs)
         [remaining-budget new-training-jobs] (reduce
                                               (fn [[budget jobs] trainer]
-                                                (let [to-train (rand-nth (flatten [((unit/type trainer) trains)]))
-                                                      to-pay (unit-type/cost to-train)]
-                                                  (if (resources/can-afford? budget to-pay)
+                                                (let [list-to-train (mapv
+                                                                     #(hash-map :to-train % :to-pay (unit-type/cost %))
+                                                                     (flatten [((unit/type trainer) trains)]))
+                                                      {:keys [to-train to-pay]} (first (filterv
+                                                                                        (fn [{:keys [to-train to-pay]}]
+                                                                                          (resources/can-afford? budget to-pay))
+                                                                                        list-to-train))]
+                                                  (if to-train
                                                     [(resources/combine-quantities - budget to-pay)
                                                      (conj jobs (-> (train/job (unit/id trainer) to-train)
                                                                     (job/init frame)))]
@@ -292,6 +393,7 @@
         [macro new-training-jobs] (maybe-train-units [macro messages] units our-player unit-jobs frame)
         [macro new-building-jobs] (maybe-build-supply [macro messages] units our-player unit-jobs frame)
         [macro new-build-rax-jobs] (maybe-build-barracks [macro messages] units our-player unit-jobs frame game-map)
+        [macro new-build-jobs] (maybe-build [macro messages] game unit-jobs)
         [macro new-research-jobs] (maybe-research [macro messages] game unit-jobs)
         messages (->> (into (or messages [])
                             (concat new-mining-jobs
@@ -300,6 +402,7 @@
                                     new-training-jobs
                                     new-building-jobs
                                     new-build-rax-jobs
+                                    new-build-jobs
                                     new-research-jobs))
                       (filterv (comp some? :unit-id)))]
     [macro messages]))

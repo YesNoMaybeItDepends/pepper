@@ -69,6 +69,12 @@
 (defn player-units [player units]
   (filterv #(player-owns-unit? player %) units))
 
+(defn can-upgrade [game]
+  (:can-upgrade game))
+
+(defn can-upgrade? [game upgrade]
+  (some #{upgrade} (can-upgrade game)))
+
 ;; our
 
 (defn our-player [game]

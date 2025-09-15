@@ -46,8 +46,9 @@
        (mapv unit-type/object->keyword)))
 
 (defn researches [kw]
-  (->> (UpgradeType/.whatUpgrades (kw->obj kw))
-       (mapv unit-type/object->keyword)))
+  (-> (kw->obj kw)
+      UpgradeType/.whatUpgrades
+      unit-type/object->keyword))
 
 (defn requires
   ([kw]

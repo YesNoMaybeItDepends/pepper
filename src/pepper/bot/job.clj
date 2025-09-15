@@ -120,6 +120,7 @@
     (nil? job) nil
     (completed? job) nil
     (cancelled? job) nil
+    (and (nil? (xform-id job)) (nil? (action job))) nil
     :else (-> (if (xform? job)
                 (xform! job api)
                 (execute-action! job api))

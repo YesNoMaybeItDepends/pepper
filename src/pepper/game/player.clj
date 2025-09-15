@@ -47,13 +47,19 @@
 (defn has-researched? [player ability]
   (some #{ability} (has-researched player)))
 
+(defn has-upgraded [player]
+  (:has-upgraded player))
+
 (defn has-upgraded-max [player]
   (->> (get-in player [:has-upgraded])
        (filterv #(upgrade/max-level? (first %) (second %)))
        (mapv first)))
 
-(defn has-upgraded? [player upgrade]
+(defn has-upgraded-max? [player upgrade]
   (upgrade/max-level? upgrade (get-in player [:has-upgraded upgrade])))
+
+(defn has-upgraded-level? [player [upgrade level]]
+  (= level (get-in player [:has-upgraded upgrade])))
 
 ;;;; players
 

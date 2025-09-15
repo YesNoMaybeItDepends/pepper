@@ -26,8 +26,9 @@
 ;;;; Portal
 
 (defn init-portal! [store]
-  (let [instance (portal/open {:launcher :vs-code})
-        #_(portal/open {:theme :portal.colors/nord})]
+  (let [vs-code {:launcher :vs-code}
+        default {:theme :portal.colors/nord}
+        instance (portal/open default)]
     (add-tap #'portal/submit)
     (swap! store assoc :portal/instance instance)))
 

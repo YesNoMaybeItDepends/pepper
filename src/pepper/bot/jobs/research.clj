@@ -25,8 +25,8 @@
         unit (Game/.getUnit game (job/unit-id job))
         researching? (Unit/.isResearching unit)
         upgrading? (Unit/.isUpgrading unit)]
-    (if (or (not researching?)
-            (not upgrading?))
+    (if (and (not researching?)
+             (not upgrading?))
       (job/set-completed job)
       job)))
 
@@ -63,16 +63,17 @@
     :done-researching?! (#'done-researching? job api)
     job))
 
-(defn job [unit-id to-research]
+(defn job [unit-id {:keys [target level]}]
   (job/register-xform! :research #'xform)
   (-> {:job :research
        :xform-id :research ;; if I check if a job has an xform then i dont need this
        :step :start-research!
-       :to-research to-research
+       :to-research target
+       :to-research-level level
        :unit-id unit-id}
       (job/set-cost (cond
-                      (to-research upgrade/by-keyword) (upgrade/cost to-research)
-                      (to-research ability/by-keyword) (ability/cost to-research)))))
+                      (target upgrade/by-keyword) (upgrade/cost target level)
+                      (target ability/by-keyword) (ability/cost target)))))
 
 (def job-def
   {:job :research

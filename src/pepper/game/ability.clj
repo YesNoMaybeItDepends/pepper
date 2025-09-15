@@ -39,12 +39,13 @@
      0]))
 
 (defn researches [kw]
-  (let [obj (kw->obj kw)]
-    (unit-type/object->keyword (TechType/.whatResearches obj))))
+  (-> (kw->obj kw)
+      TechType/.whatResearches
+      unit-type/object->keyword))
 
 (defn uses [kw]
-  (mapv unit-type/object->keyword
-        (-> kw kw->obj TechType/.whatUses)))
+  (->> (TechType/.whatUses (kw->obj kw))
+       (mapv unit-type/object->keyword)))
 
 (defn targets-unit? [kw]
   (-> kw kw->obj TechType/.targetsUnit))
