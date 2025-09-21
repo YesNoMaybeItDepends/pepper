@@ -3,16 +3,17 @@
    [clojure.core.async :as a]
    [pepper.core :as pepper]
    [pepper.api :as api]
-   [pepper.utils.config :as config]))
+   [pepper.utils.config :as config])
+  (:gen-class))
 
 (defn get-api-client-config [config]
   (:api config))
 
 (defn get-api-before-start [state]
-  (get-in state [:before-start]))
+  (get-in state [:before-start] (fn [] (println "no before-start fn"))))
 
 (defn get-api-after-end [state]
-  (get-in state [:after-end]))
+  (get-in state [:after-end] (fn [] (println "no after-end fn"))))
 
 (defn main [store]
   (let [[from-api to-api] [(a/chan) (a/chan)]
@@ -31,3 +32,6 @@
                  :ch-to-api to-api)]
     (api/start-game! api)
     (a/close! stop-ch)))
+
+(defn -main [& args]
+  (main (atom {})))

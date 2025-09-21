@@ -12,7 +12,6 @@
    [pepper.game.map :as map]
    [pepper.game.position :as position]
    [pepper.game.unit-type :as unit-type]
-   [user.portal :as portal]
    [pepper.game.unit :as unit]
    [pepper.bot.jobs.attack-move :as attack-move])
   (:import
@@ -134,7 +133,6 @@
 (defn render-unit-jobs [unit-jobs game _game]
   (let [jobs-to-render (filter-jobs-to-render unit-jobs)
         unit-ids (mapv :unit-id jobs-to-render)]
-    (portal/update-jobs jobs-to-render)
     (doseq [job jobs-to-render]
       (case (:job job)
         :gather (render-gather-job job game _game)

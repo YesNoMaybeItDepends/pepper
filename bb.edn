@@ -1,13 +1,17 @@
 {:tasks
- {hello-world {:doc "Prints hello world"
-               :task (println "hello world")}
-  wait-for-port {:doc "Waits for port localhost:7888"
-                 :task (wait/wait-for-port "localhost" 7888)}
-  #_test-new-cmd #_{:doc "try to open a new cmd"
-                    :requires ([babashka.fs :as fs]
-                               [babashka.process :as p])
-                    :task (p/shell "powershell" "-command" "start-process" "test-run-bot.ps1")}
-  test {:doc "Run tests"
+ {test {:doc "Run tests"
         :task (clojure "-X:test")}
   run:dev {:doc "Runs the bot from dev"
-           :task (clojure "-A:dev -X pepper.dev/main")}}}
+           :task (clojure "-A:dev -X pepper.dev/main")}
+  run:prod {:doc "Runs the bot from prod"
+            :task (clojure "-A:prod -M -m pepper.main")}
+  build:prod:uberjar {:doc "Build production uberjar"
+                      :task (clojure "-T:build uberjar")}
+  deploy:local {:doc "Move the jar to scbw folder"
+                :requires ([babashka.fs :as fs]
+                           [clojure.edn :as edn])
+                :task (let [cfg (edn/read-string (slurp "config.local.edn"))
+                            scbw-dir (get-in cfg [:scbw :path])]
+                        (fs/move "target/pepper.jar"
+                                 (str scbw-dir "\\AI")
+                                 {:replace-existing true}))}}}

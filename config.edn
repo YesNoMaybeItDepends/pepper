@@ -1,7 +1,8 @@
 ;; Replaced with config.local.edn
 {:starcraft {:path "your/absolute/path/to/chaoslauncher.exe"}
+ :scbw {:path "your/absolute/path/to/scbw/bots/pepper"}
  :log? false
  :api {:async true
-       :unlimited-frame-zero true
+       :unlimited-frame-zero false
        :debug-connection false
        :log-verbosely false}}

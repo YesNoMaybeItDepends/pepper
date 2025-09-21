@@ -1,5 +1,5 @@
 (ns pepper.game.map
-  (:refer-clojure :exclude [map])
+  (:refer-clojure :exclude [map bases])
   (:require [pepper.game.position :as position])
   (:import [bwapi Unit Pair]
            [bwem BWEM Neutral Base Area AreaId BWMap ChokePoint Altitude]))

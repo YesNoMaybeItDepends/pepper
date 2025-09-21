@@ -2,13 +2,19 @@
   (:require [clojure.edn :as edn]
             [clojure.test :refer [deftest testing is]]))
 
+(def dir {:ai ".\\bwapi-data\\AI"
+          :read ".\\bwapi-data\\read"
+          :write ".\\bwapi-data\\write"})
+
 (defn- read-edn [file]
-  (edn/read-string (slurp file)))
+  (edn/read-string
+   (try (slurp file)
+        (catch Exception e
+          (println "Could not read file" file)
+          "{}"))))
 
-(defn read-config [] (read-edn "config.local.edn"))
-;; (def ^:private schema (read-edn "config.edn"))
-
-(def config (read-config))
+(defn read-config []
+  (read-edn (str (:ai dir) "\\config.local.edn")))
 
 ;;;; TODO: validate configs
 

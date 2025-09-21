@@ -1,8 +1,7 @@
 (ns pepper.bot.job
   (:refer-clojure :exclude [type new])
   (:require
-   [pepper.api :as api]
-   [pepper.bot.job :as job])
+   [pepper.api :as api])
   (:import
    [bwapi Game Unit]))
 

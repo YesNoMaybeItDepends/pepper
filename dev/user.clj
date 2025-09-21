@@ -10,10 +10,11 @@
    [user.portal :as user.portal]
    [clojure.edn :as edn]
    [com.brunobonacci.mulog :as mu]
-   [quil.core :as q]
-   [quil.middleware :as qm]
-   [quil.applet :as qa]
-   [user.drawing :as drawing]
+   ;; java 8 rip quil
+   #_[quil.core :as q]
+   #_[quil.middleware :as qm]
+   #_[quil.applet :as qa]
+   #_[user.drawing :as drawing]
    [snitch.core :refer [defn* defmethod* *fn *let]]
    [babashka.fs :as fs]))
 
@@ -99,19 +100,19 @@
 
   #_())
 
-(comment ;; quill
+#_(comment ;; quill
 
-  (def last-state (logs/state-from-last-log-file!))
-  (def sketch (drawing/sketch last-state))
-  (def sketch nil)
+    (def last-state (logs/state-from-last-log-file!))
+    (def sketch (drawing/sketch last-state))
+    (def sketch nil)
 
-  sketch
+    sketch
 
-  (use 'user.drawing :reload)
-  (qa/with-applet user/sketch (q/start-loop))
-  (qa/with-applet user/sketch (q/exit))
-  (qa/with-applet user/sketch (q/random 10))
-  (qa/with-applet user/sketch (q/no-loop))
-  (qa/with-applet user/sketch (q/start-loop))
+    (use 'user.drawing :reload)
+    (qa/with-applet user/sketch (q/start-loop))
+    (qa/with-applet user/sketch (q/exit))
+    (qa/with-applet user/sketch (q/random 10))
+    (qa/with-applet user/sketch (q/no-loop))
+    (qa/with-applet user/sketch (q/start-loop))
 
-  #_())
+    #_())
