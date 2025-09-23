@@ -40,15 +40,17 @@
         (completing resources/sum-quantities)
         [0 0 0])))
 
-(defn execute-jobs! [unit-jobs api]
+(defn execute-jobs! [unit-jobs api bot game]
   (reduce-kv
    (fn [m id unit-job]
-     (assoc m id (job/process-job! unit-job api)))
+     (assoc m id (-> unit-job
+                     (job/preprocess-job! api game bot)
+                     (job/process-job! api))))
    {}
    unit-jobs))
 
-(defn update-on-frame [[unit-jobs messages] api]
+(defn update-on-frame [[unit-jobs messages] api bot game]
   (let [[new-jobs messages] (split-with job/job? (or messages []))
         unit-jobs (reduce set-unit-job unit-jobs new-jobs)
-        unit-jobs (execute-jobs! unit-jobs api)]
+        unit-jobs (execute-jobs! unit-jobs api bot game)]
     [unit-jobs (into [] messages)]))

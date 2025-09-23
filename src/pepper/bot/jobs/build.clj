@@ -33,6 +33,25 @@
                  bwapi.TilePosition/None})
    location))
 
+(defn building-tiles
+  "Given `target-tile` and `unit-type`, returns vector of tile-positions spanning the unit
+     
+     eg: [0 0] + [2 2]
+   
+     -> [[0 0] [0 1] [0 2]
+         [1 0] [1 1] [1 2]
+         [2 0] [2 1] [2 2]]"
+  [target-tile unit-type]
+  (let [{x :x y :y} target-tile
+        {w :x h :y} (unit-type/tile-size unit-type)]
+    (if (every? (every-pred (some-fn zero? pos?) int? some?) [x y w h])
+      (vec (for [w (range w)
+                 h (range h)]
+             (position/_->tile-position {:x (+ x w)
+                                         :y (+ y h)
+                                         :scale :tile-position})))
+      [])))
+
 (declare get-build-tile!)
 (declare go-build!)
 
@@ -63,17 +82,6 @@
                            (assoc :action #'building-completed?!))
       :else job)))
 
-(defn building-tiles [target-tile unit-type]
-  (let [{x :x y :y} target-tile
-        {w :x h :y} (unit-type/tile-size unit-type)]
-    (if (every? (every-pred (some-fn zero? pos?) int? some?) [x y w h])
-      (vec (for [w (range w)
-                 h (range h)]
-             (position/_->tile-position {:x (+ x w)
-                                         :y (+ y h)
-                                         :scale :tile-position})))
-      [])))
-
 (defn go-build! [api job]
   (let [game (api/game api)
         frame (Game/.getFrameCount game)
@@ -95,7 +103,7 @@
             job)
         job))))
 
-(defn get-build-location
+(defn get-build-location!
   "TODO: other than moving this somewhere else, maybe start looking from max and recur inwards to avoid funny building locations"
   [game building where min max]
   (loop [n min]
@@ -115,13 +123,20 @@
                     (Player/.getStartLocation (Game/.self game)))
         build-tile (if (= (:building job) :refinery)
                      (.getTilePosition (Game/.getUnit game (:geyser-id job)))
-                     (get-build-location game building near-tile 18 30))]
+                     (get-build-location! game building near-tile 18 30))]
     (if build-tile
       (assoc job
              :build-tile (position/->map build-tile)
              :frame-got-build-tile (Game/.getFrameCount game)
              :action #'go-build!)
       job)))
+
+(defn xform [[job api]]
+  (case (:step job)
+    :get-build-tile! #'get-build-tile!
+    :go-build! #'go-build!
+    :get-building-id! #'get-building-id!
+    :building-completed?! #'building-completed?!))
 
 (defn job
   ([unit-id unit-type] (job unit-id unit-type {}))

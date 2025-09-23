@@ -5,7 +5,8 @@
    [pepper.bot :as bot]
    [pepper.game :as game]
    [com.brunobonacci.mulog :as mu]
-   [pepper.utils.logging :as logging]))
+   [pepper.utils.logging :as logging])
+  (:import [bwapi Game Flag]))
 
 (defn api [state]
   (:api state))
@@ -50,13 +51,23 @@
 
 ;;;; on start
 
+(defn enable-flags! [state]
+  (let [flags {:user-input Flag/UserInput
+               :complete-map-information Flag/CompleteMapInformation}
+        game-obj (api/game (api state))
+        game (game state)]
+    (doseq [[_ flag] (filterv (fn [[flag _]] (flag game)) flags)]
+      (Game/.enableFlag game-obj flag))))
+
 (defn on-start [state]
   (let [state (update state :api api/update-on-start)
         state (update state :game game/update-on-start
                       (game/parse-on-start (api state)))
         state (update state :bot bot/update-on-start
                       (bot/parse-on-start (api state)) (game state))]
-    state))
+    (doto
+     state
+      enable-flags!)))
 
 ;;;; on frame
 
@@ -153,13 +164,13 @@
   (or (= ch stop-ch)
       (nil? msg)))
 
-(defn init-state [api]
+(defn init-state [api bot-config]
   {:api api
-   :game {}
+   :game (merge {} bot-config)
    :bot {}})
 
-(defn init [api from-api to-api store stop-ch]
-  (reset! store (init-state api))
+(defn init [api from-api to-api store stop-ch bot-config]
+  (reset! store (init-state api bot-config))
   (a/go-loop []
     (when-let [[msg _ :as res] (a/alts! [stop-ch
                                          from-api]

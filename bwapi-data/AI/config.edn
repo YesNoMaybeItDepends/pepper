@@ -2,6 +2,8 @@
 {:starcraft {:path "your/absolute/path/to/chaoslauncher.exe"}
  :scbw {:path "your/absolute/path/to/scbw/bots/pepper"}
  :log? false
+ :bot-config {:user-input false
+              :complete-map-information false}
  :api {:async true
        :unlimited-frame-zero false
        :debug-connection false

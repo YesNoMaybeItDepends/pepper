@@ -266,3 +266,8 @@ config.local.edn
 ### Logs ###
 .log.edn
 .logs
+
+### BWAPI ###
+# bwapi-data/AI
+bwapi-data/write
+bwapi-data/read

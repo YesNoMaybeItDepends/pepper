@@ -10,7 +10,7 @@
    {:type :multi
     :publishers [#_{:type :console :pretty? true}
                  {:type :simple-file
-                  :filename (str ".logs/" file-name ".log")}]}))
+                  :filename (str "bwapi-data/write/" file-name ".log")}]}))
 
 (defn format-state
   "dissoc :api

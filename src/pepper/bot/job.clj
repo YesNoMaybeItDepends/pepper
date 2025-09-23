@@ -1,7 +1,10 @@
 (ns pepper.bot.job
   (:refer-clojure :exclude [type new])
   (:require
-   [pepper.api :as api])
+   [pepper.api :as api]
+   [pepper.game.unit :as unit]
+   [pepper.game :as game]
+   [com.brunobonacci.mulog :as mu])
   (:import
    [bwapi Game Unit]))
 
@@ -27,8 +30,14 @@
 (defn completed? [job]
   (:job/completed? job))
 
-(defn set-cancelled [job]
-  (assoc job :job/cancelled? true))
+(defn set-cancelled
+  ([job] (set-cancelled job "no reason given"))
+  ([job reason]
+   (doto
+    (assoc job
+           :job/cancelled? true
+           :job/cancelled-reason reason)
+     (#(mu/log :job-cancelled :job %)))))
 
 (defn cancelled? [job]
   (:job/cancelled? job))
@@ -109,10 +118,20 @@
 (defn xform? [job]
   (some? (xform-id job)))
 
+(defn ensure-assignee-exists [job game]
+  (if-not (unit/exists? (get (game/units-by-id game)
+                             (unit-id job)))
+    (set-cancelled job "assignee doesn't exist")
+    job))
+
 (defn execute-action!
   "executes job on action"
   [job api]
   ((action job) api job))
+
+(defn preprocess-job! [job api game bot]
+  (some-> job
+          (ensure-assignee-exists game)))
 
 (defn process-job! [job api]
   (cond

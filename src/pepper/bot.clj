@@ -75,7 +75,7 @@
 
         [unit-jobs _] (unit-jobs/update-on-frame
                        [unit-jobs messages]
-                       api)]
+                       api bot game)]
     (assoc bot
            :our our
            :macro macro
