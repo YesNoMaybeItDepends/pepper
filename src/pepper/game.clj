@@ -8,7 +8,8 @@
    [pepper.game.player :as player]
    [pepper.game.position :as position]
    [pepper.game.unit :as unit]
-   [pepper.game.upgrade :as upgrade])
+   [pepper.game.upgrade :as upgrade]
+   [pepper.game.map.area :as area])
   (:import
    [bwapi BWClient Game Text]))
 
@@ -133,7 +134,8 @@
 
 (defn parse-on-frame [api]
   (let [client (api/client api)
-        game (api/game api)]
+        game (api/game api)
+        bwem (api/bwem api)]
     (-> {}
         (set-frame (Game/.getFrameCount game))
         (set-frames-behind (BWClient/.framesBehind client))
@@ -143,7 +145,7 @@
         (set-latency-remaining-time (Game/.getRemainingLatencyTime game))
         (set-elapsed-time (Game/.elapsedTime game))
         (set-players-by-id (map (player/parse-player! game) (Game/.getPlayers game)))
-        (set-units (map (unit/parse-unit! game) (Game/.getAllUnits game)))
+        (set-units (map (unit/parse-unit! game bwem) (Game/.getAllUnits game)))
         (merge
          {:can-upgrade (transduce
                         (comp
@@ -210,17 +212,33 @@
          (map format)
          (str/join ":"))))
 
-(defn render-top-left! [api strings]
-  (api-game/draw-text-screen
-   (api/game api) 2 0 (str/join "\n" strings)))
-
-(defn render-game! [game api]
+(defn render-top-left! [game api-game]
   (let [format-fn (fn [[k v]] [(str k " " v)])
         display {:frame (frame game)
-                 :clock (clock (elapsed-time game))}]
-    (render-top-left!
-     api (mapcat format-fn display))
-    (render-units! game (api/game api))))
+                 :clock (clock (elapsed-time game))}
+        strings (mapcat format-fn display)]
+    (api-game/draw-text-screen
+     api-game 2 0 (str/join "\n" strings))))
+
+(defn rectangle-center [{:keys [x1 y1 w h]}]
+  [(+ x1 (unchecked-divide-int w 2))
+   (+ y1 (unchecked-divide-int h 2))])
+
+(defn render-areas! [areas api-game]
+  (doseq [area areas]
+    (let [{id :id {:keys [x1 x2 y1 y2] :as rectangle} :rectangle} area
+          [x y] (rectangle-center rectangle)]
+      (api-game/draw-text-map api-game x y (str id))
+      (Game/.drawBoxMap api-game x1 y1 x2 y2 bwapi.Color/White))))
+
+(defn render-map! [map api-game]
+  (render-areas! (map/areas map) api-game))
+
+(defn render-game! [game api]
+  (let [api-game (api/game api)]
+    (render-top-left! game api-game)
+    (render-map! (get-map game) api-game)
+    (render-units! game api-game)))
 
 (defn update-on-unit-event [game [event-id {unit :unit}] api]
   (let [frame (Game/.getFrameCount (api/game api))
@@ -246,3 +264,4 @@
                                          :visible? true}))
               with-some-data)]
     (update game :units-by-id update-units-by-id [u])))
+

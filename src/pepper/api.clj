@@ -4,7 +4,8 @@
    [pepper.api.bwem :as bwem]
    [pepper.api.client :as client])
   (:import
-   [bwapi BWClient PerformanceMetrics PerformanceMetric]))
+   [bwapi BWClient PerformanceMetrics PerformanceMetric]
+   [bwem BWEM]))
 
 ;; If these are private, do I want these fns?
 
@@ -43,6 +44,9 @@
 (defn bwem [api]
   (:api/bwem api))
 
+(defn bwem-map [api]
+  (:api/bwmap api))
+
 (defn performance-metrics [api]
   (:api/performance-metrics api))
 
@@ -54,6 +58,7 @@
     (-> api
         (set-game game)
         (set-bwem bwem)
+        (assoc :api/bwmap (BWEM/.getMap bwem))
         (set-performance-metrics performance-metrics))))
 
 (defn start-game! [api]

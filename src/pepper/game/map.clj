@@ -1,8 +1,27 @@
 (ns pepper.game.map
   (:refer-clojure :exclude [map bases])
-  (:require [pepper.game.position :as position])
-  (:import [bwapi Unit Pair]
-           [bwem BWEM Neutral Base Area AreaId BWMap ChokePoint Altitude]))
+  (:require
+   [pepper.game.position :as position])
+  (:import
+   [bwapi Pair TilePosition Unit]
+   [bwem Altitude Area AreaId BWEM BWMap Base ChokePoint Neutral]))
+
+(defn ->rectangle [[top-left bottom-right]]
+  (let [x1 (:x top-left)
+        y1 (:y top-left)
+        x2 (:x bottom-right)
+        y2 (:y bottom-right)]
+    {:x1 x1 :x2 x2
+     :y1 y1 :y2 y2
+     :w (- x2 x1)
+     :h (- y2 y1)}))
+
+(defn position-in-rectangle? [position rectangle]
+  (let [{:keys [x y]} position]
+    (and (>= x (:x1 rectangle))
+         (<= x (:x2 rectangle))
+         (>= y (:y1 rectangle))
+         (<= y (:y2 rectangle)))))
 
 #_(def mini-tiles (atom))
 
@@ -50,15 +69,18 @@
    :geometry (mapv position/->map (ChokePoint/.getGeometry choke-point))})
 
 (defn parse-area-on-start! [area]
-  {:id (->id area)
-   :group-id (Area/.getGroupId area)
-   :bases (mapv ->id (Area/.getBases area))
-   :choke-point-ids (mapv ->id (Area/.getChokePoints area))
-   :accessible-neighbor-ids (mapv ->id (Area/.getAccessibleNeighbors area))
-   :top-left-tile (position/->map (Area/.getTopLeft area))
-   :bottom-right-tile (position/->map (Area/.getBottomRight area))
-   :highest-altitude (Altitude/.intValue (Area/.getHighestAltitude area))
-   :lowest-altitude (Altitude/.intValue (Area/.getHighestAltitude area))})
+  (let [top-left-tile (position/->map (Area/.getTopLeft area))
+        bottom-right-tile (position/->map (Area/.getBottomRight area))]
+    {:id (->id area)
+     :group-id (Area/.getGroupId area)
+     :bases (mapv ->id (Area/.getBases area))
+     :choke-point-ids (mapv ->id (Area/.getChokePoints area))
+     :accessible-neighbor-ids (mapv ->id (Area/.getAccessibleNeighbors area))
+     :top-left-tile top-left-tile
+     :bottom-right-tile bottom-right-tile
+     :rectangle (->rectangle (mapv position/_->position [top-left-tile bottom-right-tile]))
+     :highest-altitude (Altitude/.intValue (Area/.getHighestAltitude area))
+     :lowest-altitude (Altitude/.intValue (Area/.getHighestAltitude area))}))
 
 (defn parse-starting-bases-on-start! [map]
   (mapv ->id (BWMap/.getStartingLocations map)))
@@ -151,5 +173,20 @@
 (defn get-area-base-ids [area]
   (:bases area))
 
-(defn bases [map]
+(defn bases-by-id [map]
   (:bases map))
+
+(defn bases [map]
+  (vals (:bases map)))
+
+(defn areas-by-id [map]
+  (:areas map))
+
+(defn areas [map]
+  (vals (:areas map)))
+
+(defn _position->areas [areas position]
+  (filterv (comp #(position-in-rectangle? position %) :rectangle) areas))
+
+(defn position->areas [map position]
+  (mapv :id (_position->areas (areas map) position)))

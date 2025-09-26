@@ -53,13 +53,16 @@
   (apply TilePosition/new (mapv (convert scale :tile-position) [x y])))
 
 (defn _->position [{:keys [x y scale] :as pos}]
-  (merge pos (zipmap [:x :y] (mapv (convert scale :position) [x y]))))
+  (merge (zipmap [:x :y] (mapv (convert scale :position) [x y]))
+         {:scale :position}))
 
 (defn _->walk-position [{:keys [x y scale] :as pos}]
-  (merge pos (zipmap [:x :y] (mapv (convert scale :walk-position) [x y]))))
+  (merge (zipmap [:x :y] (mapv (convert scale :walk-position) [x y]))
+         {:scale :walk-position}))
 
 (defn _->tile-position [{:keys [x y scale] :as pos}]
-  (merge pos (zipmap [:x :y] (mapv (convert scale :tile-position) [x y]))))
+  (merge (zipmap [:x :y] (mapv (convert scale :tile-position) [x y]))
+         {:scale :tile-position}))
 
 (defn ->obj [{:keys [x y scale]}]
   (->> [x y]

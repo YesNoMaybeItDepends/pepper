@@ -71,7 +71,7 @@
                           [macro messages] game (vals unit-jobs))
 
         [military messages] (military/update-on-frame
-                             [military messages] data)
+                             [military messages] game unit-jobs)
 
         [unit-jobs _] (unit-jobs/update-on-frame
                        [unit-jobs messages]

@@ -4,12 +4,46 @@
    [pepper.bot.jobs.attack-move :as attack-move]
    [pepper.bot.jobs.find-enemy-starting-base :as find-enemy-starting-base]
    [pepper.bot.macro :as macro]
+   [pepper.game :as game]
    [pepper.game.map :as game-map]
    [pepper.game.map.area :as area]
    [pepper.game.player :as player]
+   [pepper.game.position :as position]
    [pepper.game.unit :as unit]
-   [pepper.game.unit-type :as unit-type]
-   [pepper.game.position :as position]))
+   [pepper.game.unit-type :as unit-type]))
+
+(defn ->event [name frame]
+  {:event/name name
+   :event/frame frame})
+
+(defn event-name [event]
+  (:event/name event))
+
+(defn event-frame [event]
+  (:event/frame event))
+
+(defn valid-event? [event]
+  (every? event [:event/name :event/frame]))
+
+(def base-events
+  {:scouted-base "We scouted a base"
+   :confirmed-enemy-base "We are certain that the enemy controls a base"
+   :confirmed-enemy-starting-base "We are certain that this is the enemy starting base"})
+
+(defn valid-base-event? [base-event]
+  (contains? base-events (:event/name base-event)))
+
+(defn validate-base-event [base-event]
+  (if-not (valid-base-event? base-event)
+    (throw (Exception. "invalid base event"))
+    base-event))
+
+(defn ->base-event [name frame base]
+  (assoc (->event name frame)
+         :base-id base))
+
+(defn events [military]
+  (:events military []))
 
 (defn find-enemy-starting-base-jobs [unit-jobs]
   (filterv #(= (:job %) :find-enemy-starting-base) unit-jobs))
@@ -25,8 +59,10 @@
 (defn set-enemy-starting-base [military base-id]
   (assoc military :enemy-starting-base base-id))
 
-(defn enemy-starting-base [military]
-  (:enemy-starting-base military))
+(defn enemy-starting-base-id [military] ;; used
+  (:base-id (->> (events military)
+                 (filterv (comp #{:confirmed-enemy-starting-base} event-name))
+                 first)))
 
 (defn empty-starting-bases [military]
   (or (:empty-starting-bases military)
@@ -38,17 +74,11 @@
 (defn our-main-base-id [military]
   (:our-main-base-id military))
 
-(defn set-their-main-base-by-id [military base-id]
-  (assoc military :their-main-base-id base-id))
+(defn frame-last-rallied [military]
+  (:frame-last-rallied military))
 
-(defn their-main-base-id [military]
-  (:their-main-base-id military))
-
-(defn set-swarm-rally-point [military position]
-  (assoc military :swarm-rally-position position))
-
-(defn swarm-rally-position [military]
-  (:swarm-rally-position military))
+(defn set-frame-last-rallied [military frame]
+  (assoc military :frame-last-rallied frame))
 
 (defn player-units [units player] ;; where do i put this its everywhere
   (filterv #(unit/owned-by-player? % player) units))
@@ -63,7 +93,7 @@
   (mapv find-enemy-starting-base/starting-base-to-scout (find-enemy-starting-base-jobs unit-jobs)))
 
 (defn know-enemy-starting-base? [military]
-  (some? (enemy-starting-base military)))
+  (some? (enemy-starting-base-id military)))
 
 (defn set-unit-finding-enemy-starting-base [military worker]
   (update military :units-finding-enemy-starting-base conj (unit/id worker)))
@@ -76,7 +106,11 @@
         military (set-unit-finding-enemy-starting-base military worker)] ;; TODO: if some base to scout then add job and stuff, otherwise skip adding it bro
     [military [job]]))
 
-(defn see-enemy-main? [units possible-enemy-starting-bases]
+(defn see-enemy-main?
+  "Do we see an enemy town hall in any of the starting bases?
+   
+   Returns a tile lol lmao"
+  [units possible-enemy-starting-bases]
   (first (->> units
               (filterv (unit/type? unit-type/town-hall))
               (filterv (fn [u] (some #(= % (:tile u)) possible-enemy-starting-bases)))
@@ -96,8 +130,35 @@
                           [military []])]
     [military jobs]))
 
-(defn maybe-find-enemy-starting-base [[military messages] units our-player unit-jobs frame starting-bases]
-  (let [know-enemy-starting-base? (know-enemy-starting-base? military)
+(defn base->areas [])
+
+(defn unit->areas [unit map]
+  (game-map/position->areas map (unit/position unit)))
+
+(defn group-units-by-area [map units]
+  (reduce
+   (fn [acc unit]
+     (reduce #(update-in %1 [%2] conj unit) acc (unit->areas unit map)))
+   {}
+   units))
+
+(defn discover-enemy-bases [game]
+  (let [all-bases (game-map/bases (game/get-map game))
+        visible-enemy-units (filterv (every-pred unit/exists? unit/visible?) (game/enemy-units game))
+        group-units-by-area (group-by (fn [x]
+                                        :position) visible-enemy-units)]))
+
+(defn update-intel [[military messages] game unit-jobs]
+  (let [bases (game-map/bases (game/get-map game))
+        areas (game-map/areas (game/get-map game))
+        enemy-units (game/enemy-units game)]))
+
+(defn maybe-find-enemy-starting-base [[military messages] game unit-jobs]
+  (let [starting-bases (game-map/starting-bases (game/get-map game)) ;; as keyval
+        units (game/units game)
+        our-player (game/our-player game)
+        frame (game/frame game)
+        know-enemy-starting-base? (know-enemy-starting-base? military)
         see-enemy-main? (see-enemy-main? units (:possible-enemy-starting-bases military))]
     (cond
       know-enemy-starting-base?
@@ -112,6 +173,11 @@
 
       :else
       [military []])))
+
+(defn maybe-find-enemy-starting-base-v2 [[military messages] game unit-jobs]
+  (let [events (events military)
+        enemy-starting-base-id (enemy-starting-base-id military)]
+    enemy-starting-base-id))
 
 (defn get-main-geography [base-id game-map]
   (let [base (game-map/get-base-by-id game-map base-id)
@@ -186,7 +252,7 @@
         lurkers-to-kill (filterv (every-pred :visible? (complement :burrowed?) (unit/type? :lurker)) units-to-kill)
         buildings-to-kill (filterv #(unit-type/building? (unit/type %)) units-to-kill)
         units-that-can-attack (units-that-can-attack our-units)
-        their-main (enemy-starting-base military)
+        their-main (enemy-starting-base-id military)
         their-ramp (:center (first (get-main-ramp their-main game-map)))
         our-main   (player/starting-base our-player)
         our-ramp (:center (first (get-main-ramp our-main game-map)))
@@ -206,7 +272,7 @@
                         their-main
                         (if (some? (first buildings-to-kill))
                           (:tile (first buildings-to-kill))
-                          (rand-nth (keys (game-map/bases game-map)))))
+                          (rand-nth (keys (game-map/bases-by-id game-map)))))
                       our-ramp)
         units-to-rally-xf (comp (filter (complement :attack-frame?))
                                 (filter (complement :starting-attack?))
@@ -217,10 +283,10 @@
                                   (filter any?)))
         units-to-rally (transduce units-to-rally-xf conj [] units-that-can-attack)
         new-jobs (mapv #(job/init (attack-move/job (unit/id %) rally-point {:target-unit-id (unit/id (first lurkers-to-kill))}) frame) units-to-rally)
-        frame-last-rallied (:frame-last-rallied military)
+        frame-last-rallied (frame-last-rallied military)
         rally? (< (+ 250 (or frame-last-rallied 0)) frame)]
     [(if rally?
-       (assoc military :frame-last-rallied frame)
+       (set-frame-last-rallied military frame)
        military)
      (if rally?
        new-jobs
@@ -228,20 +294,16 @@
 
 ;;;; 
 
-(defn init-military [our-player starting-bases]
-  (let [our-starting-base (player/starting-base our-player)]
-    {:our-starting-base our-starting-base
-     :enemy-starting-base nil
-     :possible-enemy-starting-bases (filterv (fn [base] (nil? (#{our-starting-base} base))) starting-bases)
-     :discarded-enemy-starting-bases []
-     :units-finding-enemy-starting-base #{}})) ;; unit -> base tuple, eg [3 [7 113]]
+(defn init-military
+  "delete this probably"
+  [our-player starting-bases]
+  {})
 
 (defn update-on-start [our-player starting-bases]
   (init-military our-player starting-bases))
 
-(defn update-on-frame [[military messages] {:keys [units players frame game-map unit-jobs]}]
-  (let [our-player (player/our-player players)
-        starting-bases (game-map/starting-bases game-map)
-        [military new-scouting-jobs] (maybe-find-enemy-starting-base [military messages] units our-player unit-jobs frame starting-bases)
-        [military new-rally-jobs] (maybe-rally-marines [military messages] game-map players units unit-jobs frame)]
-    [military (into messages conj (concat (or new-scouting-jobs []) (or new-rally-jobs [])))]))
+(defn update-on-frame [[military messages] game unit-jobs]
+  (let [[military new-scouting-jobs] (maybe-find-enemy-starting-base [military messages] game unit-jobs)
+        [military new-rally-jobs] (maybe-rally-marines [military messages] (game/get-map game) (game/players game) (game/units game) unit-jobs (game/frame game))]
+    [military (into messages conj (concat (or new-scouting-jobs [])
+                                          (or new-rally-jobs [])))]))

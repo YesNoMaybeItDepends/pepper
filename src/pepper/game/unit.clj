@@ -5,7 +5,8 @@
    [pepper.game.position :as position]
    [pepper.game.unit-type :as unit-type])
   (:import
-   (bwapi Game Player Unit)))
+   (bwapi Game Player Unit WalkPosition)
+   (bwem BWEM BWMap Area AreaId)))
 
 (defn id [unit]
   (:id unit))
@@ -93,6 +94,7 @@
               :initial-type (comp unit-type/object->keyword Unit/.getInitialType)
               :position (comp position/->map Unit/.getPosition)
               :tile (comp position/->map Unit/.getTilePosition)
+              ;; :areas (comp  Unit/.getPosition) ;; needs to use unit and bwem so gotta rethink this
               :completed? Unit/.isCompleted
               :visible? Unit/.isVisible
               :attack-frame? Unit/.isAttackFrame
@@ -112,13 +114,23 @@
    (-> (datafy unit-obj keywords kw->val)
        (set-last-frame-updated frame))))
 
+(defn parse-nearest-area! [tile-position bwmap]
+  (-> (BWMap/.getNearestArea bwmap tile-position)
+      Area/.getId
+      AreaId/.intValue))
+
+(defn parse-area! [tile-position bwmap]
+  (when-some [area (BWMap/.getArea bwmap tile-position)]
+    (AreaId/.intValue (Area/.getId area))))
+
 (defn parse-unit!
   "DEPRECATED
    
    Reads a bwapi unit with a bwapi game"
-  [game]
+  [game bwem]
   (fn [unit]
-    (->map unit (Game/.getFrameCount game))))
+    (assoc (->map unit (Game/.getFrameCount game))
+           :area (parse-area! (Unit/.getTilePosition unit) (BWEM/.getMap bwem)))))
 
 (defn group-unit-by-keywords
   ([unit keywords] (group-unit-by-keywords {} unit keywords))
