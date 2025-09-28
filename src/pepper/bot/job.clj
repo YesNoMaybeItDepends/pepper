@@ -10,6 +10,9 @@
 
 (def xforms (atom {}))
 
+(defn register-xforms! [map-xforms]
+  (reset! xforms map-xforms))
+
 (defn register-xform! [xform-id xform]
   (swap! xforms assoc xform-id xform))
 
@@ -100,6 +103,17 @@
 (defn with-last-frame-executed! [job api] ;; disgusting
   (set-last-frame-executed job (Game/.getFrameCount
                                 (api/game api))))
+
+(defn ->job [job frame params]
+  (let [job-params (set (keys (:params job)))]
+    (-> (reduce
+         (fn [m k]
+           (assoc m k (k params)))
+         job
+         job-params)
+        (assoc
+         :uuid (random-uuid)
+         :frame-created-job frame))))
 
 (defn init [job frame]
   ((fnil merge {}) job {:uuid (random-uuid)

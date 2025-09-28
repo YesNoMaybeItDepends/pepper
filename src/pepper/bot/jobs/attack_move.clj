@@ -1,5 +1,6 @@
 (ns pepper.bot.jobs.attack-move
   (:require
+   [com.brunobonacci.mulog :as mu]
    [pepper.api :as api]
    [pepper.bot.job :as job]
    [pepper.game.position :as position]
@@ -76,9 +77,10 @@
                      (if (= :medic (unit-type/object->keyword unit-type))
                        :maybe-heal!
                        :go-there!)))
-      (if (or (not (Unit/.exists unit)) (not target-position))
+      (if (or (not (Unit/.exists unit))
+              (not target-position))
         (job/set-completed job)
-        (println "what?!")))))
+        (mu/log :unexpected :data job :msg "attack-move job that didn't succeed and at least has either an existing unit or a position. AKA What?!")))))
 
 (defn xform [[job api]]
   (case (:step job)
@@ -88,7 +90,6 @@
     :yay! (#'yay! job api)))
 
 (defn job [unit-id target-position opts]
-  (job/register-xform! :attack-move #'xform)
   {:job :attack-move
    :xform-id :attack-move
    :step :go-there!

@@ -64,7 +64,6 @@
     job))
 
 (defn job [unit-id {:keys [target level]}]
-  (job/register-xform! :research #'xform)
   (-> {:job :research
        :xform-id :research ;; if I check if a job has an xform then i dont need this
        :step :start-research!

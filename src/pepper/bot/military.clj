@@ -94,7 +94,7 @@
     (filterv (complement not-enemy-starting-bases) all-starting-bases)))
 
 (defn starting-bases-already-being-scouted [unit-jobs]
-  (mapv find-enemy-starting-base/starting-base-to-scout (find-enemy-starting-base-jobs unit-jobs)))
+  (mapcat find-enemy-starting-base/positions (find-enemy-starting-base-jobs unit-jobs)))
 
 (defn know-enemy-starting-base? [military]
   (some? (enemy-starting-base-id military)))
@@ -154,14 +154,17 @@
         some-available-worker (macro/get-idle-or-mining-worker (macro/workers our-units) unit-jobs)
         possible-enemy-starting-bases (possible-enemy-starting-bases military our-player starting-bases)
         starting-bases-already-being-scouted (starting-bases-already-being-scouted unit-jobs)
-        starting-base-to-scout (first (into [] (remove (set starting-bases-already-being-scouted) possible-enemy-starting-bases)))
+        starting-bases-to-scout (into [] (remove
+                                          (set starting-bases-already-being-scouted) possible-enemy-starting-bases))
         assign-job? (and barracks-completed?
                          (not already-scouting?)
                          some-available-worker
-                         starting-base-to-scout)
+                         (not-empty starting-bases-to-scout))
         jobs (if-not assign-job?
                []
-               [(job/init (find-enemy-starting-base/job starting-base-to-scout (unit/id some-available-worker)) frame)])]
+               [(job/->job find-enemy-starting-base/job frame
+                           {:positions starting-bases-to-scout
+                            :unit-id (unit/id some-available-worker)})])]
     [military jobs]))
 
 (defn maybe-find-enemy-starting-base [[military messages] game unit-jobs]

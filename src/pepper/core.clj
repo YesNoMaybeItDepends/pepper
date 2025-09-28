@@ -5,7 +5,12 @@
    [pepper.bot :as bot]
    [pepper.game :as game]
    [com.brunobonacci.mulog :as mu]
-   [pepper.utils.logging :as logging])
+   [pepper.utils.logging :as logging]
+   [pepper.bot.job :as job]
+   [pepper.bot.jobs.attack-move :as attack-move]
+   [pepper.bot.jobs.build :as build]
+   [pepper.bot.jobs.find-enemy-starting-base :as find-enemy-starting-base]
+   [pepper.bot.jobs.research :as research])
   (:import [bwapi Game Flag]))
 
 (defn api [state]
@@ -169,8 +174,15 @@
    :game (merge {} bot-config)
    :bot {}})
 
+(def xforms
+  {:attack-move #'attack-move/xform
+   :build #'build/xform
+   :find-enemy-starting-base #'find-enemy-starting-base/xform
+   :research #'research/xform})
+
 (defn init [api from-api to-api store stop-ch bot-config]
   (reset! store (init-state api bot-config))
+  (job/register-xforms! xforms)
   (a/go-loop []
     (when-let [[msg _ :as res] (a/alts! [stop-ch
                                          from-api]

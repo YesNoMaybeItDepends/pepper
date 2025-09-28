@@ -79,6 +79,12 @@
       UnitType/.tileSize
       position/->map))
 
+(defn sight-range
+  "In pixels"
+  [unit-type]
+  (-> (keyword->object unit-type)
+      UnitType/.sightRange))
+
 ;; TODO: unit size to kw '(:large :small etc)
 ;; (defn unit-size [unit-type] 
 ;;   (-> (keyword->object unit-type)

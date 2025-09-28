@@ -71,8 +71,21 @@
                 :tile-position TilePosition/new
                 :walk-position WalkPosition/new))))
 
-(defn + [{x1 :x y1 :y :as pos1}
-         {x2 :x y2 :y :as pos2}]
+(defn + [{x1 :x y1 :y scale1 :scale :as pos1}
+         {x2 :x y2 :y scale2 :scale :as pos2}]
   (assoc pos1
          :x (clojure.core/+ x1 x2)
          :y (clojure.core/+ y1 y2)))
+
+(defn distance
+  "Beware scales"
+  [{x1 :x y1 :y scale1 :scale :as pos1}
+   {x2 :x y2 :y scale2 :scale :as pos2}]
+  (assoc pos1
+         :x (abs (clojure.core/- x1 x2))
+         :y (abs (clojure.core/- y1 y2))))
+
+(defn in-distance? [a b d]
+  (let [{x :x y :y} (distance a b)]
+    (and (<= x d)
+         (<= y d))))
