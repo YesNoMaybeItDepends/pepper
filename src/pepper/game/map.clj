@@ -1,10 +1,19 @@
 (ns pepper.game.map
   (:refer-clojure :exclude [map bases])
   (:require
+   [pepper.game.map.area :as area]
    [pepper.game.position :as position])
   (:import
    [bwapi Pair TilePosition Unit]
-   [bwem Altitude Area AreaId BWEM BWMap Base ChokePoint Neutral]))
+   [bwem
+    Altitude
+    Area
+    AreaId
+    BWEM
+    BWMap
+    Base
+    ChokePoint
+    Neutral]))
 
 (defn ->rectangle [[top-left bottom-right]]
   (let [x1 (:x top-left)
@@ -59,12 +68,14 @@
    :blocking-mineral-fields (mapv ->id (Base/.getBlockingMinerals base))
    :geysers (mapv ->id (Base/.getGeysers base))
    :resource-depot-tile (position/->map (Base/.getLocation base))
-   :center (position/->map (Base/.getCenter base))})
+   :center (position/->map (Base/.getCenter base))
+   :starting-location? (Base/.isStartingLocation base)})
 
 (defn parse-choke-point-on-start! [choke-point]
   {:id (->id choke-point) ;; (random-uuid)
    :areas (mapv ->id (pair->tuple (ChokePoint/.getAreas choke-point)))
-   :blocking-neutral (->id (ChokePoint/.getBlockingNeutral choke-point))
+   :starts-blocked? (ChokePoint/.isPseudo choke-point)
+   :blocking-neutral (->id (ChokePoint/.getBlockingNeutral choke-point)) ;; if there's more than 1 only returns 1 
    :center (position/->map (ChokePoint/.getCenter choke-point))
    :geometry (mapv position/->map (ChokePoint/.getGeometry choke-point))})
 
@@ -190,3 +201,35 @@
 
 (defn position->areas [map position]
   (mapv :id (_position->areas (areas map) position)))
+
+(defn get-main-geography [base-id game-map]
+  (let [base (get-base-by-id game-map base-id)
+        area (get-base-area base game-map)
+        choke-points (get-area-choke-points area game-map)]
+    {:base base
+     :area area
+     :choke-points choke-points}))
+
+(defn get-main-ramp
+  "Returns list of ramps"
+  [base-id game-map]
+  (let [{:keys [base area choke-points]} (get-main-geography base-id game-map)
+        accessible-neighbors (get-area-accessible-neighbors area game-map)
+        choke-points-to-accessible-neighbors (area/choke-points-to-accessible-neighbors area accessible-neighbors choke-points)]
+    (filterv (comp nil? :blocking-neutral) choke-points-to-accessible-neighbors)))
+
+(defn get-area-accesible-areas [area game-map]
+  (->> (get-area-choke-points area game-map)
+       (filterv (complement :starts-blocked?))
+       (mapcat get-choke-point-area-ids)
+       (filterv (complement #{(:id area)}))
+       (mapv #(get-area-by-id game-map %))))
+
+(defn get-main-natural
+  "TODO: There could be more than 1 natural, but right now I'm always getting the first one"
+  [base game-map]
+  (let [area (get-base-area base game-map)
+        bases (->> (get-area-accesible-areas area game-map)
+                   (mapcat get-area-base-ids)
+                   (mapv #(get-base-by-id game-map %)))]
+    (first bases)))

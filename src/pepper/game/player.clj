@@ -38,7 +38,7 @@
 (defn resources-available [player]
   [(minerals player) (gas player) (supply-available player)])
 
-(defn starting-base [player]
+(defn starting-base "starting base id" [player]
   (:starting-base player))
 
 (defn has-researched [player]
