@@ -1,4 +1,4 @@
-;; Replaced with config.local.edn
+;; Rename to config.local.edn
 {:starcraft {:path "your/absolute/path/to/chaoslauncher.exe"}
  :scbw {:path "your/absolute/path/to/scbw/bots/pepper"}
  :log? false
