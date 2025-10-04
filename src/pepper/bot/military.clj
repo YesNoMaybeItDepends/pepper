@@ -163,7 +163,7 @@
         jobs (if-not assign-job?
                []
                [(job/->job find-enemy-starting-base/job frame
-                           {:positions starting-bases-to-scout
+                           {:positions (shuffle starting-bases-to-scout) ;; :^)
                             :unit-id (unit/id some-available-worker)})])]
     [military jobs]))
 
@@ -237,31 +237,35 @@
         our-ramp (:center (first (game-map/get-main-ramp our-main game-map)))
         slightly-behind-our-ramp (slightly-behind-our-ramp our-ramp our-main)
         our-ramp slightly-behind-our-ramp
-        rally-point (if (or (and (enough-units-to-move-out? units-that-can-attack)
-                                 (enough-abilities-to-move-out? (player/has-researched our-player))
-                                 (enough-upgrades-to-move-out (player/has-upgraded our-player)))
-                            (not-empty (transduce
-                                        (comp
-                                         (filter (job/type? :attack-move))
-                                         (filter (comp (conj #{} their-ramp their-main)
-                                                       attack-move/target-position)))
-                                        conj []
-                                        unit-jobs)))
-                      (if (some #(#{their-main} (unit/tile %)) buildings-to-kill)
-                        their-main
-                        (if (some? (first buildings-to-kill))
-                          (:tile (first buildings-to-kill))
-                          (rand-nth (keys (game-map/bases-by-id game-map)))))
-                      our-ramp)
+        rally-points (if (or (and (enough-units-to-move-out? units-that-can-attack)
+                                  (enough-abilities-to-move-out? (player/has-researched our-player))
+                                  (enough-upgrades-to-move-out (player/has-upgraded our-player)))
+                             (not-empty (transduce
+                                         (comp
+                                          (filter (job/type? :attack-move))
+                                          (filter (comp (conj #{} their-ramp their-main)
+                                                        attack-move/target-position)))
+                                         conj []
+                                         unit-jobs)))
+                       (if (some #(#{their-main} (unit/tile %)) buildings-to-kill)
+                         [their-main]
+                         (if (some? (first buildings-to-kill))
+                           [(:tile (first buildings-to-kill))]
+                           (keys (game-map/bases-by-id game-map))))
+                       [our-ramp])
         units-to-rally-xf (comp (filter (complement :attack-frame?))
                                 (filter (complement :starting-attack?))
                                 (filter (complement :under-attack?))
                                 (filter (complement :stimmed?))
-                                (if (= rally-point our-ramp)
+                                (if (some #{our-ramp} rally-points)
                                   (filter (complement (unit/type? :scv)))
                                   (filter any?)))
         units-to-rally (transduce units-to-rally-xf conj [] units-that-can-attack)
-        new-jobs (mapv #(job/init (attack-move/job (unit/id %) rally-point {:target-unit-id (unit/id (first lurkers-to-kill))}) frame) units-to-rally)
+        opts {:target-unit-id (unit/id (first lurkers-to-kill))}
+        rally-unit (fn [opts frame]
+                     (fn [unit rally]
+                       (job/init (attack-move/job (unit/id unit) rally opts) frame)))
+        new-jobs (mapv (rally-unit opts frame) units-to-rally (cycle rally-points))
         frame-last-rallied (frame-last-rallied military)
         rally? (< (+ 250 (or frame-last-rallied 0)) frame)]
     [(if rally?

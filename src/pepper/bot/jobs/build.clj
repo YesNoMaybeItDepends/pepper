@@ -123,7 +123,7 @@
                     (Player/.getStartLocation (Game/.self game)))
         build-tile (if (= (:building job) :refinery)
                      (.getTilePosition (Game/.getUnit game (:geyser-id job)))
-                     (get-build-location! game building near-tile 18 30))]
+                     (get-build-location! game building near-tile 25 30))]
     (if build-tile
       (assoc job
              :build-tile (position/->map build-tile)

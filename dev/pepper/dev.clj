@@ -46,12 +46,11 @@
    TODO: reconsider start-pepper!"
   ([] (main {}))
   ([{:keys [async?] :as opts}]
-   (let [_ (logging/init-logging! (str (inst-ms (java.time.Instant/now))))]
-     (reset! store initial-store-state)
-     (swap! store merge opts)
-     (if async?
-       (alter-var-root #'bot (constantly (future (pepper-main/main store))))
-       (alter-var-root #'bot (constantly (pepper-main/main store)))))))
+   (reset! store initial-store-state)
+   (swap! store merge opts)
+   (if async?
+     (alter-var-root #'bot (constantly (future (pepper-main/main store))))
+     (alter-var-root #'bot (constantly (pepper-main/main store))))))
 
 (defn reset []
   (reset! bot initial-bot-state)

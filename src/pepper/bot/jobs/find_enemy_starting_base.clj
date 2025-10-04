@@ -34,7 +34,7 @@
         scout-type (unit-type/object->keyword (Unit/.getType scout))
         scout-pos (position/->map (Unit/.getPosition scout))
         are-we-there-yet? (position/in-distance? scout-pos (target-position job)
-                                                 (unit-type/sight-range scout-type))]
+                                                 (unchecked-divide-int (unit-type/sight-range scout-type) 2))]
     (if are-we-there-yet?
       (-> (update-in job [:position-updates (target-tile-position job)]
                      assoc

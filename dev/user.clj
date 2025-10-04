@@ -52,6 +52,9 @@
 (defn reset-jobs! [pepper-ref]
   (swap! pepper-ref update-in [:bot :unit-jobs] {}))
 
+(defn reset-job! [pepper-ref unit-id]
+  (swap! pepper-ref update-in [:bot :unit-jobs] dissoc unit-id))
+
 (comment
 
   (set! *print-namespace-maps* false)
@@ -91,12 +94,14 @@
   ;; speed
 
   (dev/set-game-speed!)
+  (dev/set-game-speed! 0)
   (dev/set-game-speed! 4)
   (dev/set-game-speed! 42)
 
   ;;
 
   (reset-jobs! (dev/pepper-ref!))
+  (reset-job! (dev/pepper-ref!) 249)
 
   #_())
 

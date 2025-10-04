@@ -13,39 +13,31 @@
 (defn with-time [& str]
   (clojure.string/join " " (concat [(HH-mm-ss) "-"] str)))
 
-(defn- jar-opts [opts]
-  (let [app "pepper"
-        version "0.0.1"
-        target "target"
-        classes (str target "/classes")]
-    (assoc opts
-           :app app
-           :main 'pepper.main
-           :version version
-           :uber-file (str target "/" app ".jar")
-           :manifest {"Add-Opens" "java.base/java.nio"} ;; do I still need this?
-           :scm {:tag (str "v" version)}
-           :basis (b/create-basis {})
-           :class-dir classes
-           :target-dir classes ;; for b/copy-dir
-           :target target
-           :path target ;; for b/delete
-           :src-dirs ["src"])))
-
 (defn uberjar [opts]
-  (time (let [opts (jar-opts opts)]
+  (time (let [build-folder "target"
+              jar-content (str build-folder "/classes")
+              basis (b/create-basis {:project "deps.edn"})
+              app "pepper"
+              file-name (str build-folder "/" app ".jar")]
+
           (println (with-time "Using JVM version" (jvm-version)))
 
           (println (with-time "Cleaning target dir..."))
-          (b/delete opts)
+          (b/delete {:path "target"})
 
-          (println (with-time "Copying source to target dir..."))
-          (b/copy-dir (update opts :src-dirs conj "resources"))
+          (println (with-time "Copying files to target dir..."))
+          (b/copy-dir {:src-dirs   ["resources"]
+                       :target-dir jar-content})
 
           (println (with-time "Compiling source..."))
-          (b/compile-clj opts)
+          (b/compile-clj {:basis     basis
+                          :src-dirs  ["src"]
+                          :class-dir jar-content})
 
-          (println (with-time "Building uberjar" (:uber-file opts) "..."))
-          (b/uber opts)
+          (println (with-time "Building uberjar" file-name "..."))
+          (b/uber {:class-dir jar-content
+                   :uber-file file-name
+                   :basis     basis
+                   :main      'pepper.main})
 
-          (println (with-time "Done")))))
+          (println "Done"))))

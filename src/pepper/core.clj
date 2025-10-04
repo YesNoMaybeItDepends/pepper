@@ -30,10 +30,10 @@
 
 ;;;; misc
 
-(defn tapping [state]
-  (tap> {:reason :tapping
-         :state state})
-  state)
+#_(defn tapping [state]
+    (tap> {:reason :tapping
+           #_:state #_state})
+    state)
 
 (defn rendering [state]
   (game/render-game! (game state) (api state))
@@ -60,8 +60,9 @@
   (let [flags {:user-input Flag/UserInput
                :complete-map-information Flag/CompleteMapInformation}
         game-obj (api/game (api state))
-        game (game state)]
-    (doseq [[_ flag] (filterv (fn [[flag _]] (flag game)) flags)]
+        flags (filterv (fn [[flag _]] (flag game)) flags)]
+    (mu/log :enabling-flags :flags flags)
+    (doseq [[_ flag] flags]
       (Game/.enableFlag game-obj flag))))
 
 (defn on-start [state]
@@ -101,28 +102,29 @@
 
 ;;;; handlers
 
-(defn handle-error [e store]
-  (let [s @store
-        _ (doto (api/game (api s))
-            (.setLocalSpeed 167)
-            (.pauseGame))
-        state (logging/format-state s)
-        error-data (ex-data e)]
-    (mu/log :error
-            :exception e
-            :state state
-            :error-data error-data)
-    (tap> {:msg :error
-           :state state
-           :exception e
-           :error-data (ex-data e)})))
+(defn handle-error
+  "TODO: different error handling depending on alias"
+  [e store]
+  (mu/log :error
+          :exception e
+          :error-data (ex-data e))
+  #_(let [#_s #_@store
+          #__ #_(doto (api/game (api s))
+                  (.setLocalSpeed 167)
+                  (.pauseGame))
+          #_state #_(logging/format-state s)]
+      ;; log error + state
+      #_(tap> {:msg :error
+               :state state
+               :exception e
+               :error-data (ex-data e)})))
 
 (defn handle-stop [store]
   (let [s @store
         state (logging/format-state s)]
-    (mu/log :stopped :state state)
+    (mu/log :stopped #_:state #_state)
     (tap> {:msg :stopping
-           :state state})))
+           #_:state #_state})))
 
 (defn handle-on-unit-event [state event]
   (update state :game game/update-on-unit-event event (api state)))
@@ -133,7 +135,7 @@
                 (tap> "game over man")
                 (tap> data)
                 (mu/log :on-end :winner? data)
-                (tapping (on-end state)))
+                #_(tapping (on-end state)))
     :on-frame (-> state
                   (skipping-if-paused #(throttling-by-game-frame % on-frame))
                   rendering)
@@ -143,7 +145,9 @@
     :on-receive-text state
     :on-save-game state
     :on-send-text state
-    :on-start (tapping (on-start state))
+    :on-start (do (mu/log :on-start)
+                  (on-start state)
+                  #_tapping)
     :on-unit-complete (handle-on-unit-event state event)
     :on-unit-create (handle-on-unit-event state event)
     :on-unit-destroy (handle-on-unit-event state event)
@@ -153,7 +157,6 @@
     :on-unit-morph (handle-on-unit-event state event)
     :on-unit-renegade (handle-on-unit-event state event)
     :on-unit-show (handle-on-unit-event state event)
-    :tap (tapping state)
     state))
 
 (defn handle-res! [store msg stop-ch]

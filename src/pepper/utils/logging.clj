@@ -8,9 +8,10 @@
 (defn init-logging! [file-name]
   (mu/start-publisher!
    {:type :multi
-    :publishers [#_{:type :console :pretty? true}
-                 {:type :simple-file
-                  :filename (str "bwapi-data/write/" file-name ".log")}]}))
+    :publishers [{:type :console :pretty? true}
+                 #_{:type :simple-file
+                    :filename (str ".\\bwapi-data\\write\\" file-name ".log")}]})
+  (mu/log :logging-started #_:filename #_file-name))
 
 (defn format-state
   "dissoc :api

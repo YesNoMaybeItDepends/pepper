@@ -1,9 +1,11 @@
 (ns pepper.main
   (:require
    [clojure.core.async :as a]
-   [pepper.core :as pepper]
+   [com.brunobonacci.mulog :as mu]
    [pepper.api :as api]
-   [pepper.utils.config :as config])
+   [pepper.core :as pepper]
+   [pepper.utils.config :as config]
+   [pepper.utils.logging :as logging])
   (:gen-class))
 
 (defn get-api-client-config [config]
@@ -19,7 +21,8 @@
   (get-in state [:after-end] (fn [] (println "no after-end fn"))))
 
 (defn main [store]
-  (let [[from-api to-api] [(a/chan) (a/chan)]
+  (let [_ (logging/init-logging! (str (inst-ms (java.time.Instant/now))))
+        [from-api to-api] [(a/chan) (a/chan)]
         config (config/read-config)
         pepper-ref (atom {})
         stop-ch (a/chan)

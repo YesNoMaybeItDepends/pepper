@@ -10,8 +10,11 @@
   deploy:local {:doc "Move the jar to scbw folder"
                 :requires ([babashka.fs :as fs]
                            [clojure.edn :as edn])
-                :task (let [cfg (edn/read-string (slurp "config.local.edn"))
+                :task (let [cfg (edn/read-string (slurp "bwapi-data/AI/config.local.edn"))
                             scbw-dir (get-in cfg [:scbw :path])]
-                        (fs/move "target/pepper.jar"
+                        (fs/copy "target/pepper.jar"
+                                 (str scbw-dir "\\AI")
+                                 {:replace-existing true})
+                        (fs/copy "bwapi-data/AI/config.local.edn"
                                  (str scbw-dir "\\AI")
                                  {:replace-existing true}))}}}
