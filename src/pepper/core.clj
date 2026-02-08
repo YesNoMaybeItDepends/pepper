@@ -104,10 +104,11 @@
 
 (defn handle-error
   "TODO: different error handling depending on alias"
-  [e store]
+  [e store stop-ch]
   (mu/log :error
           :exception e
           :error-data (ex-data e))
+  (a/close! stop-ch)
   #_(let [#_s #_@store
           #__ #_(doto (api/game (api s))
                   (.setLocalSpeed 167)
@@ -164,7 +165,7 @@
     (let [state (handle-msg @store msg stop-ch)]
       (swap! store merge state))
     (catch Exception e
-      (handle-error e store))))
+      (handle-error e store stop-ch))))
 
 ;;;; init
 

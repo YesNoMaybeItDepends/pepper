@@ -84,7 +84,8 @@
     (let [id (Player/.getID player-obj)
           self-id (Player/.getID (Game/.self game-obj))
           enemy-id (Player/.getID (Game/.enemy game-obj))
-          race (race/object->keyword (Player/.getRace player-obj))]
+          race (race/object->keyword (Player/.getRace player-obj))
+          frame (Game/.getFrameCount game-obj)]
       (-> {}
           (assoc :id id)
           (assoc :name (Player/.getName player-obj))
@@ -92,7 +93,7 @@
           (assoc :force (Force/.getID (Player/.getForce player-obj)))
           (assoc :color (color/object->keyword (Player/.getColor player-obj)))
           (assoc :supply-total (Player/.supplyTotal player-obj))
-          (assoc :supply-used (Player/.supplyUsed player-obj))
+          (assoc :supply-used (when (> frame 0) (Player/.supplyUsed player-obj)))
           (assoc :starting-base (position/->map (Player/.getStartLocation player-obj)))
           (assoc :neutral? (Player/.isNeutral player-obj))
           (assoc :self? (= id self-id))

@@ -52,8 +52,8 @@
               (job/set-cost-paid frame)
               (job/set-step :done-researching?!)))
       (if (or already-researched? already-upgraded?)
-        (do (println "bro something went wrong...")
-            (job/set-completed job))
+        (do #_(println "bro something went wrong...")
+         (job/set-completed job))
         job))))
 
 (defn xform

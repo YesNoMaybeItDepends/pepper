@@ -1,20 +1,30 @@
 {:tasks
- {test {:doc "Run tests"
-        :task (clojure "-X:test")}
-  run:dev {:doc "Runs the bot from dev"
-           :task (clojure "-A:dev -X pepper.dev/main")}
-  run:prod {:doc "Runs the bot from prod"
-            :task (clojure "-A:prod -M -m pepper.main")}
-  build:prod:uberjar {:doc "Build production uberjar"
-                      :task (clojure "-T:build uberjar")}
-  deploy:local {:doc "Move the jar to scbw folder"
-                :requires ([babashka.fs :as fs]
-                           [clojure.edn :as edn])
-                :task (let [cfg (edn/read-string (slurp "bwapi-data/AI/config.local.edn"))
-                            scbw-dir (get-in cfg [:scbw :path])]
-                        (fs/copy "target/pepper.jar"
-                                 (str scbw-dir "\\AI")
-                                 {:replace-existing true})
-                        (fs/copy "bwapi-data/AI/config.local.edn"
-                                 (str scbw-dir "\\AI")
-                                 {:replace-existing true}))}}}
+
+ {test
+  {:doc "Run tests"
+   :task (clojure "-X:test")}
+
+  run:dev
+  {:doc "Runs the bot from dev"
+   :task (clojure "-A:dev -X pepper.dev/main")}
+
+  run:prod
+  {:doc "Runs the bot from prod"
+   :task (clojure "-A:prod -M -m pepper.main")}
+
+  build:prod:uberjar
+  {:doc "Build production uberjar"
+   :task (clojure "-T:build uberjar")}
+
+  deploy:local
+  {:doc "Move the jar to scbw folder"
+   :requires ([babashka.fs :as fs]
+              [clojure.edn :as edn])
+   :task (let [cfg (edn/read-string (slurp "bwapi-data/AI/config.local.edn"))
+               scbw-dir (get-in cfg [:scbw :path])]
+           (fs/copy "target/pepper.jar"
+                    (str scbw-dir "\\AI")
+                    {:replace-existing true})
+           (fs/copy "bwapi-data/AI/config.local.edn"
+                    (str scbw-dir "\\AI")
+                    {:replace-existing true}))}}}

@@ -3,14 +3,24 @@
    [clojure.edn :as edn]
    [clojure.java.io :as io]
    [com.brunobonacci.mulog :as mu]
-   [com.brunobonacci.mulog.flakes]))
+   [com.brunobonacci.mulog.flakes])
+  (:import [java.time LocalTime]
+           [java.time.format DateTimeFormatter]))
+
+(defn HH-mm-ss! []
+  (LocalTime/.format (LocalTime/now) (DateTimeFormatter/ofPattern "HH:mm:ss")))
 
 (defn init-logging! [file-name]
   (mu/start-publisher!
    {:type :multi
-    :publishers [{:type :console :pretty? true}
-                 #_{:type :simple-file
-                    :filename (str ".\\bwapi-data\\write\\" file-name ".log")}]})
+    :publishers [{:type :console
+                  :pretty? true
+                  :transform (fn [events]
+                               (map (fn [event]
+                                      (assoc event :log/HH-mm-ss (HH-mm-ss!)))
+                                    events))}
+                 {:type :simple-file
+                  :filename (str ".\\bwapi-data\\write\\" file-name ".log")}]})
   (mu/log :logging-started #_:filename #_file-name))
 
 (defn format-state

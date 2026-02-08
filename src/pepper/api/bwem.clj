@@ -1,4 +1,5 @@
 (ns pepper.api.bwem
+  (:require [com.brunobonacci.mulog :as mu])
   (:import [bwem BWEM]))
 
 (defn switch-errors! [b toggle]
@@ -11,6 +12,8 @@
 
 (defn init! [game]
   (let [b (new bwem.BWEM game)]
+    (mu/log :initializing-bwem)
     (switch-errors! b :off)
     (BWEM/.initialize b)
+    (mu/log :initialized-bwem)
     (switch-errors! b :on)))

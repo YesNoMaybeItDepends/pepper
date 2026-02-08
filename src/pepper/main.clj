@@ -15,12 +15,14 @@
   (:bot-config config))
 
 (defn get-api-before-start [state]
-  (get-in state [:before-start] (fn [] (println "no before-start fn"))))
+  (get-in state [:before-start] (fn [] #_(println "no before-start fn"))))
 
 (defn get-api-after-end [state]
-  (get-in state [:after-end] (fn [] (println "no after-end fn"))))
+  (get-in state [:after-end] (fn [] #_(println "no after-end fn"))))
 
 (defn main [store]
+  (println "hello")
+  (System/exit 0)
   (let [_ (logging/init-logging! (str (inst-ms (java.time.Instant/now))))
         [from-api to-api] [(a/chan) (a/chan)]
         config (config/read-config)
@@ -39,7 +41,9 @@
                  :ch-stop? stop-ch
                  :ch-from-api from-api
                  :ch-to-api to-api)]
+    (mu/log :starting-game)
     (api/start-game! api)
+    (mu/log :closing-ch)
     (a/close! stop-ch)))
 
 (defn -main [& args]
