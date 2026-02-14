@@ -44,13 +44,16 @@
     :scale scale}))
 
 (defn ->position [{:keys [x y scale]}]
-  (apply Position/new (mapv (convert scale :position) [x y])))
+  (let [[x y] (mapv (convert scale :position) [x y])]
+    (Position/new x y)))
 
 (defn ->walk-position [{:keys [x y scale]}]
-  (apply WalkPosition/new (mapv (convert scale :walk-position) [x y])))
+  (let [[x y] (mapv (convert scale :walk-position) [x y])]
+    (WalkPosition/new x y)))
 
 (defn ->tile-position [{:keys [x y scale]}]
-  (apply TilePosition/new (mapv (convert scale :tile-position) [x y])))
+  (let [[x y] (mapv (convert scale :tile-position) [x y])]
+    (TilePosition/new x y)))
 
 (defn _->position [{:keys [x y scale] :as pos}]
   (merge (zipmap [:x :y] (mapv (convert scale :position) [x y]))
@@ -64,12 +67,12 @@
   (merge (zipmap [:x :y] (mapv (convert scale :tile-position) [x y]))
          {:scale :tile-position}))
 
-(defn ->obj [{:keys [x y scale]}]
-  (->> [x y]
-       (apply (case scale
-                :position Position/new
-                :tile-position TilePosition/new
-                :walk-position WalkPosition/new))))
+#_(defn ->obj [{:keys [x y scale]}]
+    (->> [x y]
+         (apply (case scale
+                  :position Position/new
+                  :tile-position TilePosition/new
+                  :walk-position WalkPosition/new))))
 
 (defn + [{x1 :x y1 :y scale1 :scale :as pos1}
          {x2 :x y2 :y scale2 :scale :as pos2}]

@@ -11,7 +11,10 @@
     AreaId
     BWEM
     BWMap
+    MapData
+    MiniTile
     Base
+    TerrainData
     ChokePoint
     Neutral]))
 
@@ -96,13 +99,13 @@
 (defn parse-starting-bases-on-start! [map]
   (mapv ->id (BWMap/.getStartingLocations map)))
 
-(defn parse-map-data! [map-data]
+(defn parse-map-data! [^MapData map-data]
   {:pixel-size (position/->map (.getPixelSize map-data))
    :tile-size (position/->map (.getTileSize map-data))
    :walk-size (position/->map (.getWalkSize map-data))
    :center-position (position/->map (.getCenter map-data))})
 
-(defn parse-mini-tile! [mini-tile]
+(defn parse-mini-tile! [^MiniTile mini-tile]
   {:lake (.isLake mini-tile)
    :sea (.isSea mini-tile)
    :terrain (.isTerrain mini-tile)
@@ -110,7 +113,7 @@
    :area-id (.intValue (.getAreaId mini-tile))
    :altitude (.intValue (.getAltitude mini-tile))})
 
-(defn get-mini-tile! [terrain-data x y]
+(defn get-mini-tile! [^TerrainData terrain-data x y]
   (.getMiniTile terrain-data (bwapi.WalkPosition. x y)))
 
 (defn set-mini-tile!
@@ -129,7 +132,7 @@
 (defn parse-mini-tiles! [x y terrain-data]
   (reduce (set-mini-tile-columns! y terrain-data) {} (range x)))
 
-(defn parse-terrain-data! [terrain-data]
+(defn parse-terrain-data! [^TerrainData terrain-data]
   (let [map-data (parse-map-data! (.getMapData terrain-data))
         {:keys [x y]} (:walk-size map-data)]
     {:map-data map-data

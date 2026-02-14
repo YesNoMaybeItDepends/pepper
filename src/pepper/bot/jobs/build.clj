@@ -3,7 +3,7 @@
             [pepper.api :as api]
             [pepper.game.position :as position]
             [pepper.game.unit-type :as unit-type])
-  (:import [bwapi Game Unit Player]))
+  (:import [bwapi Game Unit Player UnitType TilePosition]))
 
 ;; problems
 ;; sometimes workers get conflicting build locations (probably)
@@ -85,10 +85,10 @@
 (defn go-build! [api job]
   (let [game (api/game api)
         frame (Game/.getFrameCount game)
-        worker (Game/.getUnit game (job/unit-id job))
+        ^Unit worker (Game/.getUnit game (job/unit-id job))
         tiles (mapv position/->tile-position (building-tiles (build-tile job) (building job)))
-        building (unit-type/keyword->object (building job))
-        tile (position/->tile-position (build-tile job))
+        ^UnitType building (unit-type/keyword->object (building job))
+        ^TilePosition tile (position/->tile-position (build-tile job))
         can-build? (Unit/.canBuild worker building tile)
         tiles-visible? (every? #(Game/.isVisible  game %) tiles)]
     (if tiles-visible?

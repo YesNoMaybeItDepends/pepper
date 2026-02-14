@@ -4,7 +4,12 @@
    [pepper.api.bwem :as bwem]
    [pepper.api.client :as client])
   (:import
-   [bwapi BWClient PerformanceMetrics PerformanceMetric]
+   [bwapi
+    BWClient
+    PerformanceMetric
+    PerformanceMetric$RunningTotal
+    PerformanceMetrics
+    Game]
    [bwem BWEM]))
 
 ;; If these are private, do I want these fns?
@@ -39,6 +44,7 @@
   (:api/client api))
 
 (defn game [api]
+  ^Game
   (:api/game api))
 
 (defn bwem [api]
@@ -94,11 +100,11 @@
           {}
           keywords))
 
-(def kw->running-total {:last #(.getLast %)
-                        :max #(.getMax %)
-                        :mean #(.getMean %)
-                        :min #(.getMin %)
-                        :samples #(.getSamples %)})
+(def kw->running-total {:last #(PerformanceMetric$RunningTotal/.getLast %)
+                        :max #(PerformanceMetric$RunningTotal/.getMax %)
+                        :mean #(PerformanceMetric$RunningTotal/.getMean %)
+                        :min #(PerformanceMetric$RunningTotal/.getMin %)
+                        :samples #(PerformanceMetric$RunningTotal/.getSamples %)})
 
 (defn datafy-running-total
   ([running-total] (datafy-running-total

@@ -11,7 +11,7 @@
    [pepper.game.upgrade :as upgrade]
    [pepper.game.map.area :as area])
   (:import
-   [bwapi BWClient Game Text]))
+   [bwapi BWClient Game Text Unit]))
 
 (defn set-frame [game frame]
   (assoc game :frame frame))
@@ -186,10 +186,10 @@
       (assoc :can-upgrade can-upgrade)
       (assoc :can-research can-research)))
 
-(defn unit-position [unit-obj]
+(defn unit-position [^Unit unit-obj]
   (position/->map (.getPosition unit-obj)))
 
-(defn render-units! [_game api-game]
+(defn render-units! [_game ^Game api-game]
   (doseq [unit (filterv some? (units _game))]
     (let [unit-id (unit/id unit)
           unit-obj (.getUnit api-game unit-id)

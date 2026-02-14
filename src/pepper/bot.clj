@@ -15,7 +15,7 @@
    [pepper.game.unit :as unit]
    [pepper.bot.jobs.attack-move :as attack-move])
   (:import
-   [bwapi Game UnitType]))
+   [bwapi Game UnitType Unit]))
 
 (defn our [bot]
   (:our bot))
@@ -87,10 +87,10 @@
 (defn edn->str [edn]
   (with-out-str (pp/pprint edn)))
 
-(defn focus-camera-on [[x y] game]
+(defn focus-camera-on [[x y] ^Game game]
   (.setScreenPosition game x y))
 
-(defn unit-position [unit-obj]
+(defn unit-position [^Unit unit-obj]
   (position/->map (.getPosition unit-obj)))
 
 (defn render-gather-job [job game _game]
@@ -103,7 +103,7 @@
         {xto :x yto :y} (unit/position mineral)]
     (Game/.drawLineMap game xfrom yfrom xto yto bwapi.Color/Blue)))
 
-(defn render-build-job [job game]
+(defn render-build-job [job ^Game game]
   (when (and ((job/type? :build) job)
              (build/build-tile job))
     (let [worker (.getUnit game (job/unit-id job))
@@ -117,7 +117,7 @@
       (Game/.drawLineMap game pos1 worker-pos bwapi.Color/Yellow)
       (Game/.drawBoxMap game pos1 pos2 bwapi.Color/Yellow))))
 
-(defn render-attack-move-job [job game]
+(defn render-attack-move-job [job ^Game game]
   (when (and ((job/type? :attack-move) job)
              (attack-move/target-position job))
     (let [unit (.getUnit game (job/unit-id job))

@@ -114,12 +114,12 @@
    (-> (datafy unit-obj keywords kw->val)
        (set-last-frame-updated frame))))
 
-(defn parse-nearest-area! [tile-position bwmap]
+(defn parse-nearest-area! [^bwapi.TilePosition tile-position bwmap]
   (-> (BWMap/.getNearestArea bwmap tile-position)
       Area/.getId
       AreaId/.intValue))
 
-(defn parse-area! [tile-position bwmap]
+(defn parse-area! [^bwapi.TilePosition tile-position bwmap]
   (when-some [area (BWMap/.getArea bwmap tile-position)]
     (AreaId/.intValue (Area/.getId area))))
 

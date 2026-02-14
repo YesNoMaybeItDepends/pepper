@@ -6,7 +6,7 @@
    [pepper.game.position :as position]
    [pepper.game.unit-type :as unit-type])
   (:import
-   [bwapi Game Player Unit]))
+   [bwapi Game Player Unit Position]))
 
 (defn target-position [job]
   (:target-position job))
@@ -60,7 +60,7 @@
         unit (Game/.getUnit game (job/unit-id job))
         unit-type (Unit/.getType unit)
         target-unit (when (target-unit-id job) (Game/.getUnit game (target-unit-id job)))
-        target-position (when (target-position job) (position/->position (target-position job)))
+        ^Position target-position (when (target-position job) (position/->position (target-position job)))
         success? (cond
                    (and target-unit
                         (Unit/.exists target-unit)

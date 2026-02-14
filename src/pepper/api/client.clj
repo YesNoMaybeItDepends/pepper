@@ -104,11 +104,15 @@
       (f [:on-unit-show {:unit unit}]))))
 
 (defn make-client
+  ^bwapi.BWClient
   [handler-fn]
   (BWClient.
    (event-listener handler-fn)))
 
 (defn start-game!
   "Starts the game"
-  ([client] (.startGame client))
-  ([client config] (.startGame client (make-configuration config))))
+  ([client] (BWClient/.startGame client))
+  ([client config]
+   (BWClient/.startGame client
+    ^bwapi.BWClientConfiguration
+    (make-configuration config))))

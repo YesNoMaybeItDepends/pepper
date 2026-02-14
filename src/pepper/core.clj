@@ -11,7 +11,8 @@
    [pepper.bot.jobs.build :as build]
    [pepper.bot.jobs.find-enemy-starting-base :as find-enemy-starting-base]
    [pepper.bot.jobs.research :as research])
-  (:import [bwapi Game Flag]))
+  (:import
+   [bwapi Flag Game]))
 
 (defn api [state]
   (:api state))
@@ -42,7 +43,7 @@
 
 (defn throttling-by-game-frame [state state-fn]
   (let [to-skip 4
-        now (.getFrameCount (api/game (api state)))
+        now (.getFrameCount ^Game (api/game (api state)))
         last (or (frame-last-run state) 0)
         can-run? (> (- now last) to-skip)]
     (if can-run?
@@ -50,7 +51,7 @@
       state)))
 
 (defn skipping-if-paused [state state-fn]
-  (if-not (.isPaused (api/game (api state)))
+  (if-not (.isPaused ^Game (api/game (api state)))
     (state-fn state)
     state))
 

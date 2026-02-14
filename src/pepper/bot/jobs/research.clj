@@ -9,7 +9,8 @@
     Game
     Player
     Unit
-    UpgradeType]))
+    UpgradeType
+    TechType]))
 
 (defn to-research [job]
   (:to-research job))
@@ -36,9 +37,9 @@
         unit (Game/.getUnit game (job/unit-id job))
         our-player (Game/.self game)
         started-research? (frame-started-research job)
-        to-upgrade (when (not started-research?) (upgrade/kw->obj (to-research job)))
+        ^UpgradeType to-upgrade (when (not started-research?) (upgrade/kw->obj (to-research job)))
         can-upgrade? (when to-upgrade (Unit/.canUpgrade unit to-upgrade))
-        to-research (when (not started-research?) (ability/kw->obj (to-research job)))
+        ^TechType to-research (when (not started-research?) (ability/kw->obj (to-research job)))
         can-research? (when to-research (Unit/.canResearch unit to-research))
         already-researched? (when to-research (Player/.hasResearched our-player to-research))
         already-upgraded? (when to-upgrade (= (UpgradeType/.maxRepeats to-upgrade)
