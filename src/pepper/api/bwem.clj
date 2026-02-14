@@ -1,5 +1,5 @@
 (ns pepper.api.bwem
-  (:require [com.brunobonacci.mulog :as mu])
+  (:require [pepper.utils.logging :as logging])
   (:import [bwem BWEM]))
 
 (defn switch-errors! [b toggle]
@@ -12,8 +12,8 @@
 
 (defn init! [game]
   (let [b (new bwem.BWEM game)]
-    (mu/log :initializing-bwem)
+    (logging/log {:event :initializing-bwem})
     (switch-errors! b :off)
     (BWEM/.initialize b)
-    (mu/log :initialized-bwem)
+    (logging/log {:event :initialized-bwem})
     (switch-errors! b :on)))

@@ -1,7 +1,6 @@
 (ns pepper.main
   (:require
    [clojure.core.async :as a]
-   [com.brunobonacci.mulog :as mu]
    [pepper.api :as api]
    [pepper.core :as pepper]
    [pepper.utils.config :as config]
@@ -21,9 +20,8 @@
   (get-in state [:after-end] (fn [] #_(println "no after-end fn"))))
 
 (defn main [store]
-  (println "hello")
-  (System/exit 0)
-  (let [_ (logging/init-logging! (str (inst-ms (java.time.Instant/now))))
+  (logging/init-logging!)
+  (let [config (config/read-config)
         [from-api to-api] [(a/chan) (a/chan)]
         config (config/read-config)
         pepper-ref (atom {})
@@ -37,13 +35,10 @@
         pepper (pepper/init api from-api to-api pepper-ref stop-ch bot-config)
         _ (swap! store assoc
                  :pepper pepper
-                 :pepper-ref pepper-ref
-                 :ch-stop? stop-ch
-                 :ch-from-api from-api
-                 :ch-to-api to-api)]
-    (mu/log :starting-game)
+                 :pepper-ref pepper-ref)]
+    (logging/log {:event :starting-game})
     (api/start-game! api)
-    (mu/log :closing-ch)
+    (logging/log {:event :game-ended})
     (a/close! stop-ch)))
 
 (defn -main [& args]

@@ -3,8 +3,8 @@
   (:require
    [pepper.api :as api]
    [pepper.game.unit :as unit]
-   [pepper.game :as game]
-   [com.brunobonacci.mulog :as mu])
+   [pepper.utils.logging :as logging]
+   [pepper.game :as game])
   (:import
    [bwapi Game Unit]))
 
@@ -40,7 +40,7 @@
     (assoc job
            :job/cancelled? true
            :job/cancelled-reason reason)
-     (#(mu/log :job-cancelled :job %)))))
+     (#(logging/log {:event :job-cancelled :job %})))))
 
 (defn cancelled? [job]
   (:job/cancelled? job))

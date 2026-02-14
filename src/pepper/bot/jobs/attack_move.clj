@@ -1,6 +1,6 @@
 (ns pepper.bot.jobs.attack-move
   (:require
-   [com.brunobonacci.mulog :as mu]
+   [pepper.utils.logging :as logging]
    [pepper.api :as api]
    [pepper.bot.job :as job]
    [pepper.game.position :as position]
@@ -80,7 +80,7 @@
       (if (or (not (Unit/.exists unit))
               (not target-position))
         (job/set-completed job)
-        (mu/log :unexpected :data job :msg "attack-move job that didn't succeed and at least has either an existing unit or a position. AKA What?!")))))
+        (logging/log {:event :unexpected :data job :msg "attack-move job that didn't succeed and at least has either an existing unit or a position. AKA What?!"})))))
 
 (defn xform [[job api]]
   (case (:step job)

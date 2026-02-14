@@ -4,7 +4,6 @@
    [pepper.api :as api]
    [pepper.bot :as bot]
    [pepper.game :as game]
-   [com.brunobonacci.mulog :as mu]
    [pepper.utils.logging :as logging]
    [pepper.bot.job :as job]
    [pepper.bot.jobs.attack-move :as attack-move]
@@ -31,10 +30,10 @@
 
 ;;;; misc
 
-#_(defn tapping [state]
-    (tap> {:reason :tapping
-           #_:state #_state})
-    state)
+(defn tapping [state]
+  (tap> {:reason :tapping
+         #_:state #_state})
+  state)
 
 (defn rendering [state]
   (game/render-game! (game state) (api state))
@@ -62,7 +61,7 @@
                :complete-map-information Flag/CompleteMapInformation}
         game-obj (api/game (api state))
         flags (filterv (fn [[flag _]] (flag game)) flags)]
-    (mu/log :enabling-flags :flags flags)
+    (logging/log {:event :enabling-flags :flags flags})
     (doseq [[_ flag] flags]
       (Game/.enableFlag game-obj flag))))
 
@@ -103,28 +102,40 @@
 
 ;;;; handlers
 
+(def errs (atom 0))
+
+(defn log-error [error store]
+  (let [state {} #_(logging/format-state @store)]
+    (logging/log {:event :error
+                  :throwable (Throwable->map error)
+                  :state state})))
+
+(defn log-on-error? []
+  (< @errs 1))
+
+(defn pause-on-error? []
+  false)
+
+(defn pause-on-error [store]
+  (doto (api/game (api @store))
+    (.setLocalSpeed 167)
+    (.pauseGame)))
+
 (defn handle-error
   "TODO: different error handling depending on alias"
-  [e store stop-ch]
-  (mu/log :error
-          :exception e
-          :error-data (ex-data e))
-  (a/close! stop-ch)
-  #_(let [#_s #_@store
-          #__ #_(doto (api/game (api s))
-                  (.setLocalSpeed 167)
-                  (.pauseGame))
-          #_state #_(logging/format-state s)]
-      ;; log error + state
-      #_(tap> {:msg :error
-               :state state
-               :exception e
-               :error-data (ex-data e)})))
+  ([error store] (handle-error error store {}))
+  ([error store stop-ch]
+   (when (log-on-error?)
+     (log-error error store))
+   (when (pause-on-error?)
+     (pause-on-error store))
+   (swap! errs inc)
+   (a/close! stop-ch)))
 
 (defn handle-stop [store]
   (let [s @store
         state (logging/format-state s)]
-    (mu/log :stopped #_:state #_state)
+    (logging/log {:event :stopped :state state})
     (tap> {:msg :stopping
            #_:state #_state})))
 
@@ -136,8 +147,8 @@
     :on-end (do (a/close! stop-ch)
                 (tap> "game over man")
                 (tap> data)
-                (mu/log :on-end :winner? data)
-                #_(tapping (on-end state)))
+                (logging/log {:event :on-end :winner? data})
+                (tapping (on-end state)))
     :on-frame (-> state
                   (skipping-if-paused #(throttling-by-game-frame % on-frame))
                   rendering)
@@ -147,9 +158,8 @@
     :on-receive-text state
     :on-save-game state
     :on-send-text state
-    :on-start (do (mu/log :on-start)
-                  (on-start state)
-                  #_tapping)
+    :on-start (do (logging/log {:event :on-start})
+                  (on-start state))
     :on-unit-complete (handle-on-unit-event state event)
     :on-unit-create (handle-on-unit-event state event)
     :on-unit-destroy (handle-on-unit-event state event)

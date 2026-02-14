@@ -4,8 +4,7 @@
 
  :deps {org.clojure/clojure {:mvn/version "1.12.0"}
         org.clojure/core.async {:mvn/version "1.9.808-alpha1"}
-        com.github.JavaBWAPI/JBWAPI {:mvn/version "2.1.0"}
-        com.brunobonacci/mulog {:mvn/version "0.9.0"}}
+        com.github.JavaBWAPI/JBWAPI {:mvn/version "2.1.0"}}
  :aliases {:prod
            {:jvm-opts ["--add-opens=java.base/java.nio=ALL-UNNAMED"]}
 
