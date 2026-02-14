@@ -39,9 +39,8 @@
           (b/compile-clj {:basis     basis
                           :src-dirs  ["src"]
                           :compile-opts {;; :disable-locals-clearing false ?
-                                         ;; :elide-meta [:doc :file :line :added]
-                                         ;; :direct-linking true
-                                         }
+                                         :elide-meta [:doc :file :line :added]
+                                         :direct-linking true}
                           :bindings {} ;; {#'clojure.core/*assert* false #'clojure.core/*warn-on-reflection* true}
                           :class-dir jar-content})
 
