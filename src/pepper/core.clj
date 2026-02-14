@@ -122,13 +122,12 @@
 
 (defn handle-error
   "TODO: different error handling depending on alias"
-  ([error store] (handle-error error store {}))
-  ([error store stop-ch]
-   (when (log-on-error?)
-     (log-error error store))
-   (when (pause-on-error?)
-     (pause-on-error store))
-   (swap! errs inc)))
+  [error store]
+  (when (log-on-error?)
+    (log-error error store))
+  (when (pause-on-error?)
+    (pause-on-error store))
+  (swap! errs inc))
 
 (defn handle-on-unit-event [state event]
   (update state :game game/update-on-unit-event event (api state)))

@@ -6,9 +6,16 @@
 (defn HH-mm-ss! []
   (LocalTime/.format (LocalTime/now) (DateTimeFormatter/ofPattern "HH:mm:ss")))
 
+(defn filter? [x]
+  (some? (#{:job-cancelled} (:event x))))
+
+(defn log? [x]
+  (some? (#{:error :starting-game :on-start} (:event x))))
+
 (defn log [x]
-  (pp/pprint {:log/HH-mm-ss (HH-mm-ss!)
-              :log/data x}))
+  (when (log? x)
+    (pp/pprint {:log/HH-mm-ss (HH-mm-ss!)
+                :log/data x})))
 
 (defn filename []
   (str (inst-ms (java.time.Instant/now))))
