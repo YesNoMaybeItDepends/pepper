@@ -159,17 +159,17 @@
               (with-last-frame-executed! api)
               (with-tick-inc))))
 
-(defn debug-job! [job api]
-  (let [game (api/game api)
-        unit (Game/.getUnit (unit-id job))]
-    (merge job {:debug-unit {:exists? (Unit/.exists unit)
-                             :completed? (Unit/.isCompleted unit)
-                             :idle? (Unit/.isIdle unit)
-                             :order (Unit/.getOrder unit)
-                             :order-target (Unit/.getOrderTarget unit)
-                             :order-target-position (Unit/.getOrderTargetPosition unit)
-                             :order-timer (Unit/.getOrderTimer unit)
-                             :last-command-frame (Unit/.getLastCommandFrame unit)
-                             :last-command (Unit/.getLastCommand unit)
-                             :can-command (Unit/.canCommand unit)
-                             :can-gather (Unit/.canGather unit)}})))
+#_(defn debug-job! [job api]
+    (let [game (api/game api)
+          unit (Game/.getUnit (unit-id job))]
+      (merge job {:debug-unit {:exists? (Unit/.exists unit)
+                               :completed? (Unit/.isCompleted unit)
+                               :idle? (Unit/.isIdle unit)
+                               :order (Unit/.getOrder unit)
+                               :order-target (Unit/.getOrderTarget unit)
+                               :order-target-position (Unit/.getOrderTargetPosition unit)
+                               :order-timer (Unit/.getOrderTimer unit)
+                               :last-command-frame (Unit/.getLastCommandFrame unit)
+                               :last-command (Unit/.getLastCommand unit)
+                               :can-command (Unit/.canCommand unit)
+                               :can-gather (Unit/.canGather unit)}})))
