@@ -1,6 +1,5 @@
 (ns pepper.core
   (:require
-   [clojure.core.async :as a]
    [pepper.api :as api]
    [pepper.bot :as bot]
    [pepper.game :as game]
@@ -117,7 +116,7 @@
   false)
 
 (defn pause-on-error [store]
-  (doto (api/game (api @store))
+  (doto ^Game (api/game (api @store))
     (.setLocalSpeed 167)
     (.pauseGame)))
 
@@ -129,23 +128,14 @@
      (log-error error store))
    (when (pause-on-error?)
      (pause-on-error store))
-   (swap! errs inc)
-   (a/close! stop-ch)))
-
-(defn handle-stop [store]
-  (let [s @store
-        state (logging/format-state s)]
-    (logging/log {:event :stopped :state state})
-    (tap> {:msg :stopping
-           #_:state #_state})))
+   (swap! errs inc)))
 
 (defn handle-on-unit-event [state event]
   (update state :game game/update-on-unit-event event (api state)))
 
-(defn handle-msg [state [id data :as event] stop-ch]
+(defn handle-msg [state [id data :as event]]
   (case id
-    :on-end (do (a/close! stop-ch)
-                (tap> "game over man")
+    :on-end (do (tap> "game over man")
                 (tap> data)
                 (logging/log {:event :on-end :winner? data})
                 (tapping (on-end state)))
@@ -171,18 +161,17 @@
     :on-unit-show (handle-on-unit-event state event)
     state))
 
-(defn handle-res! [store msg stop-ch]
+(defn handle-res! [store msg]
   (try
-    (let [state (handle-msg @store msg stop-ch)]
+    (let [state (handle-msg @store msg)]
       (swap! store merge state))
-    (catch Exception e
-      (handle-error e store stop-ch))))
+    (catch Throwable t
+      (handle-error t store))))
+
+(defn event-handler [store]
+  (fn [event] (handle-res! store event)))
 
 ;;;; init
-
-(defn stop? [[msg ch] stop-ch]
-  (or (= ch stop-ch)
-      (nil? msg)))
 
 (defn init-state [api bot-config]
   {:api api
@@ -195,16 +184,6 @@
    :find-enemy-starting-base #'find-enemy-starting-base/xform
    :research #'research/xform})
 
-(defn init [api from-api to-api store stop-ch bot-config]
+(defn init [api store bot-config]
   (reset! store (init-state api bot-config))
-  (job/register-xforms! xforms)
-  (a/go-loop []
-    (when-let [[msg _ :as res] (a/alts! [stop-ch
-                                         from-api]
-                                        :priority true)]
-      (if (stop? res stop-ch)
-        (do (handle-stop store)
-            (a/close! to-api))
-        (do (handle-res! store msg stop-ch)
-            (a/>! to-api :done)
-            (recur))))))
+  (job/register-xforms! xforms))

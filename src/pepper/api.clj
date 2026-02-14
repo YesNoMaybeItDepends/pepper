@@ -1,6 +1,5 @@
 (ns pepper.api
   (:require
-   [clojure.core.async :as a]
    [pepper.api.bwem :as bwem]
    [pepper.api.client :as client])
   (:import
@@ -39,7 +38,7 @@
   (assoc api :api/performance-metrics performance-metrics))
 
 ;;;;
-
+;; what ?
 (defn client [api]
   (:api/client api))
 
@@ -52,6 +51,8 @@
 
 (defn bwem-map [api]
   (:api/bwmap api))
+;; end of what
+;;;;
 
 (defn performance-metrics [api]
   (:api/performance-metrics api))
@@ -77,22 +78,13 @@
     (client/start-game! client client-config)
     (when (fn? after-end) (after-end))))
 
-(defn callback-async [out-ch]
+(defn callback-sync [handler-fn]
   (fn [event]
-    (a/put! out-ch event)))
+    (handler-fn event)))
 
-(defn callback-blocking [out-ch in-ch]
-  (fn [event]
-    (a/>!! out-ch event)
-    (a/<!! in-ch)))
-
-(defn init [out-ch in-ch client-config before-start after-end]
-  {:api/client (client/make-client (callback-blocking out-ch in-ch))
-   :api/out-ch out-ch
-   :api/in-ch in-ch
-   :api/client-config client-config
-   :api/before-start before-start
-   :api/after-end after-end})
+(defn init [client-config event-handler]
+  {:api/client (client/make-client (callback-sync event-handler))
+   :api/client-config client-config})
 
 (defn datafy [obj keywords kw->val]
   (reduce (fn [acc kw]
