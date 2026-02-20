@@ -8,9 +8,12 @@
    [pepper.bot.jobs.attack-move :as attack-move]
    [pepper.bot.jobs.build :as build]
    [pepper.bot.jobs.find-enemy-starting-base :as find-enemy-starting-base]
-   [pepper.bot.jobs.research :as research])
+   [pepper.bot.jobs.research :as research]
+   [pepper.api.client :as client])
   (:import
    [bwapi Flag Game]))
+
+(def _store (atom nil))
 
 (defn api [state]
   (:api state))
@@ -173,7 +176,7 @@
 ;;;; init
 
 (defn init-state [api bot-config]
-  {:api api
+  {:api {:api/client api} ;; :api was being initialized in main, we skip main now, gotta rethink life
    :game (merge {} bot-config)
    :bot {}})
 
@@ -186,3 +189,12 @@
 (defn init [api store bot-config]
   (reset! store (init-state api bot-config))
   (job/register-xforms! xforms))
+
+(defn java-init [client]
+  ;; TODO: init :api module with the client
+  (reset! _store (init-state client {}))
+  (job/register-xforms! xforms))
+
+(defn handle-java-res! [callback & args]
+  (handle-res! _store
+               (client/callback->event callback args)))

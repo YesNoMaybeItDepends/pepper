@@ -1,28 +1,36 @@
 (ns pepper.api.client
   (:import (bwapi BWClient BWClientConfiguration BWEventListener)))
 
-(def event-id->params {:on-start []
-                       :on-end [:is-winner]
-                       :on-frame []
-                       :on-save-game [:game-name]
-                       :on-send-text [:text]
-                       :on-receive-text [:player :text]
-                       :on-player-left [:player]
-                       :on-player-dropped [:player]
-                       :on-nuke-detect [:position]
-                       :on-unit-complete [:unit]
-                       :on-unit-create [:unit]
-                       :on-unit-destroy [:unit]
-                       :on-unit-discover [:unit]
-                       :on-unit-evade [:unit]
-                       :on-unit-hide [:unit]
-                       :on-unit-morph [:unit]
-                       :on-unit-renegade [:unit]
-                       :on-unit-show [:unit]})
+(def ^:private callback->spec
+  {"onStart"         [:on-start []]
+   "onEnd"           [:on-end [:is-winner]]
+   "onFrame"         [:on-frame []]
+   "onSaveGame"      [:on-save-game [:game-name]]
+   "onSendText"      [:on-send-text [:text]]
+   "onReceiveText"   [:on-receive-text [:player :text]]
+   "onPlayerLeft"    [:on-player-left [:player]]
+   "onPlayerDropped" [:on-player-dropped [:player]]
+   "onNukeDetect"    [:on-nuke-detect [:position]]
+   "onUnitComplete"  [:on-unit-complete [:unit]]
+   "onUnitCreate"    [:on-unit-create [:unit]]
+   "onUnitDestroy"   [:on-unit-destroy [:unit]]
+   "onUnitDiscover"  [:on-unit-discover [:unit]]
+   "onUnitEvade"     [:on-unit-evade [:unit]]
+   "onUnitHide"      [:on-unit-hide [:unit]]
+   "onUnitMorph"     [:on-unit-morph [:unit]]
+   "onUnitRenegade"  [:on-unit-renegade [:unit]]
+   "onUnitShow"      [:on-unit-show [:unit]]})
 
-(def event-params (into #{} (flatten (vals event-id->params))))
+(defn ^:private spec+args->event
+  [[name params] args]
+  [name (zipmap params args)])
 
-(def event-ids (into #{} (keys event-id->params)))
+(defn callback->event
+  "Bridge events from Java to Clojure"
+  [callback args]
+  (spec+args->event
+   (callback->spec callback)
+   args))
 
 (defn make-configuration
   ([] (BWClientConfiguration.))
@@ -114,5 +122,30 @@
   ([client] (BWClient/.startGame client))
   ([client config]
    (BWClient/.startGame client
-    ^bwapi.BWClientConfiguration
-    (make-configuration config))))
+                        ^bwapi.BWClientConfiguration
+                        (make-configuration config))))
+
+;; These are only used in unused tests
+
+(def event-id->params {:on-start []
+                       :on-end [:is-winner]
+                       :on-frame []
+                       :on-save-game [:game-name]
+                       :on-send-text [:text]
+                       :on-receive-text [:player :text]
+                       :on-player-left [:player]
+                       :on-player-dropped [:player]
+                       :on-nuke-detect [:position]
+                       :on-unit-complete [:unit]
+                       :on-unit-create [:unit]
+                       :on-unit-destroy [:unit]
+                       :on-unit-discover [:unit]
+                       :on-unit-evade [:unit]
+                       :on-unit-hide [:unit]
+                       :on-unit-morph [:unit]
+                       :on-unit-renegade [:unit]
+                       :on-unit-show [:unit]})
+
+(def event-params (into #{} (flatten (vals event-id->params))))
+
+(def event-ids (into #{} (keys event-id->params)))
